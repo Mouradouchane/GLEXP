@@ -15,3 +15,5 @@ project/*.filters
 *.exe
 *.pdb
 *.dll
+temp/*
+libs/*
