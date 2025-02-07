@@ -13,3 +13,5 @@ project/*.filters
 *.vcxproj.*
 *.db
 *.exe
+*.pdb
+*.dll
