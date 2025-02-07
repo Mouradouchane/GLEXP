@@ -1,0 +1,15 @@
+.vs
+.vscode
+.git
+*.vcxproj
+*.sln
+build/binaries
+build/*.dll
+build/*.pdb
+project/*.aps
+project/*.user
+project/*.filters
+*.vcxproj
+*.vcxproj.*
+*.db
+*.exe
