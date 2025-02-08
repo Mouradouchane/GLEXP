@@ -1,4 +1,3 @@
-
 #pragma once
 
 #ifndef SHADER_CPP
@@ -76,8 +75,8 @@ void init_data_for_shader() {
 
 }
 
-G_ERROR init_textures() {
-	G_ERROR result = G_ERROR::NO_ERR;
+ERR init_textures() {
+	ERR result = ERR::NO_ERR;
 
 	return result;
 }
@@ -142,10 +141,10 @@ shader_object create_shader(std::string const& shader_code, GLuint shader_type) 
 
 		switch (shader_type) {
 			case GL_VERTEX_SHADER: {
-				shader.last_error = G_ERROR::FAILED_TO_COMPILE_VERTEX_SHADER;
+				shader.last_error = ERR::FAILED_TO_COMPILE_VERTEX_SHADER;
 			}break;
 			case GL_FRAGMENT_SHADER: {
-				shader.last_error = G_ERROR::FAILED_TO_COMPILE_FRAGMENT_SHADER;
+				shader.last_error = ERR::FAILED_TO_COMPILE_FRAGMENT_SHADER;
 			}break;
 		}
 
@@ -165,7 +164,7 @@ shader::shader(
 	
 	// check if loading shaders source code failed
 	if (vertex_shader_code == nullptr || fragement_shader_code == nullptr) {
-		this->last_error = G_ERROR::FAILED_TO_LOAD_SHADER_FILE;
+		this->last_error = ERR::FAILED_TO_LOAD_SHADER_FILE;
 
 		if (vertex_shader_code    != nullptr) delete vertex_shader_code;
 		if (fragement_shader_code != nullptr) delete fragement_shader_code;
@@ -178,23 +177,23 @@ shader::shader(
 	this->id = glCreateProgram();
 
 	if (this->id == NULL) {
-		this->last_error = G_ERROR::FAILED_TO_CREATE_PROGRAM;
+		this->last_error = ERR::FAILED_TO_CREATE_PROGRAM;
 		return;
 	}
 
 	// create vertex shader
 	shader_object vertex_shader = create_shader(vertex_shader_code[0] , GL_VERTEX_SHADER);
 	// check for errors
-	if (vertex_shader.last_error != G_ERROR::NO_ERR) {
-		this->last_error = G_ERROR::FAILED_TO_CREATE_VERTEX_SHADER;
+	if (vertex_shader.last_error != ERR::NO_ERR) {
+		this->last_error = ERR::FAILED_TO_CREATE_VERTEX_SHADER;
 		return;
 	}
 
 	// create fragment shader
 	shader_object fragment_shader = create_shader(fragement_shader_code[0] , GL_FRAGMENT_SHADER);
 	// check for errors
-	if (fragment_shader.last_error != G_ERROR::NO_ERR) {
-		this->last_error = G_ERROR::FAILED_TO_CREATE_FRAGMENT_SHADER;
+	if (fragment_shader.last_error != ERR::NO_ERR) {
+		this->last_error = ERR::FAILED_TO_CREATE_FRAGMENT_SHADER;
 		return;
 	}
 
@@ -208,7 +207,7 @@ shader::shader(
 	glGetProgramiv(this->id, GL_LINK_STATUS, &operation_result);
 	
 	if (!operation_result) {
-		this->last_error = G_ERROR::FAILED_TO_LINK_PROGRAM;
+		this->last_error = ERR::FAILED_TO_LINK_PROGRAM;
 		return;
 	}
 	
@@ -219,7 +218,7 @@ shader::shader(
 	if(glIsShader(vertex_shader.id))   glDeleteShader(vertex_shader.id);
 	if(glIsShader(fragment_shader.id)) glDeleteShader(fragment_shader.id);
 
-	this->last_error = G_ERROR::NO_ERR;
+	this->last_error = ERR::NO_ERR;
 }
 
 shader::~shader() {

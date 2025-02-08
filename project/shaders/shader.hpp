@@ -8,6 +8,9 @@
 #include <fstream>
 #include <sstream>
 
+#include "assert.hpp"
+#include "errors.hpp"
+
 #include "glew/glew.h"
 #include "glfw/glfw3.h"
 #include "texture_2d.hpp"
@@ -18,26 +21,6 @@
 extern GLuint EBO;
 extern GLuint VBO;
 extern GLuint VAO;
-
-/*
-	TODO : replace this with ERROR
-*/
-enum class G_ERROR : uint16_t{
-	NO_ERR,
-	// compile errors
-	FAILED_TO_COMPILE_VERTEX_SHADER,
-	FAILED_TO_COMPILE_FRAGMENT_SHADER,
-	// linking errors
-	FAILED_TO_LINK_PROGRAM,
-	// create errors
-	FAILED_TO_CREATE_PROGRAM,
-	FAILED_TO_CREATE_VERTEX_SHADER,
-	FAILED_TO_CREATE_FRAGMENT_SHADER,
-	// file errors
-	FAILED_TO_LOAD_SHADER_FILE,
-	// texture errors
-	FAILED_TO_LOAD_SOME_TEXTURE
-};
 
 struct texture_parameters {
 	GLint data_type;
@@ -75,7 +58,7 @@ struct vao {
 std::string* load_shader_source_code(std::string const& shader_file_path);
 
 struct shader_object{
-	G_ERROR last_error = G_ERROR::NO_ERR;
+	ERR last_error = ERR::NO_ERR;
 	GLuint  type = NULL;
 	GLuint  id   = NULL;
 };
@@ -83,7 +66,7 @@ struct shader_object{
 class shader {
 
 public:
-	G_ERROR last_error = G_ERROR::NO_ERR;
+	ERR last_error = ERR::NO_ERR;
 	GLuint  id = NULL; // program shader id
 
 	shader(std::string const& shader_code, std::string const& fragement_shader_path);
@@ -100,6 +83,6 @@ public:
 
 void init_data_for_shader();
 
-G_ERROR init_textures();
+ERR init_textures();
 
 #endif

@@ -7,6 +7,14 @@
 
 enum class ERR : uint16_t {
 	NO_ERR = 0,
+	FAILED_WHILE_ASSERT,
+	// application errors
+	FAILED_TO_INIT_GLFW,
+	FAILED_TO_CREATE_WINDOW,
+	FAILED_TO_INIT_GLEW,
+
+	// main loop errors
+	INVALID_SHADER_PROGRAM,
 
 	// "shader compile" errors
 	FAILED_TO_COMPILE_VERTEX_SHADER,
@@ -24,6 +32,7 @@ enum class ERR : uint16_t {
 	FAILED_TO_LOAD_SHADER_FILE,
 
 	// "textures" errors
+	FAILED_TO_INIT_TEXTURES,
 	FAILED_TO_LOAD_SOME_TEXTURE,
 
 	// "configs" errors
