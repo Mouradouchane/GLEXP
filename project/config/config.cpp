@@ -4,7 +4,7 @@
 #define CONFIG_CPP
 
 #include <cstdlib>
-#include "ini_lib.h"
+#include "ini.h"
 #include "config.hpp"
 
 #define DEFAULT_WIDTH  800
