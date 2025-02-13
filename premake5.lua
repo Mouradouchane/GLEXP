@@ -46,11 +46,14 @@ objdir(build_path.."/binaries/") -- obj output folder
 -- debugging working path
 debugging_path = "$(SolutionDir)build"
 
+assimp_dll_lib_path = libs_path.."/assimp/assimp-vc143-mt.lib"
+
 filter("configurations:debug_dynamic")
     -- libs dirs "dynamic linking"
     links{ "opengl32.lib" }
     links{ libs_path.."/glew/glew32.lib" }
     links{ libs_path.."/glfw/glfw3dll.lib" }
+    links{ assimp_dll_lib_path }
     targetname "glexp_dx64"
     defines { "DEBUG" }
     debugdir(debugging_path)
@@ -61,6 +64,7 @@ filter("configurations:release_dynamic")
     links{ "opengl32.lib" }
     links{ libs_path.."/glew/glew32.lib" }
     links{ libs_path.."/glfw/glfw3dll.lib" }
+    links{ assimp_dll_lib_path }
     targetname "glexp_rx64"
     defines {"NDEBUG"}
     debugdir(debugging_path) 
@@ -72,6 +76,8 @@ filter("configurations:debug_static")
     links{ "opengl32.lib" }
     links{ libs_path.."/glew/glew32s.lib" }
     links{ libs_path.."/glfw/glfw3.lib" }
+    -- TODO : add static assimp for static build
+    links{ assimp_dll_lib_path }
     targetname "glexp_dx64"
     defines("GLEW_STATIC") -- for glew static linking
     debugdir(debugging_path) 
@@ -83,6 +89,8 @@ filter("configurations:release_static")
     links{ "opengl32.lib" }
     links{ libs_path.."/glew/glew32s.lib" }
     links{ libs_path.."/glfw/glfw3.lib" }
+    -- TODO : add static assimp for static build
+    links{ assimp_dll_lib_path }
     targetname "glexp_rx64"
     defines("GLEW_STATIC") -- for glew static linking
     debugdir(debugging_path) 

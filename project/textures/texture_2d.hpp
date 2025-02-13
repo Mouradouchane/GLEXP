@@ -9,6 +9,16 @@
 
 #include "image.hpp"
 
+struct texture_parameters {
+	GLint data_type;
+	GLint channel;
+	GLint mip_map_levels;
+	GLint wrap_style_x;
+	GLint wrap_style_y;
+	GLint filter_min_style;
+	GLint filter_mag_style;
+};
+
 class texture_2d {
 public:
 	GLuint id = NULL;

@@ -22,45 +22,13 @@ extern GLuint EBO;
 extern GLuint VBO;
 extern GLuint VAO;
 
-struct texture_parameters {
-	GLint data_type;
-	GLint channel;
-	GLint mip_map_levels;
-	GLint wrap_style_x;
-	GLint wrap_style_y;
-	GLint filter_min_style;
-	GLint filter_mag_style;
-};
+// std::string* load_shader_source_code(std::string const& shader_file_path);
 
-struct vbo {
-	GLuint id;
-
-	vbo();
-	~vbo();
-
-	void bind();
-	void unbind();
-};
-struct ebo : vbo {
-
-};
-struct vao {
-	GLuint id = NULL; // vao id
-	std::vector<vbo> vbos; 
-	std::vector<GLuint> ebos;
-
-	vao();
-	~vao();
-	void bind();
-	void unbind();
-};
-
-std::string* load_shader_source_code(std::string const& shader_file_path);
-
+// used to represent "vertex shader","fragement shader",...
 struct shader_object{
 	ERR last_error = ERR::NO_ERR;
-	GLuint  type = NULL;
-	GLuint  id   = NULL;
+	GLuint type = NULL;
+	GLuint id   = NULL;
 };
 
 class shader {

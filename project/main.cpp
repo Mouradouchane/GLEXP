@@ -10,8 +10,9 @@ int APIENTRY wWinMain(
 
     ASSERT(application::init());
 
-    ASSERT(application::run());
+    application::run();
 
     application::clean_up();
+
     return int(ERR::NO_ERR);
 }

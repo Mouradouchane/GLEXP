@@ -3,7 +3,6 @@
 #ifndef SHADER_CPP
 #define SHADER_CPP
 
-#include "texture_2d.hpp"
 #include "globals.hpp"
 #include "shader.hpp"
 
@@ -81,7 +80,7 @@ ERR init_textures() {
 	return result;
 }
 
-std::string* load_shader_source_code(
+static std::string* load_shader_source_code(
 	std::string const& shader_file_path
 ){
 
@@ -110,7 +109,7 @@ std::string* load_shader_source_code(
 	return nullptr;
 }
 
-shader_object create_shader(std::string const& shader_code, GLuint shader_type) {
+static shader_object create_shader(std::string const& shader_code, GLuint shader_type) {
 
 	shader_object shader;  shader.type = shader_type;
 

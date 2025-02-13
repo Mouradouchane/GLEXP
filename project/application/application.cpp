@@ -25,9 +25,13 @@
 #include "texture_2d.hpp"
 #include "shader.hpp"
 
+#include "models.hpp"
+
 namespace application {
 
-GLFWwindow*  window  = nullptr;
+std::string  title  = "GLEXP";
+GLFWwindow*  window = nullptr;
+
 shader* program = nullptr;
 
 static ERR init_glfw() {
@@ -51,7 +55,12 @@ static ERR init_glfw() {
 
 static ERR init_glew() {
 	if (GLEW_OK != glewInit()) return ERR::FAILED_TO_INIT_GLEW;
-	else return ERR::NO_ERR;
+	else {
+		glViewport(0, 0, config::screen::width , config::screen::height);
+		glClearColor(0, 0, 0, 1.0f); 
+
+		return ERR::NO_ERR; 
+	}
 }
 
 static ERR create_window() {
@@ -65,7 +74,7 @@ static ERR create_window() {
 	window = glfwCreateWindow(
 		config::screen::width, 
 		config::screen::height, 
-		"GLEXP", NULL, NULL
+		application::title.c_str(), NULL, NULL
 	);
 
 	if (window == nullptr) return ERR::FAILED_TO_CREATE_WINDOW;
@@ -75,35 +84,29 @@ static ERR create_window() {
 	}
 }
 
-static ERR init_inputs_handling() {
-	// setup keyboard+mouse handling
+// setup keys handling
+static void init_inputs_handling() {
 	glfwSetKeyCallback(window, key_press_handler);
 	glfwSetMouseButtonCallback(window, mouse_click_handling);
 }
 
 ERR init() {
 
-	ASSERT_ERR(init_glfw());
+	models_loader::test_assimp("false.obj");
 
-	// it's ok if its failed to load configs from ini file
-	// we have default configs 
+	ASSERT_APP_INIT(init_glfw());
+
+	// if loading configs from ini failed "it's fine" , we have default configs 
 	config::load_configs_from_file("glexp.ini");
 	
-	ASSERT_ERR(create_window());
+	ASSERT_APP_INIT(create_window());
 
-	ASSERT_ERR(init_inputs_handling());
+	init_inputs_handling();
 
-	ASSERT_ERR(init_inputs_handling());
-
-	ASSERT_ERR(init_glew());
-
-	// setup view port
-	glViewport(0, 0, config::screen::width , config::screen::height);
-	// screen clear color "black"
-	glClearColor(0, 0, 0,1.0f); 
+	ASSERT_APP_INIT(init_glew());
 
 	// load data for shader program
-	init_data_for_shader();
+	init_data_for_shader(); // TODO : change this 
 
 	// setup shader program
 	program = new shader("shaders/shader.vert","shaders/shader.frag");
@@ -148,7 +151,7 @@ ERR run() {
 
 		glfwSwapBuffers(window);
 
-		g_running = (glfwWindowShouldClose(window)) ? false : true;
+		if(glfwWindowShouldClose(window)) g_running = false;
 
 		// fps controll
 		// TODO: make it calculated instead of hard-coded 15ms

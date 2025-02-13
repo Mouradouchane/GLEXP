@@ -7,8 +7,12 @@
 
 enum class ERR : uint16_t {
 	NO_ERR = 0,
-	FAILED_WHILE_ASSERT,
+
+	// assert errors
+	ASSERT_STOP,
+
 	// application errors
+	FAILED_TO_INIT_APPLICATION,
 	FAILED_TO_INIT_GLFW,
 	FAILED_TO_CREATE_WINDOW,
 	FAILED_TO_INIT_GLEW,
