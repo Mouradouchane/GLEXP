@@ -97,3 +97,8 @@ filter("configurations:release_static")
     defines {"NDEBUG"}
     symbols("Off")
     optimize "Off"
+
+
+-- disable few warning related to libs
+disablewarnings( "C26812" ) -- assimp 
+disablewarnings( "C26451" ) -- assimp

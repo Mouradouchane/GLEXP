@@ -92,7 +92,8 @@ static void init_inputs_handling() {
 
 ERR init() {
 
-	models_loader::test_assimp("false.obj");
+	model teapot;
+	model::load_model("./models/teapot.obj", &teapot);
 
 	ASSERT_APP_INIT(init_glfw());
 

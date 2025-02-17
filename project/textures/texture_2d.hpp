@@ -9,6 +9,12 @@
 
 #include "image.hpp"
 
+enum class TEXTURE_TYPE : uint16_t {
+	DEFAULT = 0,
+	DIFFUSE,
+	SPECULAR,
+};
+
 struct texture_parameters {
 	GLint data_type;
 	GLint channel;
@@ -22,6 +28,7 @@ struct texture_parameters {
 class texture_2d {
 public:
 	GLuint id = NULL;
+	TEXTURE_TYPE type = TEXTURE_TYPE::DEFAULT;
 
 	// constructor's
 	texture_2d() = default;

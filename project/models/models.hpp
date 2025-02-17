@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "glew/glew.h"
+#include "errors.hpp"
 #include "gl_buffers.hpp"
 
 /*
@@ -29,20 +30,20 @@ public:
 class model {
 public:
 	std::string name = "unkown";
-	vao handle;
 	std::vector<mesh> mesh;
 
 	// constructor
-	model();
+	model() = default;
+	//model(std::string const& model_file_path , bool load_automatically = true);
+
 	// destructor
 	~model();
 
+	// static methods for models
+	static ERR load_model(
+		std::string const& model_file_path, 
+		model* dest_model_object
+	);
 };
-
-namespace models_loader {
-
-	void test_assimp(std::string const& file_path);
-
-}
 
 #endif

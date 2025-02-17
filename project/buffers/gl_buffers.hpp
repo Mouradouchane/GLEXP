@@ -4,45 +4,69 @@
 #define GL_BUFFERS_HPP
 
 #include <stdint.h>
+#include <initializer_list>
 #include "glew/glew.h"
+#include "glerror_debug.hpp"
+
+struct vbo_data {
+	void*    ptr   = nullptr;
+	uint32_t size  = 0;
+	GLenum   usage = GL_STATIC_DRAW;
+};
+
+struct vbo_layout {
+	GLuint 			index;
+	GLint 			size;
+	GLenum 			type = GL_FLOAT;
+	GLboolean 		normalized = GL_FALSE;
+	GLsizei			stride = 0;
+	const GLvoid*	pointe = nullptr;
+};
 
 class vbo {
-public:
+private:
 	// VBO handle
-	GLuint id; 
+	GLuint id = 0; 
 
+public:
 	// constructor's
 	vbo() = default;
-	vbo(void* data , uint32_t size);
+	vbo(vbo_data data , std::initializer_list<vbo_layout> layouts);
 	// destructor
 	~vbo();
 
 	// methods
-	void bind();
-	void unbind();
+	void bind() const;
+	void unbind() const;
 };
 
 // TODO : implement EBO
-struct ebo {
+class ebo {
+private:
 	// EBO handle 
 	GLuint id; 
 
-	ebo() = default;
+public:
+	ebo();
 	~ebo();
 
-	void bind();
-	void unbind();
+	void bind() const;
+	void unbind() const;
 };
 
-struct vao {
+class vao {
+public :
 	// VAO handle
-	GLuint id; 
-
-	vao() = default;
+	GLuint id = 0; 
+	
+	// constructor
+	vao(bool bind_automatically = false);
+	// destructor
 	~vao();
-	void bind();
-	void unbind();
-};
 
+	// methods 
+	void bind() const;
+	void unbind() const;
+};
 
 #endif
