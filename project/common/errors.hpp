@@ -47,6 +47,7 @@ enum class ERR : uint16_t {
 
 	// models errors
 	FAILED_TO_LOAD_MODEL,
+	FAILED_TO_PROCESS_MODEL,
 	NULLPTR_MODEL_OBJET,
 };
 

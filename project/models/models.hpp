@@ -6,12 +6,35 @@
 #include <string>
 #include <vector>
 #include "glew/glew.h"
+#include "glm.hpp"
 #include "errors.hpp"
 #include "gl_buffers.hpp"
+#include "texture_2d.hpp"
 
-/*
-	TODO : implement MODELS and MESHES
-*/
+typedef glm::vec3 vec3;
+typedef glm::vec2 vec2;
+
+struct vertex {
+	vec3 position;
+	vec3 normal;
+	vec2 texture_coord;
+};
+
+struct mesh_data{
+	std::vector<vertex> vertices;
+	std::vector<uint32_t> indices;
+	std::vector<texture_2d> textures;
+	// constructor's
+	mesh_data() = default;
+	mesh_data(
+		std::vector<vertex>& _vertices, 
+		std::vector<uint32_t>& _indices,
+		std::vector<texture_2d>& _textures
+	);
+	// destructor
+	~mesh_data() = default;
+};
+
 class mesh {
 private:
 	vao VAO;
@@ -19,8 +42,10 @@ private:
 	ebo EBO; 
 
 public:
+	uint32_t indices_size = 0;
 	std::string name = "unkown";
-	 mesh() = default;
+	mesh() = default;
+	mesh(mesh_data* data);
 	~mesh();
 
 	void bind();

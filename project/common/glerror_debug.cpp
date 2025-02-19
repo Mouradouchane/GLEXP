@@ -8,7 +8,11 @@
 #include "glerror_debug.hpp"
 
 void clear_opengl_errors() {
-	while (glGetError() != GL_NO_ERROR);
+	GLenum err = glGetError();
+
+	while ( err != GL_NO_ERROR ) {
+		err = glGetError();
+	}
 }
 
 void handle_opengl_errors(
@@ -16,12 +20,19 @@ void handle_opengl_errors(
 	const char* _function ,
 	const char* _file
 ) {
-	GLenum err;
+	//bool result = false;
+	GLenum err = glGetError();
 
-	while ( (err = glGetError()) != GL_NO_ERROR) {
+	while ( err != GL_NO_ERROR ) {
+		//result = true;
 		// TODO: show messagebox include gl error
-	}
-}
 
+		#ifdef DEBUG
+			__debugbreak();
+		#endif
+		err = glGetError();
+	}
+	// return result;
+}
 
 #endif

@@ -3,82 +3,19 @@
 #ifndef SHADER_CPP
 #define SHADER_CPP
 
+#include <string>
+#include <vector>
+#include <fstream>
+#include <sstream>
+
 #include "globals.hpp"
 #include "shader.hpp"
 
-GLuint EBO = NULL;
-GLuint VBO = NULL;
-GLuint VAO = NULL;
-GLuint UVs = NULL;
+#define MIPMAP_ZERO_LEVEL 0
 
-std::string textures_list[] = {
-	"textures/wall.jpg",
-	"textures/brick.jpg",
-};
-
-std::vector<float> vertices = {
-	//  x      y     z 
-	  -0.5f, -0.5f, 0.0f,
-	   0.5f, -0.5f, 0.0f,
-	   0.0f,  0.5f, 0.0f
-};
-std::vector<uint8_t> indices = { 
-	0, 1, 2 
-};
-std::vector<float> texture_coord = {
-  // u     v
-	0.0f, 0.0f, // lower-left corner
-	1.0f, 0.0f, // lower-right corner
-	0.5f, 1.0f  // top-center corner
-};
-
-std::vector<float> colors = {
-	//  r	 g	   b	 a
-	  0.0f, 0.0f, 1.0f, 1.0f,
-	  0.0f, 1.0f, 0.0f, 1.0f,
-	  1.0f, 0.0f, 0.0f, 1.0f,
-	  1.0f, 0.0f, 1.0f, 1.0f
-};
-
-void init_data_for_shader() { 
-	// create
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-	glGenBuffers(1, &UVs);
-
-	glBindVertexArray(VAO);
-
-	// bind + copy data
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
-	// describe
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
-
-	// ebo setup
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint8_t) * indices.size(), &indices[0], GL_STATIC_DRAW);
-
-	// UVs setup 
-	glBindBuffer(GL_ARRAY_BUFFER, UVs);
-	glBufferData(GL_ARRAY_BUFFER, texture_coord.size() * sizeof(float), &texture_coord[0], GL_STATIC_DRAW);
-	// describe
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(1);
-
-	// unbind 
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	//glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
-}
-
-ERR init_textures() {
-	ERR result = ERR::NO_ERR;
-
-	return result;
-}
+/*
+	TODO : add GL_CHECK to all opengl functions !
+*/
 
 static std::string* load_shader_source_code(
 	std::string const& shader_file_path

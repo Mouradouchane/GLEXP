@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <initializer_list>
+#include <vector>
 #include "glew/glew.h"
 #include "glerror_debug.hpp"
 
@@ -27,17 +28,18 @@ class vbo {
 private:
 	// VBO handle
 	GLuint id = 0; 
+	bool   is_binded = false;
 
 public:
 	// constructor's
 	vbo() = default;
-	vbo(vbo_data data , std::initializer_list<vbo_layout> layouts);
+	vbo(vbo_data data, std::initializer_list<vbo_layout> layouts);
 	// destructor
 	~vbo();
 
 	// methods
-	void bind() const;
-	void unbind() const;
+	void bind();
+	void unbind();
 };
 
 // TODO : implement EBO
@@ -45,28 +47,34 @@ class ebo {
 private:
 	// EBO handle 
 	GLuint id; 
+	bool   is_binded = false;
 
 public:
-	ebo();
+	// constructors
+	ebo() = default;
+	ebo(std::vector<uint32_t> const& indices);
+	// destructor
 	~ebo();
 
-	void bind() const;
-	void unbind() const;
+	void bind();
+	void unbind();
 };
 
 class vao {
 public :
 	// VAO handle
 	GLuint id = 0; 
+	bool   is_binded = false;
 	
 	// constructor
-	vao(bool bind_automatically = false);
+	vao() = default;
+	vao(bool bind_automatically);
 	// destructor
 	~vao();
 
 	// methods 
-	void bind() const;
-	void unbind() const;
+	void bind();
+	void unbind();
 };
 
 #endif

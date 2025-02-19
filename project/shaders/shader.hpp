@@ -4,25 +4,12 @@
 #define SHADER_HPP
 
 #include <string>
-#include <vector>
-#include <fstream>
-#include <sstream>
+#include "glew/glew.h"
 
 #include "assert.hpp"
 #include "errors.hpp"
-
-#include "glew/glew.h"
-#include "glfw/glfw3.h"
 #include "texture_2d.hpp"
 
-#define MSG_SIZE 1024
-#define MIPMAP_ZERO_LEVEL 0
-
-extern GLuint EBO;
-extern GLuint VBO;
-extern GLuint VAO;
-
-// std::string* load_shader_source_code(std::string const& shader_file_path);
 
 // used to represent "vertex shader","fragement shader",...
 struct shader_object{
@@ -34,8 +21,8 @@ struct shader_object{
 class shader {
 
 public:
-	ERR last_error = ERR::NO_ERR;
-	GLuint  id = NULL; // program shader id
+	ERR    last_error = ERR::NO_ERR;
+	GLuint id = NULL; // "shader program" id
 
 	shader(std::string const& shader_code, std::string const& fragement_shader_path);
 	~shader();
@@ -48,9 +35,5 @@ public:
 	void  set_bool(GLint uniform_location, bool value);
 	void set_float(GLint uniform_location, float value);
 };
-
-void init_data_for_shader();
-
-ERR init_textures();
 
 #endif

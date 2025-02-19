@@ -90,10 +90,14 @@ static void init_inputs_handling() {
 	glfwSetMouseButtonCallback(window, mouse_click_handling);
 }
 
-ERR init() {
+model test_model;
+texture_2d test_texutre;
+std::string textures_list[] = {
+	"textures/wall.jpg",
+	"textures/brick.jpg",
+};
 
-	model teapot;
-	model::load_model("./models/teapot.obj", &teapot);
+ERR init() {
 
 	ASSERT_APP_INIT(init_glfw());
 
@@ -106,15 +110,16 @@ ERR init() {
 
 	ASSERT_APP_INIT(init_glew());
 
-	// load data for shader program
-	init_data_for_shader(); // TODO : change this 
+	// TODO : make a loader load "3D models" from file_list
+	model::load_model("./models/cube.obj", &test_model);
 
 	// setup shader program
 	program = new shader("shaders/shader.vert","shaders/shader.frag");
 	if (program->last_error != ERR::NO_ERR) return ERR::FAILED_TO_CREATE_PROGRAM;
 
-	// load textures for shader program
-	if(init_textures() != ERR::NO_ERR) return ERR::FAILED_TO_INIT_TEXTURES;
+	// load textures 
+	// TODO : make texture loader from file_list
+	// if(init_textures() != ERR::NO_ERR) return ERR::FAILED_TO_INIT_TEXTURES;
 
 	return ERR::NO_ERR;
 }
@@ -127,9 +132,8 @@ ERR run() {
 
 	program->use();
 
-	// TODO : make texture objects handle "texture uints"
+	// TODO : make texture or mesh handle "texture uints"
 	glActiveTexture(GL_TEXTURE0);
-
 	// set texture unit
 	GLint sampler = glGetUniformLocation(program->id,"sampler");
 	glUniform1i(sampler, 0);
@@ -144,11 +148,12 @@ ERR run() {
 		glfwPollEvents();
 
 		// rendering
-		glClear(GL_COLOR_BUFFER_BIT);
+		GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
 
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, 0);
-		glBindVertexArray(0);
+		test_model.mesh[0].bind();
+		GL_CHECK(glDrawElements(GL_TRIANGLES, test_model.mesh[0].indices_size , GL_UNSIGNED_INT, 0));
+		//GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
+		test_model.mesh[0].unbind();
 
 		glfwSwapBuffers(window);
 
