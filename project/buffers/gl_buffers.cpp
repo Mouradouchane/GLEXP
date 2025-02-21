@@ -17,7 +17,8 @@ vao::vao(bool bind_automatically) {
 
 // VAO destructor
 vao::~vao() {
-	// TODO : free vao
+	//this->unbind();
+	//GL_CHECK(glDeleteVertexArrays(1, &this->id));
 }
 
 void vao::bind() {
@@ -30,8 +31,10 @@ void vao::unbind() {
 	this->is_binded = false;
 }
 
+
+
 // VBO constructor
-vbo::vbo(vbo_data data, std::initializer_list<vbo_layout> layouts) {
+vbo::vbo(vbo_data data, std::initializer_list<vbo_data_layout> layouts) {
 
 	// generate
 	GL_CHECK( glGenBuffers(1, &this->id) );
@@ -39,8 +42,10 @@ vbo::vbo(vbo_data data, std::initializer_list<vbo_layout> layouts) {
 	GL_CHECK( glBindBuffer(GL_ARRAY_BUFFER, this->id) );
 	// copy
 	GL_CHECK( glBufferData(GL_ARRAY_BUFFER, data.size, data.ptr, data.usage) );
+	
 	// describe  
-	for (vbo_layout const& layout : layouts) {
+	for (vbo_data_layout const& layout : layouts) {
+
 		GL_CHECK( glEnableVertexAttribArray(layout.index) );
 		GL_CHECK( 
 			glVertexAttribPointer(
@@ -49,18 +54,18 @@ vbo::vbo(vbo_data data, std::initializer_list<vbo_layout> layouts) {
 				layout.type, 
 				layout.normalized,
 				layout.stride,
-				layout.pointe
+				layout.pointer
 			) 
 		);
 	}
 	// unbind 
 	GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
 }
 
 // VBO destructor
 vbo::~vbo() {
-	// TODO: free buffer from gpu memory 
+	//this->unbind();
+	//GL_CHECK( glDeleteBuffers(1, &this->id) );
 }
 
 void vbo::bind() {
@@ -72,6 +77,8 @@ void vbo::unbind() {
 	GL_CHECK( glBindBuffer(GL_ARRAY_BUFFER, 0) );
 	this->is_binded = false;
 }
+
+
 
 // EBO constructor
 ebo::ebo(std::vector<uint32_t> const& indices) {
@@ -89,13 +96,15 @@ ebo::ebo(std::vector<uint32_t> const& indices) {
 			GL_STATIC_DRAW
 		)
 	);
+
 	// unbind
 	GL_CHECK(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 
 // EBO destructor
 ebo::~ebo() {
-	// TODO : free ebo
+	//this->unbind();
+	//GL_CHECK( glDeleteBuffers(1, &this->id) );
 }
 
 void ebo::bind(){

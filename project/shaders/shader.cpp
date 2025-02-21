@@ -8,14 +8,10 @@
 #include <fstream>
 #include <sstream>
 
-#include "globals.hpp"
+#include "glerror_debug.hpp"
+#include "assert.hpp"
 #include "shader.hpp"
 
-#define MIPMAP_ZERO_LEVEL 0
-
-/*
-	TODO : add GL_CHECK to all opengl functions !
-*/
 
 static std::string* load_shader_source_code(
 	std::string const& shader_file_path
@@ -66,8 +62,8 @@ static shader_object create_shader(std::string const& shader_code, GLuint shader
 	const char* sc_ptr = shader_code.c_str();
 
 	// compile shader
-	glShaderSource(shader.id, 1, &sc_ptr, NULL);
-	glCompileShader(shader.id);
+	GL_CHECK(glShaderSource(shader.id, 1, &sc_ptr, NULL));
+	GL_CHECK(glCompileShader(shader.id));
 
 	// check for errors*
 	int result;
@@ -87,6 +83,18 @@ static shader_object create_shader(std::string const& shader_code, GLuint shader
 	}
 
 	return shader;
+}
+
+static vertex_shader create_vertex_shader(
+	std::string const& shader_code, GLuint shader_type
+) {
+	return create_shader(shader_code , shader_type);
+}
+
+static fragment_shader create_fragment_shader(
+	std::string const& shader_code, GLuint shader_type
+) {
+	return create_shader(shader_code , shader_type);
 }
 
 shader::shader(
@@ -118,25 +126,25 @@ shader::shader(
 	}
 
 	// create vertex shader
-	shader_object vertex_shader = create_shader(vertex_shader_code[0] , GL_VERTEX_SHADER);
+	vertex_shader vertex_shader_object = create_vertex_shader(vertex_shader_code[0] , GL_VERTEX_SHADER);
 	// check for errors
-	if (vertex_shader.last_error != ERR::NO_ERR) {
+	if (vertex_shader_object.last_error != ERR::NO_ERR) {
 		this->last_error = ERR::FAILED_TO_CREATE_VERTEX_SHADER;
 		return;
 	}
 
 	// create fragment shader
-	shader_object fragment_shader = create_shader(fragement_shader_code[0] , GL_FRAGMENT_SHADER);
+	fragment_shader fragment_shader_object = create_fragment_shader(fragement_shader_code[0] , GL_FRAGMENT_SHADER);
 	// check for errors
-	if (fragment_shader.last_error != ERR::NO_ERR) {
+	if (fragment_shader_object.last_error != ERR::NO_ERR) {
 		this->last_error = ERR::FAILED_TO_CREATE_FRAGMENT_SHADER;
 		return;
 	}
 
 	// link shaders into program
-	glAttachShader(this->id, vertex_shader.id);
-	glAttachShader(this->id, fragment_shader.id);
-	glLinkProgram(this->id);
+	GL_CHECK(glAttachShader(this->id, vertex_shader_object.id));
+	GL_CHECK(glAttachShader(this->id, fragment_shader_object.id));
+	GL_CHECK(glLinkProgram(this->id));
 
 	// check for linking errors
 	int operation_result;
@@ -147,40 +155,41 @@ shader::shader(
 		return;
 	}
 	
-	// delete used resource
+	// delete shaders objects
 	delete vertex_shader_code;
 	delete fragement_shader_code;
 
-	if(glIsShader(vertex_shader.id))   glDeleteShader(vertex_shader.id);
-	if(glIsShader(fragment_shader.id)) glDeleteShader(fragment_shader.id);
-
+	if (glIsShader(vertex_shader_object.id)) {
+		GL_CHECK(glDeleteShader(vertex_shader_object.id));
+	}
+	if (glIsShader(fragment_shader_object.id)) {
+		GL_CHECK(glDeleteShader(fragment_shader_object.id));
+	}
 	this->last_error = ERR::NO_ERR;
 }
 
 shader::~shader() {
-	glDeleteProgram(this->id);
+	GL_CHECK(glDeleteProgram(this->id));
 }
 
 void shader::use() {
-	glUseProgram(this->id);
+	GL_CHECK(glUseProgram(this->id));
 }
 
 GLint shader::get_uniform_location(std::string const& uniform_name) {
-	return glGetUniformLocation( 
-		this->id, uniform_name.c_str()
-	);
+	return glGetUniformLocation( this->id, uniform_name.c_str() );
 }
 
 void shader::set_int(GLint uniform_location, int value) {
-	glUniform1i( uniform_location , value );
+	GL_CHECK(glUniform1i( uniform_location , value ));
 }
 
 void shader::set_bool(GLint uniform_location, bool value) {
-	glUniform1i( uniform_location , (int)value );
+	GL_CHECK(glUniform1i( uniform_location , (int)value ));
 }
 
 void shader::set_float(GLint uniform_location, float value) {
-	glUniform1f( uniform_location, value );
+	GL_CHECK(glUniform1f( uniform_location, value ));
 }
 
 #endif

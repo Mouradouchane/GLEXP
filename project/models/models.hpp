@@ -27,7 +27,7 @@ struct mesh_data{
 	// constructor's
 	mesh_data() = default;
 	mesh_data(
-		std::vector<vertex>& _vertices, 
+		std::vector<vertex>& _vertices,
 		std::vector<uint32_t>& _indices,
 		std::vector<texture_2d>& _textures
 	);
@@ -55,7 +55,7 @@ public:
 class model {
 public:
 	std::string name = "unkown";
-	std::vector<mesh> mesh;
+	std::vector<mesh> meshs;
 
 	// constructor
 	model() = default;

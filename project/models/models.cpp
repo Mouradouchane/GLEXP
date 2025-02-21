@@ -21,7 +21,9 @@ mesh_data::mesh_data(
 
 // model destructor
 model::~model() {
-	// TODO: delete meshes from gpu memory and free model
+	for (mesh const& _mesh : this->meshs) {
+		_mesh.~mesh();
+	}
 }
 
 // mesh destructor
@@ -30,8 +32,9 @@ mesh::~mesh() {
 }
 
 mesh::mesh(mesh_data* data) {
-
+	
 	this->VAO = vao(true);
+
 	this->VBO = vbo(
 		vbo_data{
 			&data->vertices[0] , 
@@ -40,15 +43,17 @@ mesh::mesh(mesh_data* data) {
 		},
 		{ 
 			// vertex layout
-			vbo_layout{0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)0}, 
+			vbo_data_layout{0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)0}, 
 			// normal layout
-			vbo_layout{1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)offsetof(vertex,normal)}, 
+			vbo_data_layout{1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex,normal)}, 
 			// uv layout
-			vbo_layout{2, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (void*)offsetof(vertex,texture_coord)}  
+			vbo_data_layout{2, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex,texture_coord)}  
 		}
 	);
 
 	this->EBO = ebo(data->indices);
+	this->EBO.bind();
+
 	this->indices_size = data->indices.size();
 
 	this->VAO.unbind();
@@ -113,7 +118,7 @@ void process_node(aiNode* node , const aiScene* scene , model* _model) {
 
 		if (data != nullptr) {
 			// mesh model_mesh = mesh(data);
-			_model->mesh.push_back( mesh(data) );
+			_model->meshs.push_back( mesh(data) );
 		}
 
 		delete data;
@@ -137,10 +142,10 @@ ERR model::load_model(
 
 	const aiScene* scene = importer.ReadFile( 
 		model_file_path.c_str(),
-		//aiProcess_CalcTangentSpace       |
+		//aiProcess_CalcTangentSpace     |
 		aiProcess_Triangulate            |
 		aiProcess_JoinIdenticalVertices  |
-		//aiProcess_SortByPType            |
+		//aiProcess_SortByPType          |
 		aiProcess_GenNormals			 |
 		aiProcess_FlipUVs
 	);

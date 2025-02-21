@@ -15,8 +15,9 @@
 #include <chrono>
 #include <thread>
 
-#include "glew/glew.h"
+#define  GLFW_INCLUDE_NONE
 #include "glfw/glfw3.h"
+#include "glew/glew.h"
 
 #include "assert.hpp"
 #include "config.hpp"
@@ -50,6 +51,12 @@ static ERR init_glfw() {
 	primary_monitor = nullptr;
 	monitor_modes   = nullptr;
 
+	// set window hints
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
 	return ERR::NO_ERR;
 }
 
@@ -64,12 +71,7 @@ static ERR init_glew() {
 }
 
 static ERR create_window() {
-	// set window hints
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
+	
 	// create window
 	window = glfwCreateWindow(
 		config::screen::width, 
@@ -79,6 +81,7 @@ static ERR create_window() {
 
 	if (window == nullptr) return ERR::FAILED_TO_CREATE_WINDOW;
 	else {
+		//glewExperimental = GL_TRUE;
 		glfwMakeContextCurrent(window);
 		return ERR::NO_ERR;
 	}
@@ -106,16 +109,18 @@ ERR init() {
 	
 	ASSERT_APP_INIT(create_window());
 
-	init_inputs_handling();
-
 	ASSERT_APP_INIT(init_glew());
 
-	// TODO : make a loader load "3D models" from file_list
-	model::load_model("./models/cube.obj", &test_model);
+	init_inputs_handling();
 
 	// setup shader program
 	program = new shader("shaders/shader.vert","shaders/shader.frag");
-	if (program->last_error != ERR::NO_ERR) return ERR::FAILED_TO_CREATE_PROGRAM;
+	//if (program->last_error != ERR::NO_ERR) return ERR::FAILED_TO_CREATE_PROGRAM;
+
+	std::string opengl_version((const char*)glGetString(GL_VERSION));
+
+	// TODO : make a loader load "3D models" from file_list
+	model::load_model("./models/bunny.obj", &test_model);
 
 	// load textures 
 	// TODO : make texture loader from file_list
@@ -132,7 +137,7 @@ ERR run() {
 
 	program->use();
 
-	// TODO : make texture or mesh handle "texture uints"
+	// TODO : make texture or meshs handle "texture uints"
 	glActiveTexture(GL_TEXTURE0);
 	// set texture unit
 	GLint sampler = glGetUniformLocation(program->id,"sampler");
@@ -150,10 +155,10 @@ ERR run() {
 		// rendering
 		GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
 
-		test_model.mesh[0].bind();
-		GL_CHECK(glDrawElements(GL_TRIANGLES, test_model.mesh[0].indices_size , GL_UNSIGNED_INT, 0));
+		test_model.meshs[0].bind();
+		GL_CHECK(glDrawElements(GL_TRIANGLES, test_model.meshs[0].indices_size , GL_UNSIGNED_INT, 0));
 		//GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
-		test_model.mesh[0].unbind();
+		test_model.meshs[0].unbind();
 
 		glfwSwapBuffers(window);
 
@@ -169,13 +174,12 @@ ERR run() {
 
 void clean_up() {
 
-	// free resource
-	glfwTerminate();
-
-	glfwDestroyWindow(application::window);
-	window = nullptr;
-
+	// delete shaders
 	delete program;
+
+	// free glfw resource
+	glfwTerminate();
+	glfwDestroyWindow(application::window);
 
 	// save changes to files
 

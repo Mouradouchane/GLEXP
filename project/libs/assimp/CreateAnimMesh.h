@@ -56,15 +56,15 @@ namespace Assimp {
 
 /**
  *  Create aiAnimMesh from aiMesh.
- *  @param  mesh            The input mesh to create an animated mesh from.
+ *  @param  meshs            The input meshs to create an animated meshs from.
  *  @param  needPositions   If true, positions will be copied from.
  *  @param  needNormals     If true, normals will be copied from.
  *  @param  needTangents    If true, tangents and bitangents will be copied from.
  *  @param  needColors      If true, colors will be copied from.
  *  @param  needTexCoords   If true, texCoords will be copied from.
- *  @return The new created animated mesh.
+ *  @return The new created animated meshs.
  */
-ASSIMP_API aiAnimMesh *aiCreateAnimMesh(const aiMesh *mesh,
+ASSIMP_API aiAnimMesh *aiCreateAnimMesh(const aiMesh *meshs,
                                         bool needPositions = true,
                                         bool needNormals = true,
                                         bool needTangents = true,

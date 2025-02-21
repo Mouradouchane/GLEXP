@@ -202,9 +202,9 @@ protected:
      *  The output scene must meet the following requirements:<br>
      * <ul>
      * <li>At least a root node must be there, even if its only purpose
-     *     is to reference one mesh.</li>
+     *     is to reference one meshs.</li>
      * <li>aiMesh::mPrimitiveTypes may be 0. The types of primitives
-     *   in the mesh are determined automatically in this case.</li>
+     *   in the meshs are determined automatically in this case.</li>
      * <li>the vertex data is stored in a pseudo-indexed "verbose" format.
      *   In fact this means that every vertex that is referenced by
      *   a face is unique. Or the other way round: a vertex index may
@@ -225,7 +225,7 @@ protected:
      *   texture. </li>
      * </ul>
      * If the AI_SCENE_FLAGS_INCOMPLETE-Flag is <b>not</b> set:<ul>
-     * <li> at least one mesh must be there</li>
+     * <li> at least one meshs must be there</li>
      * <li> there may be no meshes with 0 vertices or faces</li>
      * </ul>
      * This won't be checked (except by the validation step): Assimp will
