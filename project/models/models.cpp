@@ -33,14 +33,12 @@ mesh::~mesh() {
 
 mesh::mesh(mesh_data* data) {
 	
-	this->VAO = vao(true);
-
-	this->VBO = vbo(
-		vbo_data{
+	this->VAO = create_vao(true);
+	
+	this->VBO = create_vbo(
 			&data->vertices[0] , 
 			uint32_t(data->vertices.size() * sizeof(vertex)),
-			GL_STATIC_DRAW
-		},
+			GL_STATIC_DRAW,
 		{ 
 			// vertex layout
 			vbo_data_layout{0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)0}, 
@@ -51,21 +49,24 @@ mesh::mesh(mesh_data* data) {
 		}
 	);
 
-	this->EBO = ebo(data->indices);
-	this->EBO.bind();
-
+	this->EBO = create_ebo( 
+		&data->indices[0], 
+		uint32_t(sizeof(uint32_t)*data->indices.size()), 
+		GL_STATIC_DRAW
+	);
+	//bind_ebo(this->EBO);
 	this->indices_size = data->indices.size();
 
-	this->VAO.unbind();
+	unbind_vao(this->VAO);
 }
 
 void mesh::bind() {
-	this->VAO.bind();
-	this->EBO.bind();
+	bind_vao(this->VAO);
+	bind_ebo(this->EBO);
 }
 void mesh::unbind() {
-	this->EBO.unbind();
-	this->VAO.unbind();
+	bind_ebo(0);
+	bind_vao(0);
 }
 
 mesh_data* process_mesh(aiMesh* mesh , const aiScene* scene) {
@@ -75,7 +76,6 @@ mesh_data* process_mesh(aiMesh* mesh , const aiScene* scene) {
 	mesh_data* data = new mesh_data();
 	// allocate space for mesh data
 	data->vertices = std::vector<vertex>(mesh->mNumVertices);
-	//data->indices  = std::vector<uint32_t>(mesh->mNumFaces);
 
 	// copy vertices 
 	for (uint32_t i = 0; i < mesh->mNumVertices; i++) {

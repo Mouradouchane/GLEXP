@@ -5,15 +5,9 @@
 
 #include <stdint.h>
 #include <initializer_list>
-#include <vector>
 #include "glerror_debug.hpp"
 #include "glew/glew.h"
 
-struct vbo_data {
-	void*    ptr   = nullptr;
-	uint32_t size  = 0;
-	GLenum   usage = GL_STATIC_DRAW;
-};
 
 struct vbo_data_layout {
 	GLuint 			index;
@@ -24,77 +18,31 @@ struct vbo_data_layout {
 	const GLvoid*	pointer = nullptr;
 };
 
-/*
 typedef GLuint vao;
 typedef GLuint vbo;
 typedef GLuint ebo;
 
-namespace bind {
+vao create_vao(bool bind_automatically);
 
-	inline void array_object(vao VAO_ID);
-	inline void buffer_object(vbo VBO_ID);
-	inline void element_object(vbo EBO_ID);
+vbo create_vbo(
+	void* buffer, uint32_t size, GLenum usage,
+	std::initializer_list<vbo_data_layout> layouts
+);
 
-}
+ebo create_ebo(
+	void* buffer, uint32_t size, GLenum usage
+);
 
-namespace unbind {
+void bind_vao(vao VAO_ID);
+void bind_vbo(vbo VBO_ID);
+void bind_ebo(ebo EBO_ID);
 
-	inline void array_object();
-	inline void buffer_object();
-	inline void element_object();
+void unbind_vao(vao VAO_ID);
+void unbind_vbo(vbo VBO_ID);
+void unbind_ebo(ebo EBO_ID);
 
-}
-*/
-
-struct vbo {
-	
-	// VBO handle
-	GLuint id = 0; 
-	bool   is_binded = false;
-
-	// constructor's
-	vbo() = default;
-	vbo(vbo_data data, std::initializer_list<vbo_data_layout> layouts);
-	// destructor
-	~vbo();
-
-	// methods
-	void bind();
-	void unbind();
-};
-
-
-struct ebo {
-	// EBO handle 
-	GLuint id; 
-	bool   is_binded = false;
-
-	// constructors
-	ebo() = default;
-	ebo(std::vector<uint32_t> const& indices);
-	// destructor
-	~ebo();
-
-	void bind();
-	void unbind();
-};
-
-
-struct vao {
-
-	// VAO handle
-	GLuint id = 0; 
-	bool   is_binded = false;
-	
-	// constructor
-	vao() = default;
-	vao(bool bind_automatically);
-	// destructor
-	~vao();
-
-	// methods 
-	void bind();
-	void unbind();
-};
+void delete_vao(vao VAO_ID);
+void delete_vbo(vbo VBO_ID);
+void delete_ebo(ebo EBO_ID);
 
 #endif
