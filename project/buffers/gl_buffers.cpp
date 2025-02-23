@@ -20,14 +20,14 @@ vao create_vao(bool bind_automatically) {
 	return id;
 }
 
- void bind_vao(vao VAO_ID) {
+void bind_vao(vao VAO_ID) {
 	GL_CHECK( glBindVertexArray(VAO_ID) );
 }
- void unbind_vao(vao VAO_ID) {
+void unbind_vao(vao VAO_ID) {
 	GL_CHECK( glBindVertexArray(0) );
 }
 
- void delete_vao(vao VAO_ID) {
+void delete_vao(vao VAO_ID) {
 	if (glIsVertexArray(VAO_ID) == GL_TRUE) {
 		GL_CHECK( glDeleteVertexArrays(1, &VAO_ID) );
 	}
@@ -72,11 +72,11 @@ vbo create_vbo(
 	return id;
 }
 
- void bind_vbo(vbo VBO_ID) {
+void bind_vbo(vbo VBO_ID) {
 	GL_CHECK( glBindBuffer(GL_ARRAY_BUFFER, VBO_ID) );
 }
 
- void unbind_vbo(vbo VBO_ID) {
+void unbind_vbo(vbo VBO_ID) {
 	GLint current_binded_buffer = 0;
 	GL_CHECK(glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &current_binded_buffer));
 	
@@ -85,8 +85,9 @@ vbo create_vbo(
 	}
 }
 
- void delete_vbo(vbo VBO_ID) {
+void delete_vbo(vbo VBO_ID) {
 	if (glIsBuffer(VBO_ID) == GL_TRUE) {
+		unbind_vbo(VBO_ID);
 		GL_CHECK( glDeleteBuffers(1, &VBO_ID) );
 	}
 }
@@ -134,6 +135,7 @@ ebo create_ebo(
 
  void delete_ebo(ebo EBO_ID) {
 	if (glIsBuffer(EBO_ID) == GL_TRUE) {
+		unbind_ebo(EBO_ID);
 		GL_CHECK( glDeleteBuffers(1, &EBO_ID) );
 	}
 }

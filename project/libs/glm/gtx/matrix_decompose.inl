@@ -191,7 +191,7 @@ namespace detail
 		return true;
 	}
 
-	// Recomposes a model matrix from a previously-decomposed matrix
+	// Recomposes a gl_model matrix from a previously-decomposed matrix
 	// http://www.opensource.apple.com/source/WebCore/WebCore-514/platform/graphics/transforms/TransformationMatrix.cpp
 	// https://stackoverflow.com/a/75573092/1047040
 	template <typename T, qualifier Q>

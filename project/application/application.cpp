@@ -137,7 +137,7 @@ ERR run() {
 
 	program->use();
 
-	// TODO : make texture or meshs handle "texture uints"
+	// TODO : make texture or meshes handle "texture uints"
 	glActiveTexture(GL_TEXTURE0);
 	// set texture unit
 	GLint sampler = glGetUniformLocation(program->id,"sampler");
@@ -155,10 +155,10 @@ ERR run() {
 		// rendering
 		GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
 
-		test_model.meshs[0].bind();
-		GL_CHECK(glDrawElements(GL_TRIANGLES, test_model.meshs[0].indices_size , GL_UNSIGNED_INT, 0));
+		test_model.meshes[0].bind();
+		GL_CHECK(glDrawElements(GL_TRIANGLES, test_model.meshes[0].indices_size , GL_UNSIGNED_INT, 0));
 		//GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
-		test_model.meshs[0].unbind();
+		test_model.meshes[0].unbind();
 
 		glfwSwapBuffers(window);
 

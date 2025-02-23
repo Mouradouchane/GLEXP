@@ -5,70 +5,55 @@
 
 #include <string>
 #include <vector>
-#include "glew/glew.h"
-#include "glm.hpp"
 #include "errors.hpp"
-#include "gl_buffers.hpp"
+#include "vectors.hpp"
 #include "texture_2d.hpp"
 
-typedef glm::vec3 vec3;
-typedef glm::vec2 vec2;
+class mesh{
 
-struct vertex {
-	vec3 position;
-	vec3 normal;
-	vec2 texture_coord;
-};
+public:
+	std::string name = "unkown";
 
-struct mesh_data{
 	std::vector<vertex> vertices;
 	std::vector<uint32_t> indices;
 	std::vector<texture_2d> textures;
+
 	// constructor's
-	mesh_data() = default;
-	mesh_data(
+	mesh() = default;
+	mesh(mesh const& mesh) = default;
+	mesh(mesh&& mesh) = default;
+
+	mesh(
+		std::string const& mesh_name,
 		std::vector<vertex>& _vertices,
 		std::vector<uint32_t>& _indices,
 		std::vector<texture_2d>& _textures
 	);
+
 	// destructor
-	~mesh_data() = default;
+	~mesh() = default;
 };
+// class mesh end
 
-class mesh {
-private:
-	vao VAO;
-	vbo VBO;
-	ebo EBO; 
-
-public:
-	uint32_t indices_size = 0;
-	std::string name = "unkown";
-	mesh() = default;
-	mesh(mesh_data* data);
-	~mesh();
-
-	void bind();
-	void unbind();
-};
 
 class model {
-public:
-	std::string name = "unkown";
-	std::vector<mesh> meshs;
 
-	// constructor
+public:
+	ERR last_error = ERR::NO_ERR;
+	std::string name = "unkown";
+	std::vector<mesh*> meshes;
+
+	// constructor's
 	model() = default;
-	//model(std::string const& model_file_path , bool load_automatically = true);
+	model(model const& model) = default;
+	model(model&& model) = default;
 
 	// destructor
 	~model();
-
-	// static methods for models
-	static ERR load_model(
-		std::string const& model_file_path, 
-		model* dest_model_object
-	);
 };
+// class model end
+
+
+ERR load_model(std::string const& model_file_path, model* destination_model);
 
 #endif

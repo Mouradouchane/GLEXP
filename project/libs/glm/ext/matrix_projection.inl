@@ -1,10 +1,10 @@
 namespace glm
 {
 	template<typename T, typename U, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<3, T, Q> projectZO(vec<3, T, Q> const& obj, mat<4, 4, T, Q> const& model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
+	GLM_FUNC_QUALIFIER vec<3, T, Q> projectZO(vec<3, T, Q> const& obj, mat<4, 4, T, Q> const& gl_model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
 	{
 		vec<4, T, Q> tmp = vec<4, T, Q>(obj, static_cast<T>(1));
-		tmp = model * tmp;
+		tmp = gl_model * tmp;
 		tmp = proj * tmp;
 
 		tmp /= tmp.w;
@@ -18,10 +18,10 @@ namespace glm
 	}
 
 	template<typename T, typename U, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<3, T, Q> projectNO(vec<3, T, Q> const& obj, mat<4, 4, T, Q> const& model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
+	GLM_FUNC_QUALIFIER vec<3, T, Q> projectNO(vec<3, T, Q> const& obj, mat<4, 4, T, Q> const& gl_model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
 	{
 		vec<4, T, Q> tmp = vec<4, T, Q>(obj, static_cast<T>(1));
-		tmp = model * tmp;
+		tmp = gl_model * tmp;
 		tmp = proj * tmp;
 
 		tmp /= tmp.w;
@@ -33,19 +33,19 @@ namespace glm
 	}
 
 	template<typename T, typename U, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<3, T, Q> project(vec<3, T, Q> const& obj, mat<4, 4, T, Q> const& model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
+	GLM_FUNC_QUALIFIER vec<3, T, Q> project(vec<3, T, Q> const& obj, mat<4, 4, T, Q> const& gl_model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
 	{
 #		if GLM_CONFIG_CLIP_CONTROL & GLM_CLIP_CONTROL_ZO_BIT
 			return projectZO(obj, model, proj, viewport);
 #		else
-			return projectNO(obj, model, proj, viewport);
+			return projectNO(obj, gl_model, proj, viewport);
 #		endif
 	}
 
 	template<typename T, typename U, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<3, T, Q> unProjectZO(vec<3, T, Q> const& win, mat<4, 4, T, Q> const& model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
+	GLM_FUNC_QUALIFIER vec<3, T, Q> unProjectZO(vec<3, T, Q> const& win, mat<4, 4, T, Q> const& gl_model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
 	{
-		mat<4, 4, T, Q> Inverse = inverse(proj * model);
+		mat<4, 4, T, Q> Inverse = inverse(proj * gl_model);
 
 		vec<4, T, Q> tmp = vec<4, T, Q>(win, T(1));
 		tmp.x = (tmp.x - T(viewport[0])) / T(viewport[2]);
@@ -60,9 +60,9 @@ namespace glm
 	}
 
 	template<typename T, typename U, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<3, T, Q> unProjectNO(vec<3, T, Q> const& win, mat<4, 4, T, Q> const& model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
+	GLM_FUNC_QUALIFIER vec<3, T, Q> unProjectNO(vec<3, T, Q> const& win, mat<4, 4, T, Q> const& gl_model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
 	{
-		mat<4, 4, T, Q> Inverse = inverse(proj * model);
+		mat<4, 4, T, Q> Inverse = inverse(proj * gl_model);
 
 		vec<4, T, Q> tmp = vec<4, T, Q>(win, T(1));
 		tmp.x = (tmp.x - T(viewport[0])) / T(viewport[2]);
@@ -76,12 +76,12 @@ namespace glm
 	}
 
 	template<typename T, typename U, qualifier Q>
-	GLM_FUNC_QUALIFIER vec<3, T, Q> unProject(vec<3, T, Q> const& win, mat<4, 4, T, Q> const& model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
+	GLM_FUNC_QUALIFIER vec<3, T, Q> unProject(vec<3, T, Q> const& win, mat<4, 4, T, Q> const& gl_model, mat<4, 4, T, Q> const& proj, vec<4, U, Q> const& viewport)
 	{
 #		if GLM_CONFIG_CLIP_CONTROL & GLM_CLIP_CONTROL_ZO_BIT
 			return unProjectZO(win, model, proj, viewport);
 #		else
-			return unProjectNO(win, model, proj, viewport);
+			return unProjectNO(win, gl_model, proj, viewport);
 #		endif
 	}
 
