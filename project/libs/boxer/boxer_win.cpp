@@ -1,3 +1,7 @@
+#pragma once 
+
+#ifdef _WIN32
+
 #include <boxer/boxer.h>
 #include <string>
 #ifndef WIN32_LEAN_AND_MEAN
@@ -101,3 +105,5 @@ Selection show(const char* message, const char* title, Style style, Buttons butt
 }
 
 } // namespace boxer
+
+#endif

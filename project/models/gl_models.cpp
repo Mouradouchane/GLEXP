@@ -81,7 +81,7 @@ gl_model::~gl_model() {
 	}
 }
 
-// todo: implement render using shader
+// TODO: implement render using shader
 void gl_model::render(shader const& shader_program) {
 
 }

@@ -73,7 +73,7 @@ IMAGE_ERROR image::free_buffer(){
 	return IMAGE_ERROR::NO_ERR;
 }
 
-IMAGE_ERROR image::load() {
+IMAGE_ERROR image::resource() {
 	int x = 0, y = 0, ch = 0;
 
 	this->data = stbi_load(this->path.c_str(), &x, &y, &ch, 0);

@@ -1,3 +1,7 @@
+#pragma once 
+
+#ifdef __GNUC__
+
 #include <boxer/boxer.h>
 #include <gtk/gtk.h>
 
@@ -87,3 +91,5 @@ Selection show(const char* message, const char* title, Style style, Buttons butt
 }
 
 } // namespace boxer
+
+#endif

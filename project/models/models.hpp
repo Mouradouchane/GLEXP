@@ -9,7 +9,7 @@
 #include "vectors.hpp"
 #include "texture_2d.hpp"
 
-class mesh{
+class mesh {
 
 public:
 	std::string name = "unkown";
@@ -32,6 +32,7 @@ public:
 
 	// destructor
 	~mesh() = default;
+
 };
 // class mesh end
 
@@ -39,7 +40,7 @@ public:
 class model {
 
 public:
-	ERR last_error = ERR::NO_ERR;
+	// ERR last_error = ERR::NO_ERR;
 	std::string name = "unkown";
 	std::vector<mesh*> meshes;
 
@@ -50,10 +51,17 @@ public:
 
 	// destructor
 	~model();
+
+	static ERR load_model(
+		std::string const& model_file_path, 
+		model* model_destination
+	);
+	static ERR load_models(
+		std::vector<std::string> const& models_file_path,
+		std::vector<model>& models_destination
+	);
+
 };
 // class model end
-
-
-ERR load_model(std::string const& model_file_path, model* destination_model);
 
 #endif

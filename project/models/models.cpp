@@ -4,7 +4,7 @@
 #define MODELS_CPP
 
 #include "assimp/Importer.hpp"      // C++ importer interface
-#include "assimp/scene.h"           // Output data structure
+#include "assimp/scene.h"           // Output new_mesh structure
 #include "assimp/postprocess.h"     // Post processing flags
 
 #include "models.hpp"
@@ -12,8 +12,13 @@
 /*
 	few static functions for processing assimp meshes and models
 */
-static void  process_node(aiNode* node, const aiScene* scene, model* model_);
-static mesh* process_mesh(aiMesh* assimp_mesh, const aiScene* scene);
+static mesh* process_mesh(
+	aiMesh* ai_mesh, const aiScene* ai_scene
+);
+static void process_node(
+	aiNode* ai_node, const aiScene* ai_scene, model* p_model
+);
+
 
 /*
 	============== mesh ==============
@@ -42,17 +47,17 @@ model::~model() {
 	}
 }
 
-ERR load_model(
-	std::string const& model_file_path, model* destination_model
+ERR model::load_model(
+	std::string const& model_file_path, model* model_destination
 ){
 
-	if (destination_model == nullptr) {
+	if (model_destination == nullptr) {
 		return ERR::NULLPTR_MODEL_OBJET;
 	}
 	
 	Assimp::Importer importer;
 
-	const aiScene* scene = importer.ReadFile( 
+	const aiScene* ai_scene = importer.ReadFile( 
 		model_file_path.c_str(),
 		//aiProcess_CalcTangentSpace     |
 		aiProcess_Triangulate            |
@@ -62,84 +67,101 @@ ERR load_model(
 		aiProcess_FlipUVs
 	);
 
-	// if importer failed to load file
-	if (scene == nullptr) {
+	// if importer failed to resource file
+	if (ai_scene == nullptr) {
 		// TODO : show error message
 
 		return ERR::FAILED_TO_LOAD_MODEL;
 	}
+
 	// if failed to process model
-	if (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+	if (ai_scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !ai_scene->mRootNode) {
 		// TODO : show error message 
 		std::string assimp_error(importer.GetErrorString());
 
 		return ERR::FAILED_TO_PROCESS_MODEL;
 	}
 
-	// process model by starting from "root node"
-	process_node(scene->mRootNode, scene, destination_model);
+	// process model by starting from "root ai_node"
+	process_node(ai_scene->mRootNode, ai_scene, model_destination);
+
+	return ERR::NO_ERR;
+}
+// function load_model end
+
+// TODO: implement loading multiple models 
+static ERR load_models(
+	std::vector<std::string> const& models_file_path,
+	std::vector<model>& models_destination
+) {
 
 	return ERR::NO_ERR;
 }
 
+/*
+	============== process functions ==============
+*/
 
-mesh* process_mesh(aiMesh* gl_mesh , const aiScene* scene) {
+static mesh* process_mesh(
+	aiMesh* ai_mesh , const aiScene* ai_scene
+) {
+	if (ai_mesh == nullptr) return nullptr;
 
-	if (gl_mesh == nullptr) return nullptr;
-
-	mesh* data = new mesh();
-	// allocate space for gl_mesh data
-	data->vertices = std::vector<vertex>(gl_mesh->mNumVertices);
+	mesh* new_mesh = new mesh();
+	// allocate space for ai_mesh new_mesh
+	new_mesh->vertices = std::vector<vertex>(ai_mesh->mNumVertices);
 
 	// copy vertices 
-	for (uint32_t i = 0; i < gl_mesh->mNumVertices; i++) {
+	for (uint32_t i = 0; i < ai_mesh->mNumVertices; i++) {
 
-		data->vertices[i].position = vec3(
-			gl_mesh->mVertices[i].x, gl_mesh->mVertices[i].y, gl_mesh->mVertices[i].z
+		new_mesh->vertices[i].position = vec3(
+			ai_mesh->mVertices[i].x, ai_mesh->mVertices[i].y, ai_mesh->mVertices[i].z
 		);
-		data->vertices[i].normal = vec3(
-			gl_mesh->mNormals[i].x, gl_mesh->mNormals[i].y, gl_mesh->mNormals[i].z
+		new_mesh->vertices[i].normal = vec3(
+			ai_mesh->mNormals[i].x, ai_mesh->mNormals[i].y, ai_mesh->mNormals[i].z
 		);
 
-		if (gl_mesh->mTextureCoords[0]) {
-			data->vertices[i].texture_coord = vec2(
-				gl_mesh->mTextureCoords[0][i].x , gl_mesh->mTextureCoords[0][i].y
+		if (ai_mesh->mTextureCoords[0]) {
+
+			new_mesh->vertices[i].texture_coord = vec2(
+				ai_mesh->mTextureCoords[0][i].x , ai_mesh->mTextureCoords[0][i].y
 			);
 		}
 	}
 
 	// copy indices
-	for(uint32_t i = 0; i < gl_mesh->mNumFaces; i++){
-		aiFace face = gl_mesh->mFaces[i];
+	for(uint32_t i = 0; i < ai_mesh->mNumFaces; i++){
+		aiFace face = ai_mesh->mFaces[i];
 		for (uint32_t j = 0; j < face.mNumIndices; j++) {
-			data->indices.push_back(face.mIndices[j]);
+			new_mesh->indices.push_back(face.mIndices[j]);
 		}
 	}
 
-	// TODO : process material 
+	// TODO: process material 
 
-	return data;
+	return new_mesh;
 }
 
 static void process_node(
-	aiNode* node, const aiScene* scene, model* model_
+	aiNode* ai_node, const aiScene* ai_scene, model* p_model
 ){
 
-	if (node == nullptr) return;
+	if (ai_node == nullptr) return;
 
-	// process current mesh in node
-	for (uint32_t i = 0; i < node->mNumMeshes; i++) {
-		aiMesh* _mesh = scene->mMeshes[ node->mMeshes[i] ];
-		mesh* data = process_mesh(_mesh, scene);
+	// process current mesh in ai_node
+	for (uint32_t i = 0; i < ai_node->mNumMeshes; i++) {
 
-		if (data != nullptr) {
-			model_->meshes.push_back(data);
+		aiMesh* ai_mesh = ai_scene->mMeshes[ ai_node->mMeshes[i] ];
+		mesh*  new_mesh = process_mesh(ai_mesh, ai_scene);
+
+		if (new_mesh != nullptr) {
+			p_model->meshes.push_back(new_mesh);
 		}
-
 	}
-	// process current node childern nodes
-	for (uint32_t i = 0; i < node->mNumChildren; i++) {
-		process_node(node->mChildren[i], scene, model_);
+
+	// process current ai_node childern nodes
+	for (uint32_t i = 0; i < ai_node->mNumChildren; i++) {
+		process_node(ai_node->mChildren[i], ai_scene, p_model);
 	}
 
 }

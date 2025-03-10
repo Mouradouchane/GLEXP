@@ -359,7 +359,7 @@ ASSIMP_API aiBool aiIsExtensionSupported(
 /** Get a list of all file extensions supported by ASSIMP.
  *
  * If a file extension is contained in the list this does, of course, not
- * mean that ASSIMP is able to load all files with this extension.
+ * mean that ASSIMP is able to resource all files with this extension.
  * @param szOut String to receive the extension list.
  * Format of the list: "*.3ds;*.obj;*.dae". NULL is not a valid parameter.
  */

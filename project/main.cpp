@@ -8,7 +8,7 @@ int APIENTRY wWinMain(
     _In_     int       n_cmd_show
 ){
 
-    ASSERT(application::init());
+    ASSERT_ERR(application::init());
 
     application::run();
 

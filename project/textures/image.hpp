@@ -40,7 +40,7 @@ public:
 	~image();
 
 	// functions
-	IMAGE_ERROR load();
+	IMAGE_ERROR resource();
 	const uint8_t* buffer() const;
 
 	const std::string* get_name() const;

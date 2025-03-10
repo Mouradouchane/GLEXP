@@ -34,6 +34,7 @@ public:
 
 	// functions
 	void render(shader const& shader_program);
+
 	// todo: maybe we dont need bind/unbind
 	void bind();
 	void unbind();
@@ -54,9 +55,7 @@ public:
 
 	// render all meshes with same "shader program"
 	void render(shader const& shader_program);
-
 };
 // class gl_model end 
-
 
 #endif

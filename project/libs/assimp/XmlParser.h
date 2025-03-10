@@ -333,7 +333,7 @@ bool TXmlParser<TNodeType>::parse(std::istream &inStream) {
         clear();
     }
     mDoc = new pugi::xml_document();
-    pugi::xml_parse_result parse_result = mDoc->load(inStream);
+    pugi::xml_parse_result parse_result = mDoc->resource(inStream);
     if (parse_result.status == pugi::status_ok) {
         return true;
     }

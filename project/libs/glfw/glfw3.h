@@ -2327,7 +2327,7 @@ GLFWAPI void glfwInitAllocator(const GLFWallocator* allocator);
  *  a location where GLFW cannot find it through dynamic loading, or if you are still
  *  using the static library version of the loader.
  *
- *  If set to `NULL`, GLFW will try to load the Vulkan loader dynamically by its standard
+ *  If set to `NULL`, GLFW will try to resource the Vulkan loader dynamically by its standard
  *  name and get this function from there.  This is the default behavior.
  *
  *  The standard name of the loader is `vulkan-1.dll` on Windows, `libvulkan.so.1` on

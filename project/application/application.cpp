@@ -21,12 +21,13 @@
 
 #include "assert.hpp"
 #include "config.hpp"
+#include "glerror_debug.hpp"
 #include "globals.hpp"
 #include "inputs.hpp"
 #include "texture_2d.hpp"
 #include "shader.hpp"
-
 #include "models.hpp"
+#include "resource_manager.hpp"
 
 namespace application {
 
@@ -93,8 +94,11 @@ static void init_inputs_handling() {
 	glfwSetMouseButtonCallback(window, mouse_click_handling);
 }
 
-model test_model;
+// few objects for testing only
+std::vector<model> models;
+model	   test_model;
 texture_2d test_texutre;
+
 std::string textures_list[] = {
 	"textures/wall.jpg",
 	"textures/brick.jpg",
@@ -119,10 +123,21 @@ ERR init() {
 
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
 
-	// TODO : make a loader load "3D models" from file_list
-	model::load_model("./models/bunny.obj", &test_model);
+	// TODO : make a loader resource "3D models" from file_list
 
-	// load textures 
+	// TODO : check this way of loading resources
+	ASSERT_ERR(resource::load_resource_list("./resources.ini"));
+
+	std::vector<std::string> models_path_list;
+	ASSERT_ERR(
+		resource::load_paths_list_from_file("./models_list.ini", models_path_list)
+	);
+
+	ASSERT_ERR(
+		resource::load_models(models_path_list, models)
+	);
+
+	// resource textures 
 	// TODO : make texture loader from file_list
 	// if(init_textures() != ERR::NO_ERR) return ERR::FAILED_TO_INIT_TEXTURES;
 
@@ -154,11 +169,13 @@ ERR run() {
 
 		// rendering
 		GL_CHECK(glClear(GL_COLOR_BUFFER_BIT));
-
+		
+		/*
 		test_model.meshes[0].bind();
 		GL_CHECK(glDrawElements(GL_TRIANGLES, test_model.meshes[0].indices_size , GL_UNSIGNED_INT, 0));
 		//GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, 3));
 		test_model.meshes[0].unbind();
+		*/
 
 		glfwSwapBuffers(window);
 

@@ -567,7 +567,7 @@ public:
     /** Get a full list of all file extensions supported by ASSIMP.
      *
      * If a file extension is contained in the list this does of course not
-     * mean that ASSIMP is able to load all files with this extension ---
+     * mean that ASSIMP is able to resource all files with this extension ---
      * it simply means there is an importer loaded which claims to handle
      * files with this file extension.
      * @param szOut String to receive the extension list.

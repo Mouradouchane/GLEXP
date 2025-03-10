@@ -96,7 +96,7 @@ AI_FORCE_INLINE bool is_qnan(float in) {
     // the straightforward solution does not work:
     //   return (in != in);
     // compiler generates code like this
-    //   load <in> to <register-with-different-width>
+    //   resource <in> to <register-with-different-width>
     //   compare <register-with-different-width> against <in>
 
     // FIXME: Use <float> stuff instead? I think fpclassify needs C99
@@ -113,7 +113,7 @@ AI_FORCE_INLINE bool is_qnan(double in) {
     // the straightforward solution does not work:
     //   return (in != in);
     // compiler generates code like this
-    //   load <in> to <register-with-different-width>
+    //   resource <in> to <register-with-different-width>
     //   compare <register-with-different-width> against <in>
 
     // FIXME: Use <float> stuff instead? I think fpclassify needs C99

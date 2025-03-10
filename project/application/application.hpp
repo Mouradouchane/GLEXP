@@ -4,6 +4,7 @@
 #define APP_HPP
 
 #include "errors.hpp"
+
 namespace application {
 	
 	ERR  init();
