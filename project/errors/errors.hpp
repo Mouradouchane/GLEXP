@@ -89,6 +89,23 @@ enum class ERR : uint16_t {
 #ifdef DEBUG
 
 	/*
+		THROW ERROR MESSAGE + FORCE EXIT
+	*/
+	#define EXIT_AT_ERR(EXPRESSION , ERROR_MESSAGE) \
+			if(EXPRESSION != ERR::NO_ERR){\
+				display_error_messagebox(\
+					ERROR_MESSAGE," ",__FILE__,__LINE__ \
+				); exit(-1); \
+			}
+
+	#define EXIT_AT_FALSE(EXPRESSION , ERROR_MESSAGE) \
+			if( ! EXPRESSION ){\
+				display_error_messagebox(\
+					ERROR_MESSAGE," ",__FILE__,__LINE__ \
+				); exit(-1); \
+			}
+
+	/*
 		THROW ERROR MESSAGE BOX MACROS
 	*/
 	#define DISPLAY_ERROR( FUNCTION , ERROR_MESSAGE ) \
@@ -118,7 +135,23 @@ enum class ERR : uint16_t {
 			DEBUG_BREAK \
 		}
 
-#else
+#else   /* =========== NONE DEBUG VERSION =========== */
+
+	/*
+		THROW ERROR MESSAGE + FORCE EXIT
+	*/
+	#define EXIT_AT_ERR(EXPRESSION , ERROR_MESSAGE) \
+			if(EXPRESSION != ERR::NO_ERR){ \
+				display_error_messagebox(ERROR_MESSAGE); \
+				exit(-1); \
+			}
+
+	#define EXIT_AT_FALSE(EXPRESSION , ERROR_MESSAGE) \
+			if( ! EXPRESSION ){ \
+				display_error_messagebox(ERROR_MESSAGE); \
+				exit(-1); \
+			}
+
 	/*
 		THROW ERROR MESSAGE BOX MACROS
 	*/

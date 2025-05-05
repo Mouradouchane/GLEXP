@@ -126,7 +126,7 @@ ERR init() {
 	// TODO : make a loader resource "3D models" from file_list
 
 	// TODO : check this way of loading resources
-	ASSERT_ERR(resource::load_resource_list("./resources.ini"));
+	ASSERT_ERR(resource::load_resources("./resources.ini"));
 
 	std::vector<std::string> models_path_list;
 	ASSERT_ERR(
