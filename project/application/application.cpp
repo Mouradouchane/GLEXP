@@ -123,19 +123,8 @@ ERR init() {
 
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
 
-	// TODO : make a loader resource "3D models" from file_list
-
-	// TODO : check this way of loading resources
+	// load resources based on ini file
 	ASSERT_ERR(resource::load_resources("./resources.ini"));
-
-	std::vector<std::string> models_path_list;
-	ASSERT_ERR(
-		resource::load_paths_list_from_file("./models_list.ini", models_path_list)
-	);
-
-	ASSERT_ERR(
-		resource::load_models(models_path_list, models)
-	);
 
 	// resource textures 
 	// TODO : make texture loader from file_list

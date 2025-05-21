@@ -11,6 +11,7 @@
 
 typedef mINI::INIFile ini_file;
 typedef mINI::INIStructure ini_struct;
+typedef mINI::INIMap<std::string> resource_map;
 
 namespace resource {
 
@@ -24,19 +25,41 @@ namespace resource {
 		std::string const& resources_list_file_path
 	);
 	
-	// to load a single model
+	/*
+		functions for loading 1 asset
+	*/
 	ERR load_model(
-		std::string const& file_path
+		std::string const& model_file_path,
+		model* destination
 	);
 
-	// to load a list of models 
+	ERR load_texture( 
+		std::string const& texture_file_path,
+		texture_2d* destination
+	);
+
+	/* 
+	// TODO: implement shaders loading
+	ERR load_shader( 
+		std::string const& shader_file_path,
+		shader* destination
+	);
+	*/
+
+	/*
+		functions for loading multiple assets
+	*/
 	ERR load_models(
-		ini_struct const& resource_ini
+		resource_map const& models_map
 	);
 
-	ERR load_texture(
-		std::string const& file_path,
-		model& dest_texture_object
+	ERR load_textures(
+		resource_map const& textures_map
+	);
+
+	// TODO: implement shaders loading
+	ERR load_shaders(
+		resource_map const& shaders_map
 	);
 
 };

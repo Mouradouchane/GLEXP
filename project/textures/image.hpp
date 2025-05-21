@@ -3,13 +3,8 @@
 #ifndef IMAGE_HPP
 #define IMAGE_HPP
 
+#include "errors.hpp"
 #include <string>
-
-enum class IMAGE_ERROR : uint16_t {
-	NO_ERR,
-	FAILED_TO_LOAD_IMAGE,
-	NULLPTR_IMAGE,
-};
 
 class image {
 
@@ -18,13 +13,13 @@ private:
 	uint8_t* data = nullptr;
 	int channle = -1;
 
-	std::string name = "untitled";
+	std::string name = "no-title";
 	std::string path = "";
 
 	uint16_t width   = 0; 
 	uint16_t height  = 0;
 
-	IMAGE_ERROR last_error = IMAGE_ERROR::NO_ERR;
+	ERR last_error = ERR::NO_ERR;
 	bool loaded = false;
 
 public:
@@ -40,7 +35,7 @@ public:
 	~image();
 
 	// functions
-	IMAGE_ERROR resource();
+	ERR resource();
 	const uint8_t* buffer() const;
 
 	const std::string* get_name() const;
@@ -48,7 +43,7 @@ public:
 	uint16_t get_width() const;
 	uint16_t get_height() const;
 
-	IMAGE_ERROR free_buffer();
+	ERR free_buffer();
 
 };
 

@@ -10,7 +10,10 @@
 	NOTE: if youre not using visual studio , make sure to change __debugbreak 
 	with the one working for your IDE/DEBUGGER
 */ 
-#define DEBUG_BREAK __debugbreak;
+#ifdef DEBUG
+	#include <intrin.h>
+	#define DEBUG_BREAK __debugbreak();
+#endif
 
 /*
 	all the errors is here in ERR enum
@@ -44,6 +47,10 @@ enum class ERR : uint16_t {
 
 	// "files" errors
 	FAILED_TO_LOAD_SHADER_FILE,
+
+	// "images" errors
+	FAILED_TO_LOAD_IMAGE,
+	NULLPTR_IMAGE,
 
 	// "textures" errors
 	FAILED_TO_INIT_TEXTURES,
@@ -84,9 +91,13 @@ enum class ERR : uint16_t {
 	void display_warn_messagebox( std::string const& message );
 #endif
 
-
+#define RET_ERR(EXPRESSION) \
+		if(EXPRESSION != ERR::NO_ERR){\
+			return EXPRESSION;\
+		}
 
 #ifdef DEBUG
+
 
 	/*
 		THROW ERROR MESSAGE + FORCE EXIT

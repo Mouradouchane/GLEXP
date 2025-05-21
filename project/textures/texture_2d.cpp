@@ -6,7 +6,7 @@
 #include "texture_2d.hpp"
 
 /*
-	constructors
+	constructor's
 */
 texture_2d::texture_2d(
 	void* data, 

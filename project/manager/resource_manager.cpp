@@ -5,13 +5,24 @@
 
 #include <vector>
 #include "assert.hpp"
+
+#include "assimp/Importer.hpp"      // C++ importer interface
+#include "assimp/scene.h"           // Output new_mesh structure
+#include "assimp/postprocess.h"     // Post processing flags
+
 #include "resource_manager.hpp"
+
+/*
+	few static functions for processing 3D models and make them ready to use
+*/
+static mesh* process_mesh( aiMesh* ai_mesh, const aiScene* ai_scene );
+static void  process_node( aiNode* ai_node, const aiScene* ai_scene, model* p_model );
 
 namespace resource {
 	
 namespace {
-	std::vector<model>      models;
-	std::vector<texture_2d> textures;
+	std::vector<model>      models(64);
+	std::vector<texture_2d> textures(128);
 	//std::vector<shader>   shaders;
 }
 
@@ -28,54 +39,117 @@ ERR load_ini_file(
 	return ERR::NO_ERR;
 }
 
-ERR load_resources( std::string const& resources_list_file_path ) {
+ERR load_resources( 
+	std::string const& resources_map_file_path 
+){
+	ini_struct resources;
 	
-	ini_struct resource_ini;
-
 	EXIT_AT_ERR(
-		load_ini_file(resources_list_file_path, resource_ini) , 
-		std::string("failed to load: " + resources_list_file_path)
+		load_ini_file(resources_map_file_path, resources) , 
+		std::string("failed to load: " + resources_map_file_path)
 	);
 
+	DEBUG_BREAK;
+
 	// load models
-	if (resource_ini.has("models")) {
-		resource::load_models(resource_ini);
+	if (resources.has("models")) {
+		resource::load_models( resources.get("models") );
 	}
 
 	// load textures 
-	if (resource_ini.has("textures")) {
-		//resource::load_textures(resource_ini);
+	if (resources.has("textures")) {
+		resource::load_textures( resources.get("textures") );
 	}
 	
 	// load shaders
-	if (resource_ini.has("shaders")) {
-		//resource::load_shaders(resource_ini);
+	if (resources.has("shaders")) {
+		//resource::load_shaders( resources.get("shaders") );
 	}
 
 	return ERR::NO_ERR;
 }
 
-// TODO:
-ERR load_model( std::string const& file_path ){
+ERR load_textures(
+	resource_map const& textures_map
+) {
+	DEBUG_BREAK;
 
-	ASSERT_EXP(0);
+	// if textures vector memory not enough 
+	if (textures_map.size() > textures.size()) {
+		textures.resize( 
+			textures.size() + (textures_map.size() - textures.size()) 
+		);
+	}
 
 	return ERR::NO_ERR;
 }
 
-// TODO:
-ERR load_models( ini_struct const& resource_ini ) {
+// NOTE: models gonna be in RAM not GPU-MEMORY
+ERR load_model( 
+	std::string const& model_file_path, model* destination 
+){
+	// DEBUG_BREAK;
+	if (destination == nullptr) {
+		return ERR::NULLPTR_MODEL_OBJET;
+	}
 
-	auto const& collection = resource_ini.get("models");
+	Assimp::Importer importer;
 
-	// try to load all the models 
-	for (auto const& itr : collection) {
+	const aiScene* ai_scene = importer.ReadFile( 
+		model_file_path.c_str(),
+		//aiProcess_CalcTangentSpace     |
+		aiProcess_Triangulate            |
+		aiProcess_JoinIdenticalVertices  |
+		//aiProcess_SortByPType          |
+		aiProcess_GenNormals			 |
+		aiProcess_FlipUVs
+	);
 
-		const std::string model_path = itr.first;
-		EXIT_AT_ERR(
-			resource::load_model( model_path ), 
-			std::string("failed to load model: " + model_path) 
-		);
+	// if importer failed to resource file
+	if (ai_scene == nullptr) {
+		return ERR::FAILED_TO_LOAD_MODEL;
+	}
+
+	// if failed to process model
+	if (ai_scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !ai_scene->mRootNode) {
+		// TODO : show error message in game console FUTURE
+		std::string assimp_error(importer.GetErrorString());
+
+		return ERR::FAILED_TO_PROCESS_MODEL;
+	}
+
+	// process model by starting from "root ai_node"
+	process_node(ai_scene->mRootNode, ai_scene, destination);
+
+	return ERR::NO_ERR;
+}
+
+ERR load_models( 
+	resource_map const& models_map 
+){
+	DEBUG_BREAK;
+
+	// if models vector memory not enough 
+	if (models_map.size() > models.size()) {
+		models.resize( models.size() + (models_map.size() - models.size()) );
+	}
+	
+	// loading the models one by one 
+	// TODO: multi-threading models loading later :)
+	uint32_t position = 0;
+	for (auto const& itr : models_map) {
+
+		const std::string model_path = itr.second;
+
+		RET_ERR(resource::load_model(model_path, &resource::models[position]));
+		resource::models[position].name = itr.first;
+
+		// if models vector need resize
+		if (position >= models.size()) {
+			models.resize( models.size() + size_t(models.size() * 0.5));
+		}
+
+		position += 1;
 	}
 
 	return ERR::NO_ERR;
@@ -84,5 +158,77 @@ ERR load_models( ini_struct const& resource_ini ) {
 
 }
 // namespace resource end
+
+
+/*
+	============== model processing functions ==============
+*/
+
+static mesh* process_mesh(
+	aiMesh* ai_mesh , const aiScene* ai_scene
+) {
+	if (ai_mesh == nullptr) return nullptr;
+
+	mesh* new_mesh = new mesh();
+	// allocate space for ai_mesh new_mesh
+	new_mesh->vertices = std::vector<vertex>(ai_mesh->mNumVertices);
+
+	// copy vertices 
+	for (uint32_t i = 0; i < ai_mesh->mNumVertices; i++) {
+
+		new_mesh->vertices[i].position = vec3(
+			ai_mesh->mVertices[i].x, ai_mesh->mVertices[i].y, ai_mesh->mVertices[i].z
+		);
+		new_mesh->vertices[i].normal = vec3(
+			ai_mesh->mNormals[i].x, ai_mesh->mNormals[i].y, ai_mesh->mNormals[i].z
+		);
+
+		if (ai_mesh->mTextureCoords[0]) {
+
+			new_mesh->vertices[i].texture_coord = vec2(
+				ai_mesh->mTextureCoords[0][i].x , ai_mesh->mTextureCoords[0][i].y
+			);
+		}
+	}
+
+	// copy indices
+	for(uint32_t i = 0; i < ai_mesh->mNumFaces; i++){
+		aiFace face = ai_mesh->mFaces[i];
+		for (uint32_t j = 0; j < face.mNumIndices; j++) {
+			new_mesh->indices.push_back(face.mIndices[j]);
+		}
+	}
+
+	// TODO: process materials
+	
+	// TODO: maybe process textures
+
+	return new_mesh;
+}
+
+static void process_node(
+	aiNode* ai_node, const aiScene* ai_scene, model* p_model
+){
+
+	if (ai_node == nullptr) return;
+
+	// process current mesh in ai_node
+	for (uint32_t i = 0; i < ai_node->mNumMeshes; i++) {
+
+		aiMesh* ai_mesh = ai_scene->mMeshes[ ai_node->mMeshes[i] ];
+		mesh*  new_mesh = process_mesh(ai_mesh, ai_scene);
+
+		if (new_mesh != nullptr) {
+			p_model->meshes.push_back(new_mesh);
+		}
+	}
+
+	// process current ai_node childern nodes
+	for (uint32_t i = 0; i < ai_node->mNumChildren; i++) {
+		process_node(ai_node->mChildren[i], ai_scene, p_model);
+	}
+
+}
+
 
 #endif

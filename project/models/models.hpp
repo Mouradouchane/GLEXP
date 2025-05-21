@@ -52,15 +52,6 @@ public:
 	// destructor
 	~model();
 
-	static ERR load_model(
-		std::string const& model_file_path, 
-		model* model_destination
-	);
-	static ERR load_models(
-		std::vector<std::string> const& models_file_path,
-		std::vector<model>& models_destination
-	);
-
 };
 // class model end
 
