@@ -124,7 +124,7 @@ namespace config {
 		return result;
 	}
 
-	// function to resource default configs in case .ini file is missing or corrupted
+	// function to load_image default configs in case .ini file is missing or corrupted
 	void reset_all_configs_to_default() {
 
 		// screen

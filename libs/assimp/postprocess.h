@@ -160,7 +160,7 @@ enum aiPostProcessSteps
     /** <hr>Generates normals for all faces of all meshes.
      *
      * This is ignored if normals are already there at the time this flag
-     * is evaluated. Model importers try to resource them from the source file, so
+     * is evaluated. Model importers try to load_image them from the source file, so
      * they're usually already there. Face normals are shared between all points
      * of a single face, so a single point can have multiple normals, which
      * forces the library to duplicate vertices in some cases.
@@ -174,7 +174,7 @@ enum aiPostProcessSteps
     /** <hr>Generates smooth normals for all vertices in the mesh.
     *
     * This is ignored if normals are already there at the time this flag
-    * is evaluated. Model importers try to resource them from the source file, so
+    * is evaluated. Model importers try to load_image them from the source file, so
     * they're usually already there.
     *
     * This flag may not be specified together with
@@ -629,7 +629,7 @@ enum aiPostProcessSteps
 /** @def aiProcessPreset_TargetRealtime_Fast
  *  @brief Default postprocess configuration optimizing the data for real-time rendering.
  *
- *  Applications would want to use this preset to resource models on end-user PCs,
+ *  Applications would want to use this preset to load_image models on end-user PCs,
  *  maybe for direct use in game.
  *
  * If you're using DirectX, don't forget to combine this value with

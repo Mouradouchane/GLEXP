@@ -13,27 +13,11 @@ image::image(
 	std::string const& image_name, 
 	bool load_image_automatically
 ){
+	this->name = image_name;
+	this->path = image_path;
 
-	if (!load_image_automatically) {
-		this->name = image_name;
-		this->path = image_path;
-	}
-	else {
-
-		int x = 0, y = 0, ch = 0;
-		this->data = stbi_load(image_path.c_str(), &x, &y, &ch, 0);
-
-		if (this->data == nullptr) {
-			this->last_error = ERR::FAILED_TO_LOAD_IMAGE;
-			return;
-		}
-
-		this->width  = uint16_t(x);
-		this->height = uint16_t(y);
-		this->channle = ch;
-
-		this->loaded = true;
-		this->last_error = ERR::NO_ERR;
+	if (load_image_automatically) {
+		this->load_image();
 	}
 
 }
@@ -41,6 +25,14 @@ image::image(
 /*
 	class functions
 */
+
+bool image::is_loaded() {
+	return this->loaded;
+}
+
+ERR image::get_last_error() {
+	return this->last_error;
+}
 
 const uint8_t* image::buffer() const{
 	return this->data;
@@ -77,7 +69,7 @@ ERR image::free_buffer(){
 	return ERR::NO_ERR;
 }
 
-ERR image::resource() {
+ERR image::load_image() {
 	int x = 0, y = 0, ch = 0;
 
 	this->data = stbi_load(this->path.c_str(), &x, &y, &ch, 0);
@@ -102,6 +94,7 @@ image::~image() {
 
 	if (this->data != nullptr) {
 		stbi_image_free(this->data);
+		this->loaded = false;
 		this->data = nullptr;
 	}
 }

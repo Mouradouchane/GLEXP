@@ -353,7 +353,7 @@ public: // static utilities
      *  @param data Output buffer to be resized and filled with the
      *   converted text file data. The buffer is terminated with
      *   a binary 0.
-     *  @param mode Whether it is OK to resource empty text files. */
+     *  @param mode Whether it is OK to load_image empty text files. */
     static void TextFileToBuffer(
             IOStream *stream,
             std::vector<char> &data,

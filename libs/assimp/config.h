@@ -794,7 +794,7 @@ enum aiComponent
 #define AI_CONFIG_IMPORT_MDL_HL1_READ_MISC_GLOBAL_INFO "IMPORT_MDL_HL1_READ_MISC_GLOBAL_INFO"
 
 // ---------------------------------------------------------------------------
-/** Smd resource multiple animations
+/** Smd load_image multiple animations
  *
  *  Property type: bool. Default value: true.
  */
@@ -857,7 +857,7 @@ enum aiComponent
  *    Quake player models.
  *
  * These models usually consist of 3 files, lower.md3, upper.md3 and
- * head.md3. If this property is set to true, Assimp will try to resource and
+ * head.md3. If this property is set to true, Assimp will try to load_image and
  * combine all three files if one of them is loaded.
  * Property type: bool. Default value: true.
  */
@@ -865,7 +865,7 @@ enum aiComponent
     "IMPORT_MD3_HANDLE_MULTIPART"
 
 // ---------------------------------------------------------------------------
-/** @brief  Tells the MD3 loader which skin files to resource.
+/** @brief  Tells the MD3 loader which skin files to load_image.
  *
  * When loading MD3 files, Assimp checks whether a file
  * [md3_file_name]_[skin_name].skin is existing. These files are used by
@@ -877,7 +877,7 @@ enum aiComponent
     "IMPORT_MD3_SKIN_NAME"
 
 // ---------------------------------------------------------------------------
-/** @brief  Specify if to try resource Quake 3 shader files. This also controls
+/** @brief  Specify if to try load_image Quake 3 shader files. This also controls
  *  original surface name handling: when disabled it will be used unchanged.
  *
  * Property type: bool. Default value: true.
@@ -904,9 +904,9 @@ enum aiComponent
     "IMPORT_MD3_SHADER_SRC"
 
 // ---------------------------------------------------------------------------
-/** @brief  Configures the LWO loader to resource just one layer from the model.
+/** @brief  Configures the LWO loader to load_image just one layer from the model.
  *
- * LWO files consist of layers and in some cases it could be useful to resource
+ * LWO files consist of layers and in some cases it could be useful to load_image
  * only one of them. This property can be either a string - which specifies
  * the name of the layer - or an integer - the index of the layer. If the
  * property is not set the whole LWO model is loaded. Loading fails if the
@@ -918,7 +918,7 @@ enum aiComponent
     "IMPORT_LWO_ONE_LAYER_ONLY"
 
 // ---------------------------------------------------------------------------
-/** @brief  Configures the MD5 loader to not resource the MD5ANIM file for
+/** @brief  Configures the MD5 loader to not load_image the MD5ANIM file for
  *  a MD5MESH file automatically.
  *
  * The default strategy is to look for a file with the same name but the

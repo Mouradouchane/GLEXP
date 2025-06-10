@@ -13,7 +13,7 @@ mesh::mesh(
 	std::string const& mesh_name,
 	std::vector<vertex>& _vertices,
 	std::vector<uint32_t>& _indices,
-	std::vector<texture_2d>& _textures
+	std::vector<texture>& _textures
 ) {
 	this->name     = std::string(mesh_name);
 	this->vertices = _vertices;

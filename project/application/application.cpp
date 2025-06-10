@@ -24,7 +24,7 @@
 #include "glerror_debug.hpp"
 #include "globals.hpp"
 #include "inputs.hpp"
-#include "texture_2d.hpp"
+#include "texture.hpp"
 #include "shader.hpp"
 #include "models.hpp"
 #include "resource_manager.hpp"
@@ -97,7 +97,7 @@ static void init_inputs_handling() {
 // few objects for testing only
 std::vector<model> models;
 model	   test_model;
-texture_2d test_texutre;
+texture test_texutre;
 
 std::string textures_list[] = {
 	"textures/wall.jpg",
@@ -124,9 +124,9 @@ ERR init() {
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
 
 	// load resources based on ini file
-	ASSERT_ERR(resource::load_resources("./resources.ini"));
+	ASSERT_ERR(load_image::load_resources("./resources.ini"));
 
-	// resource textures 
+	// load_image textures 
 	// TODO : make texture loader from file_list
 	// if(init_textures() != ERR::NO_ERR) return ERR::FAILED_TO_INIT_TEXTURES;
 
@@ -183,7 +183,7 @@ void clean_up() {
 	// delete shaders
 	delete program;
 
-	// free glfw resource
+	// free glfw load_image
 	glfwTerminate();
 	glfwDestroyWindow(application::window);
 

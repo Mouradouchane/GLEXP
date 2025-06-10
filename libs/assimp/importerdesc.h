@@ -131,7 +131,7 @@ struct aiImporterDesc {
         importers may respond to the same file extension -
         assimp calls all importers in the order in which they
         are registered and each importer gets the opportunity
-        to resource the file until one importer "claims" the file. Apart
+        to load_image the file until one importer "claims" the file. Apart
         from file extension checks, importers typically use
         other methods to quickly reject files (i.e. magic
         words) so this does not mean that common or generic

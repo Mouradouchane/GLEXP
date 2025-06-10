@@ -117,7 +117,7 @@ namespace glm
     /// @see - shear(vec<2, T, Q> const& l_x)
     /// @see - shear(vec<2, T, Q> const& l_y)
     /// @see - shear(vec<2, T, Q> const& l_z)
-    /// @see no resource...
+    /// @see no load_image...
     template <typename T, qualifier Q>
     GLM_FUNC_QUALIFIER mat<4, 4, T, Q> shear(
         mat<4, 4, T, Q> const &m, vec<3, T, Q> const& p, vec<2, T, Q> const &l_x, vec<2, T, Q> const &l_y, vec<2, T, Q> const &l_z);

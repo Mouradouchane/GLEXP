@@ -176,7 +176,7 @@ RECENT REVISION HISTORY:
 // If image loading fails for any reason, the return value will be NULL,
 // and *x, *y, *channels_in_file will be unchanged. The function
 // stbi_failure_reason() can be queried for an extremely brief, end-user
-// unfriendly explanation of why the resource failed. Define STBI_NO_FAILURE_STRINGS
+// unfriendly explanation of why the load_image failed. Define STBI_NO_FAILURE_STRINGS
 // to avoid compiling these strings at all, and STBI_FAILURE_USERMSG to get slightly
 // more user-friendly ones.
 //
@@ -201,10 +201,10 @@ RECENT REVISION HISTORY:
 // Additionally, stb_image will reject image files that have any of their
 // dimensions set to a larger value than the configurable STBI_MAX_DIMENSIONS,
 // which defaults to 2**24 = 16777216 pixels. Due to the above memory limit,
-// the only way to have an image with such dimensions resource correctly
+// the only way to have an image with such dimensions load_image correctly
 // is for it to have a rather extreme aspect ratio. Either way, the
 // assumption here is that such larger images are likely to be malformed
-// or malicious. If you do need to resource an image with individual dimensions
+// or malicious. If you do need to load_image an image with individual dimensions
 // larger than that, and it still fits in the overall size limit, you can
 // #define STBI_MAX_DIMENSIONS on your own to be something larger.
 //
@@ -279,8 +279,8 @@ RECENT REVISION HISTORY:
 // HDR image support   (disable by defining STBI_NO_HDR)
 //
 // stb_image supports loading HDR images in general, and currently the Radiance
-// .HDR file format specifically. You can still resource any file through the existing
-// interface; if you attempt to resource an HDR file, it will be automatically remapped
+// .HDR file format specifically. You can still load_image any file through the existing
+// interface; if you attempt to load_image an HDR file, it will be automatically remapped
 // to LDR, assuming gamma 2.2 and an arbitrary scale factor defaulting to 1;
 // both of these constants can be reconfigured through this interface:
 //
@@ -295,7 +295,7 @@ RECENT REVISION HISTORY:
 //
 //    float *data = stbi_loadf(filename, &x, &y, &n, 0);
 //
-// If you resource LDR images through this interface, those images will
+// If you load_image LDR images through this interface, those images will
 // be promoted to floating point values, run through the inverse of
 // constants corresponding to the above:
 //
@@ -405,7 +405,7 @@ extern "C" {
 //
 
 //
-// resource image by filename, open file, or memory buffer
+// load_image image by filename, open file, or memory buffer
 //
 
 typedef struct
@@ -1161,7 +1161,7 @@ static void *stbi__load_main(stbi__context *s, int *x, int *y, int *comp, int re
    if (stbi__pic_test(s))  return stbi__pic_load(s,x,y,comp,req_comp, ri);
    #endif
 
-   // then the formats that can end up attempting to resource with just 1 or 2
+   // then the formats that can end up attempting to load_image with just 1 or 2
    // bytes matching expectations; these are prone to false positives, so
    // try them later
    #ifndef STBI_NO_JPEG
@@ -2625,7 +2625,7 @@ static void stbi__idct_simd(stbi_uc *out, int out_stride, short data[64])
    __m128i bias_0 = _mm_set1_epi32(512);
    __m128i bias_1 = _mm_set1_epi32(65536 + (128<<17));
 
-   // resource
+   // load_image
    row0 = _mm_load_si128((const __m128i *) (data + 0*8));
    row1 = _mm_load_si128((const __m128i *) (data + 1*8));
    row2 = _mm_load_si128((const __m128i *) (data + 2*8));
@@ -2796,7 +2796,7 @@ static void stbi__idct_simd(stbi_uc *out, int out_stride, short data[64])
       dct_bfly32o(row3,row4, x3,x4,shiftop,shift); \
    }
 
-   // resource
+   // load_image
    row0 = vld1q_s16(data + 0*8);
    row1 = vld1q_s16(data + 1*8);
    row2 = vld1q_s16(data + 2*8);
@@ -3543,7 +3543,7 @@ static stbi_uc *stbi__resample_row_hv_2_simd(stbi_uc *out, stbi_uc *in_near, stb
    // because we need to handle the filter boundary conditions.
    for (; i < ((w-1) & ~7); i += 8) {
 #if defined(STBI_SSE2)
-      // resource and perform the vertical filtering pass
+      // load_image and perform the vertical filtering pass
       // this uses 3*x + y = 4*x + (y - x)
       __m128i zero  = _mm_setzero_si128();
       __m128i farb  = _mm_loadl_epi64((__m128i *) (in_far + i));
@@ -3586,7 +3586,7 @@ static stbi_uc *stbi__resample_row_hv_2_simd(stbi_uc *out, stbi_uc *in_near, stb
       __m128i outv = _mm_packus_epi16(de0, de1);
       _mm_storeu_si128((__m128i *) (out + i*2), outv);
 #elif defined(STBI_NEON)
-      // resource and perform the vertical filtering pass
+      // load_image and perform the vertical filtering pass
       // this uses 3*x + y = 4*x + (y - x)
       uint8x8_t farb  = vld1_u8(in_far + i);
       uint8x8_t nearb = vld1_u8(in_near + i);
@@ -3702,7 +3702,7 @@ static void stbi__YCbCr_to_RGB_simd(stbi_uc *out, stbi_uc const *y, stbi_uc cons
       __m128i xw = _mm_set1_epi16(255); // alpha channel
 
       for (; i+7 < count; i += 8) {
-         // resource
+         // load_image
          __m128i y_bytes = _mm_loadl_epi64((__m128i *) (y+i));
          __m128i cr_bytes = _mm_loadl_epi64((__m128i *) (pcr+i));
          __m128i cb_bytes = _mm_loadl_epi64((__m128i *) (pcb+i));
@@ -3759,7 +3759,7 @@ static void stbi__YCbCr_to_RGB_simd(stbi_uc *out, stbi_uc const *y, stbi_uc cons
       int16x8_t cb_const1 = vdupq_n_s16(   (short) ( 1.77200f*4096.0f+0.5f));
 
       for (; i+7 < count; i += 8) {
-         // resource
+         // load_image
          uint8x8_t y_bytes  = vld1_u8(y + i);
          uint8x8_t cr_bytes = vld1_u8(pcr + i);
          uint8x8_t cb_bytes = vld1_u8(pcb + i);
@@ -3870,7 +3870,7 @@ static stbi_uc *load_jpeg_image(stbi__jpeg *z, int *out_x, int *out_y, int *comp
    // validate req_comp
    if (req_comp < 0 || req_comp > 4) return stbi__errpuc("bad req_comp", "Internal error");
 
-   // resource a jpeg image from whichever source, but leave in YCbCr format
+   // load_image a jpeg image from whichever source, but leave in YCbCr format
    if (!stbi__decode_jpeg_image(z)) { stbi__cleanup_jpeg(z); return NULL; }
 
    // determine actual number of components to generate
@@ -5937,7 +5937,7 @@ static void *stbi__tga_load(stbi__context *s, int *x, int *y, int *comp, int req
          stbi__getn(s, tga_row, tga_width * tga_comp);
       }
    } else  {
-      //   do I need to resource a palette?
+      //   do I need to load_image a palette?
       if ( tga_indexed)
       {
          if (tga_palette_len == 0) {  /* you have to have at least one entry! */
@@ -5947,7 +5947,7 @@ static void *stbi__tga_load(stbi__context *s, int *x, int *y, int *comp, int req
 
          //   any data to skip? (offset usually = 0)
          stbi__skip(s, tga_palette_start );
-         //   resource the palette
+         //   load_image the palette
          tga_palette = (unsigned char*)stbi__malloc_mad2(tga_palette_len, tga_comp, 0);
          if (!tga_palette) {
             STBI_FREE(tga_data);
@@ -5966,7 +5966,7 @@ static void *stbi__tga_load(stbi__context *s, int *x, int *y, int *comp, int req
                return stbi__errpuc("bad palette", "Corrupt TGA");
          }
       }
-      //   resource the data
+      //   load_image the data
       for (i=0; i < tga_width * tga_height; ++i)
       {
          //   if I'm in RLE mode, do I need to get a RLE stbi__pngchunk?
@@ -5990,7 +5990,7 @@ static void *stbi__tga_load(stbi__context *s, int *x, int *y, int *comp, int req
          //   OK, if I need to read a pixel, do it now
          if ( read_next_pixel )
          {
-            //   resource however much data we did have
+            //   load_image however much data we did have
             if ( tga_indexed )
             {
                // read in index, then perform the lookup
@@ -7058,7 +7058,7 @@ static void *stbi__gif_load(stbi__context *s, int *x, int *y, int *comp, int req
       *x = g.w;
       *y = g.h;
 
-      // moved conversion to after successful resource so that the same
+      // moved conversion to after successful load_image so that the same
       // can be done for multiple frames.
       if (req_comp && req_comp != 4)
          u = stbi__convert_format(u, 4, req_comp, g.w, g.h);
@@ -7849,7 +7849,7 @@ STBIDEF int stbi_is_16_bit_from_callbacks(stbi_io_callbacks const *c, void *user
               remove duplicate typedef
       1.36  (2014-06-03)
               convert to header file single-file library
-              if de-iphone isn't set, resource iphone images color-swapped instead of returning NULL
+              if de-iphone isn't set, load_image iphone images color-swapped instead of returning NULL
       1.35  (2014-05-27)
               various warnings
               fix broken STBI_SIMD path
@@ -7865,8 +7865,8 @@ STBIDEF int stbi_is_16_bit_from_callbacks(stbi_io_callbacks const *c, void *user
       1.31  (2011-06-20)
               a few more leak fixes, bug in PNG handling (SpartanJ)
       1.30  (2011-06-11)
-              added ability to resource files via callbacks to accomidate custom input streams (Ben Wenger)
-              removed deprecated format-specific test/resource functions
+              added ability to load_image files via callbacks to accomidate custom input streams (Ben Wenger)
+              removed deprecated format-specific test/load_image functions
               removed support for installable file formats (stbi_loader) -- would have been broken for IO callbacks anyway
               error cases in bmp and tga give messages and don't leak (Raymond Barbiero, grisha)
               fix inefficiency in decoding 32-bit BMP (David Woo)

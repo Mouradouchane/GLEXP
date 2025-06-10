@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by resource.rc
+// Used by load_image.rc
 //
 //#define IDI_ICON1 100
 #define MAIN_ICON 101

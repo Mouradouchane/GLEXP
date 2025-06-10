@@ -7,7 +7,7 @@
 #include <vector>
 #include "errors.hpp"
 #include "vectors.hpp"
-#include "texture_2d.hpp"
+#include "texture.hpp"
 
 class mesh {
 
@@ -16,7 +16,7 @@ public:
 
 	std::vector<vertex> vertices;
 	std::vector<uint32_t> indices;
-	std::vector<texture_2d> textures;
+	std::vector<texture> textures;
 
 	// constructor's
 	mesh() = default;
@@ -27,7 +27,7 @@ public:
 		std::string const& mesh_name,
 		std::vector<vertex>& _vertices,
 		std::vector<uint32_t>& _indices,
-		std::vector<texture_2d>& _textures
+		std::vector<texture>& _textures
 	);
 
 	// destructor

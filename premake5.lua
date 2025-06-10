@@ -3,7 +3,7 @@
 print('\27[34m' .. "============ BUILDING SOLUTION ============" .. '\27[0m')
  
 build_path = "$(SolutionDir)build"
-libs_path  = "$(SolutionDir)project/libs"
+libs_path  = "$(SolutionDir)libs"
 
 -- workspace/solution setup
 workspace("glexp_workspace") 
@@ -17,6 +17,7 @@ workspace("glexp_workspace")
 bindirs(build_path)
 -- include dirs
 includedirs{ "./project/**" }
+includedirs{ "./libs/**" }
 includedirs{ "./build/**" }
 
 architecture("x64")

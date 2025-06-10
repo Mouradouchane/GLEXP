@@ -102,7 +102,7 @@ shader::shader(
 	std::string const& fragement_shader_path
 ) {
 	
-	// resource shaders source code
+	// load_image shaders source code
 	std::string* vertex_shader_code    = load_shader_source_code(vertex_shader_path);
 	std::string* fragement_shader_code = load_shader_source_code(fragement_shader_path);
 	

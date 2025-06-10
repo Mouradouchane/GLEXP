@@ -3,13 +3,11 @@
 #ifndef RESOURCE_MANAGER_CPP
 #define RESOURCE_MANAGER_CPP
 
-#include <vector>
-#include "assert.hpp"
-
 #include "assimp/Importer.hpp"      // C++ importer interface
 #include "assimp/scene.h"           // Output new_mesh structure
 #include "assimp/postprocess.h"     // Post processing flags
 
+#include "assert.hpp"
 #include "resource_manager.hpp"
 
 /*
@@ -21,9 +19,10 @@ static void  process_node( aiNode* ai_node, const aiScene* ai_scene, model* p_mo
 namespace resource {
 	
 namespace {
-	std::vector<model>      models(64);
-	std::vector<texture_2d> textures(128);
-	//std::vector<shader>   shaders;
+	std::vector<image>    images(128);
+	std::vector<texture>  textures(128);
+	std::vector<model>    models(64);
+    //std::vector<shader> shaders;
 }
 
 ERR load_ini_file(
@@ -39,8 +38,8 @@ ERR load_ini_file(
 	return ERR::NO_ERR;
 }
 
-ERR load_resources( 
-	std::string const& resources_map_file_path 
+ERR load_resources(
+	std::string const& resources_map_file_path
 ){
 	ini_struct resources;
 	
@@ -56,6 +55,11 @@ ERR load_resources(
 		resource::load_models( resources.get("models") );
 	}
 
+	// load images
+	if (resources.has("textures")) {
+		resource::load_textures( resources.get("textures") );
+	}
+
 	// load textures 
 	if (resources.has("textures")) {
 		resource::load_textures( resources.get("textures") );
@@ -65,6 +69,27 @@ ERR load_resources(
 	if (resources.has("shaders")) {
 		//resource::load_shaders( resources.get("shaders") );
 	}
+
+	return ERR::NO_ERR;
+}
+
+
+ERR load_texture(
+	std::string const& texture_file_path,
+	texture* destination
+) {
+	DEBUG_BREAK;
+
+	image _image(texture_file_path , "" , true);
+
+	if (_image.get_last_error() != ERR::NO_ERR) {
+		return ERR::FAILED_TO_LOAD_TEXTURE;
+	}
+	if (_image.buffer() == nullptr) {
+		return ERR::TEXTURE_BUFFER_NULLPTR;
+	}
+
+	*destination = texture( &_image );
 
 	return ERR::NO_ERR;
 }
@@ -79,6 +104,18 @@ ERR load_textures(
 		textures.resize( 
 			textures.size() + (textures_map.size() - textures.size()) 
 		);
+	}
+
+	// TODO: implement multi-threaded loading later
+	size_t position = 0;
+	for (auto const& item : textures_map) {
+
+		ERR result = resource::load_texture(item.second , &resource::textures[position]);
+		
+		if (result != ERR::NO_ERR) {
+			// TODO: display texture loading error in game console
+		}
+		else position += 1;
 	}
 
 	return ERR::NO_ERR;
@@ -105,7 +142,7 @@ ERR load_model(
 		aiProcess_FlipUVs
 	);
 
-	// if importer failed to resource file
+	// if importer failed to load_image file
 	if (ai_scene == nullptr) {
 		return ERR::FAILED_TO_LOAD_MODEL;
 	}
@@ -157,7 +194,9 @@ ERR load_models(
 
 
 }
-// namespace resource end
+/*
+	============== resource namespace end ================
+*/
 
 
 /*

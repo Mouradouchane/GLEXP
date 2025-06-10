@@ -2327,7 +2327,7 @@ GLFWAPI void glfwInitAllocator(const GLFWallocator* allocator);
  *  a location where GLFW cannot find it through dynamic loading, or if you are still
  *  using the static library version of the loader.
  *
- *  If set to `NULL`, GLFW will try to resource the Vulkan loader dynamically by its standard
+ *  If set to `NULL`, GLFW will try to load_image the Vulkan loader dynamically by its standard
  *  name and get this function from there.  This is the default behavior.
  *
  *  The standard name of the loader is `vulkan-1.dll` on Windows, `libvulkan.so.1` on
@@ -3161,7 +3161,7 @@ GLFWAPI void glfwWindowHintString(int hint, const char* value);
  *  @remark @win32 Window creation will fail if the Microsoft GDI software
  *  OpenGL implementation is the only one available.
  *
- *  @remark @win32 If the executable has an icon resource named `GLFW_ICON,` it
+ *  @remark @win32 If the executable has an icon load_image named `GLFW_ICON,` it
  *  will be set as the initial icon for the window.  If no such icon is present,
  *  the `IDI_APPLICATION` icon will be used instead.  To set a different icon,
  *  see @ref glfwSetWindowIcon.

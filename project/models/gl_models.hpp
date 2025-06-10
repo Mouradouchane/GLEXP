@@ -12,7 +12,7 @@
 #include "vectors.hpp"
 #include "errors.hpp"
 #include "gl_buffers.hpp"
-#include "texture_2d.hpp"
+#include "texture.hpp"
 #include "shader.hpp"
 #include "models.hpp"
 

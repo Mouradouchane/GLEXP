@@ -7,13 +7,15 @@
 #include <string>
 #include "ini.h"
 #include "errors.hpp"
+#include "image.hpp"
+#include "texture.hpp"
 #include "models.hpp"
 
 typedef mINI::INIFile ini_file;
 typedef mINI::INIStructure ini_struct;
 typedef mINI::INIMap<std::string> resource_map;
 
-namespace resource {
+namespace resource{
 
 	// load ini structre from file
 	ERR load_ini_file(
@@ -33,35 +35,40 @@ namespace resource {
 		model* destination
 	);
 
-	ERR load_texture( 
-		std::string const& texture_file_path,
-		texture_2d* destination
+	ERR load_image(
+		std::string const& image_file_path ,
+		image* destination
 	);
 
-	/* 
-	// TODO: implement shaders loading
-	ERR load_shader( 
-		std::string const& shader_file_path,
-		shader* destination
+	ERR load_texture( 
+		std::string const& texture_file_path,
+		texture* destination
 	);
-	*/
+
 
 	/*
 		functions for loading multiple assets
 	*/
+
 	ERR load_models(
 		resource_map const& models_map
+	);
+
+	ERR load_images(
+		resource_map const& images_map 
 	);
 
 	ERR load_textures(
 		resource_map const& textures_map
 	);
 
+/* 
 	// TODO: implement shaders loading
-	ERR load_shaders(
-		resource_map const& shaders_map
+	ERR load_shader( 
+	std::string const& shader_file_path,
+	shader* destination
 	);
-
+*/
 };
 
 #endif

@@ -1,14 +1,14 @@
 #pragma once
 
-#ifndef TEXTUER_2D_CPP
-#define TEXTUER_2D_CPP
+#ifndef TEXTUER_CPP
+#define TEXTUER_CPP
 
-#include "texture_2d.hpp"
+#include "texture.hpp"
 
 /*
 	constructor's
 */
-texture_2d::texture_2d(
+texture::texture(
 	void* data, 
 	uint16_t width, 
 	uint16_t height,
@@ -55,8 +55,8 @@ texture_2d::texture_2d(
 
 }
 
-texture_2d::texture_2d(
-	const image* _image , 
+texture::texture(
+	const image* _image	   ,
 	GLint data_type        , 
 	GLint data_format      ,
 	GLint mip_map_levels   ,
@@ -110,7 +110,7 @@ texture_2d::texture_2d(
 /*
 	destructor
 */ 
-texture_2d::~texture_2d() {
+texture::~texture() {
 
 	if (glIsTexture(this->id)) {
 		glDeleteTextures(1, &this->id);
@@ -121,11 +121,11 @@ texture_2d::~texture_2d() {
 	class functions
 */
 
-void texture_2d::bind() {
+void texture::bind() {
 	glBindTexture(GL_TEXTURE_2D, this->id);
 }
 
-void texture_2d::unbind() {
+void texture::unbind() {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -133,7 +133,7 @@ void texture_2d::unbind() {
 	class static functions
 */
 
-void texture_2d::set_parameter_i(
+void texture::set_parameter_i(
 	GLuint textuer_id, GLenum name, GLint value
 ) {
 	glBindTexture(GL_TEXTURE_2D, textuer_id);

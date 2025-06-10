@@ -19,7 +19,7 @@ private:
 	uint16_t width   = 0; 
 	uint16_t height  = 0;
 
-	ERR last_error = ERR::NO_ERR;
+	ERR  last_error = ERR::NO_ERR;
 	bool loaded = false;
 
 public:
@@ -35,7 +35,10 @@ public:
 	~image();
 
 	// functions
-	ERR resource();
+	bool is_loaded();
+	ERR get_last_error();
+
+	ERR load_image();
 	const uint8_t* buffer() const;
 
 	const std::string* get_name() const;

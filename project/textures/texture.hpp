@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef TEXTUER_2D_HPP
-#define TEXTUER_2D_HPP
+#ifndef TEXTUER_HPP
+#define TEXTUER_HPP
 
 #include <string>
 #include "glew/glew.h"
@@ -16,23 +16,23 @@ enum class TEXTURE_TYPE : uint16_t {
 };
 
 struct texture_parameters {
-	GLint data_type;
-	GLint channel;
-	GLint mip_map_levels;
-	GLint wrap_style_x;
-	GLint wrap_style_y;
-	GLint filter_min_style;
-	GLint filter_mag_style;
+	GLint data_type			= GL_UNSIGNED_BYTE;
+	GLint channel			= GL_RGB;
+	GLint mip_map_levels	= 0;
+	GLint wrap_style_x		= GL_REPEAT;
+	GLint wrap_style_y		= GL_REPEAT;
+	GLint filter_min_style	= GL_LINEAR;
+	GLint filter_mag_style	= GL_LINEAR;
 };
 
-class texture_2d {
+class texture {
 public:
 	GLuint id = NULL;
 	TEXTURE_TYPE type = TEXTURE_TYPE::DEFAULT;
 
 	// constructor's
-	texture_2d() = default;
-	texture_2d(
+	texture() = default;
+	texture(
 		void* data, 
 		uint16_t width, 
 		uint16_t height,
@@ -44,7 +44,7 @@ public:
 		GLint min_filtering_style = GL_LINEAR,
 		GLint mag_filtering_style = GL_LINEAR
 	);
-	texture_2d(
+	texture(
 		const image* _image, 
 		GLint data_type        = GL_UNSIGNED_BYTE, 
 		GLint data_format      = GL_RGB,
@@ -55,7 +55,7 @@ public:
 		GLint mag_filtering_style = GL_LINEAR
 	);
 
-	~texture_2d();
+	~texture();
 
 	void bind();
 	void unbind();
