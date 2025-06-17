@@ -4,7 +4,7 @@
 #define VECTORS_HPP
 
 #include "assert.hpp"
-#include "glm.hpp"
+#include "glm/glm.hpp"
 
 #define USE_GLM_VECTORS
 

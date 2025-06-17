@@ -38,6 +38,7 @@ ERR load_ini_file(
 	return ERR::NO_ERR;
 }
 
+// todo change return ERR to "engine status"
 ERR load_resources(
 	std::string const& resources_map_file_path
 ){

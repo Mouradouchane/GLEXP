@@ -3,22 +3,21 @@
 print('\27[34m' .. "============ BUILDING SOLUTION ============" .. '\27[0m')
  
 build_path = "$(SolutionDir)build"
-libs_path  = "$(SolutionDir)libs"
+libs_path   = "$(SolutionDir)libs"
 
 -- workspace/solution setup
 workspace("glexp_workspace") 
     configurations{ 
-        "debug_static" , "debug_dynamic",
-        "release_static", "release_dynamic"
+        "debug" , "release"
     }
-
 
 -- exe output folder
 bindirs(build_path)
+
 -- include dirs
-includedirs{ "./project/**" }
-includedirs{ "./libs/**" }
-includedirs{ "./build/**" }
+includedirs{ "project/**" }
+includedirs{ "libs" }
+--includedirs{ "build/**" }
 
 architecture("x64")
 
@@ -49,18 +48,7 @@ debugging_path = "$(SolutionDir)build"
 
 assimp_dll_lib_path = libs_path.."/assimp/assimp-vc143-mt.lib"
 
-filter("configurations:debug_dynamic")
-    -- libs dirs "dynamic linking"
-    links{ "opengl32.lib" }
-    links{ libs_path.."/glew/glew32.lib" }
-    links{ libs_path.."/glfw/glfw3dll.lib" }
-    links{ assimp_dll_lib_path }
-    targetname "glexp_dx64"
-    defines { "DEBUG" }
-    debugdir(debugging_path)
-    symbols("On")
-
-filter("configurations:release_dynamic")
+filter("configurations:release")
     -- libs dirs "dynamic linking"
     links{ "opengl32.lib" }
     links{ libs_path.."/glew/glew32.lib" }
@@ -72,7 +60,7 @@ filter("configurations:release_dynamic")
     symbols("Off")
     optimize "Off"
 
-filter("configurations:debug_static")
+filter("configurations:debug")
     -- libs dirs "static linking"
     links{ "opengl32.lib" }
     links{ libs_path.."/glew/glew32s.lib" }
@@ -84,21 +72,6 @@ filter("configurations:debug_static")
     debugdir(debugging_path) 
     defines { "DEBUG" }
     symbols("On")
-
-filter("configurations:release_static")
-    -- libs dirs "static linking"
-    links{ "opengl32.lib" }
-    links{ libs_path.."/glew/glew32s.lib" }
-    links{ libs_path.."/glfw/glfw3.lib" }
-    -- TODO : add static assimp for static build
-    links{ assimp_dll_lib_path }
-    targetname "glexp_rx64"
-    defines("GLEW_STATIC") -- for glew static linking
-    debugdir(debugging_path) 
-    defines {"NDEBUG"}
-    symbols("Off")
-    optimize "Off"
-
 
 -- disable few warning related to libs
 disablewarnings( "C26812" ) -- assimp 

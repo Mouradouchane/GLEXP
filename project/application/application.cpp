@@ -124,7 +124,7 @@ ERR init() {
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
 
 	// load resources based on ini file
-	ASSERT_ERR(load_image::load_resources("./resources.ini"));
+	ERR err = resource::load_resources("./resources.ini");
 
 	// load_image textures 
 	// TODO : make texture loader from file_list

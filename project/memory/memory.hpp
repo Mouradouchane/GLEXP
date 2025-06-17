@@ -7,7 +7,11 @@
 #ifndef MEMORY_HPP
 #define MEMORY_HPP
 
+#include "macros.hpp"
 #include <stdint.h>
+
+// macro for using default C++ allocator instead of 
+#define USE_STD_ALLOCATOR
 
 enum class MEMORY_UNIT : uint16_t {
 	BYTE = 1,
@@ -17,8 +21,9 @@ enum class MEMORY_UNIT : uint16_t {
 	// no need for TB or higher :)
 };
 
-// macro for using default C++ allocator instead of 
-#define USE_STD_ALLOCATOR
+// x64 & x32 default pointer type
+typedef uint64_t* ptr_64;
+typedef uint32_t* ptr_32;
 
 namespace memory {
 	

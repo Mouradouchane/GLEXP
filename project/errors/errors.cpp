@@ -5,7 +5,7 @@
 
 #define _WIN32
 #include <thread>
-#include "boxer.h" // https://github.com/aaronmjacobs/Boxer
+#include "boxer/boxer.h" // https://github.com/aaronmjacobs/Boxer
 #include "errors.hpp"
 
 #ifdef DEBUG

@@ -56,5 +56,6 @@ uint64_t total_cpu_memory(MEMORY_UNIT return_value_unit){
 		cpu_memory = 0;
 	}
 
+	return NULL;
 }
 #endif
