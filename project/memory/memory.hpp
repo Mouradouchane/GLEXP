@@ -10,9 +10,6 @@
 #include "macros.hpp"
 #include <stdint.h>
 
-// macro for using default C++ allocator instead of 
-#define USE_STD_ALLOCATOR
-
 enum class MEMORY_UNIT : uint16_t {
 	BYTE = 1,
 	KB,
@@ -36,19 +33,13 @@ namespace memory {
 	*/
 	
 	// to get total cpu memory/ram size
-	uint64_t total_cpu_memory(
-		MEMORY_UNIT return_value_unit = MEMORY_UNIT::MB
-	); 
+	uint64_t ram_size( );
 
 	// to get total free cpu memory/ram
-	uint64_t total_free_cpu_memory(
-		MEMORY_UNIT return_value_unit = MEMORY_UNIT::MB
-	); 
+	uint64_t free_ram( );
 
 	// get sizeof current allocated memory
-	uint64_t total_allocated_cpu_memory(
-		MEMORY_UNIT return_value_unit = MEMORY_UNIT::BYTE
-	);
+	uint64_t allocated_ram( );
 
 } // namespace memory 
 

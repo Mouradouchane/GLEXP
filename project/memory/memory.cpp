@@ -7,13 +7,11 @@
 #include "memory.hpp"
 #include "assert.hpp"
 
-// total cpu memory in BYTE
-static uint64_t cpu_memory = NULL;
+#define HWINFO_IMPORTS
+#include "hwinfo/ram.h"
 
 // total allocated/used cpu memory in BYTE
-static uint64_t used_cpu_memory = NULL;
-// total available/free cpu memory in BYTE
-static uint64_t free_cpu_memory = NULL;
+static uint64_t allocated_size = NULL;
 
 /*
 	memory namespace functions
@@ -21,23 +19,20 @@ static uint64_t free_cpu_memory = NULL;
 
 // todo: implement custom allocation
 void* memory::alloc(size_t size) {
+	
+	// todo : 0byte allocation crash
 
-#ifdef USE_STD_ALLOCATOR
-	void* ptr = new int8_t[size];
-#else
-	// custom allocator not ready
-	ASSERT_EXP(0)
-#endif
+	void* pointer = new int8_t[size];
+	if(pointer) allocated_size += size;
 
-	if(ptr) used_cpu_memory += size;
-
-	return ptr;
+	return pointer;
 }
 
 // todo: implement custom free/delete
 void memory::free(void* pointer , bool is_array ) {
 
 	#ifdef USE_STD_ALLOCATOR
+	if (pointer) allocated_size -= 0;
 		is_array ? delete[] pointer : delete pointer;
 	#else 
 		// custom allocator not ready
@@ -50,12 +45,20 @@ void memory::free(void* pointer , bool is_array ) {
 	few functions for cpu memory
 */
 
-uint64_t total_cpu_memory(MEMORY_UNIT return_value_unit){
+uint64_t memory::ram_size( ){
 
-	if (cpu_memory == NULL) {
-		cpu_memory = 0;
-	}
+	hwinfo::Memory mem = hwinfo::Memory();
+	std::vector<hwinfo::Memory::Module> mdls = mem.modules();
 
-	return NULL;
+	int64_t t = mem.total_Bytes();
+	int64_t f = mem.free_Bytes();
+	int64_t a = mem.available_Bytes();
+
+	return uint64_t( mem.total_Bytes() );
+}
+
+uint64_t memory::free_ram( ) {
+	hwinfo::Memory mem;
+	return uint64_t( mem.free_Bytes() );;
 }
 #endif
