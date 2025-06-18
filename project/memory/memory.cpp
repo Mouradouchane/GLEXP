@@ -4,14 +4,19 @@
 #define MEMORY_CPP
 
 #include "macros.hpp"
-#include "memory.hpp"
 #include "assert.hpp"
+#include "errors.hpp"
+#include "memory.hpp"
 
-#define HWINFO_IMPORTS
-#include "hwinfo/ram.h"
+#ifdef WINDOWS
+	#include <Windows.h>
+#endif
+namespace memory {
+	
+	// total allocated/used cpu memory in BYTE
+	static uint64_t allocated_size = NULL;
 
-// total allocated/used cpu memory in BYTE
-static uint64_t allocated_size = NULL;
+}
 
 /*
 	memory namespace functions
@@ -19,46 +24,44 @@ static uint64_t allocated_size = NULL;
 
 // todo: implement custom allocation
 void* memory::alloc(size_t size) {
+	DEBUG_BREAK;
+	CRASH_AT_FALSE(size , "not allowed zero byte allocation !")
 	
-	// todo : 0byte allocation crash
-
 	void* pointer = new int8_t[size];
-	if(pointer) allocated_size += size;
 
+	CRASH_AT_FALSE( (pointer != nullptr) , "failed to allocate memory");
+	memory::allocated_size += size;
+	
 	return pointer;
 }
 
-// todo: implement custom free/delete
+// todo: free memory based on look_up table
 void memory::free(void* pointer , bool is_array ) {
+	DEBUG_BREAK;
+	CRASH_AT_FALSE( (pointer != nullptr) , "free null-pointer memory not allowed");
 
-	#ifdef USE_STD_ALLOCATOR
-	if (pointer) allocated_size -= 0;
-		is_array ? delete[] pointer : delete pointer;
-	#else 
-		// custom allocator not ready
-		ASSERT_EXP(0)
-	#endif
+	(is_array) ? delete[] pointer : delete pointer;
 
 }
 
-/*
-	few functions for cpu memory
-*/
+memory_info memory::get_cpu_memory_info() {
+	DEBUG_BREAK;
 
-uint64_t memory::ram_size( ){
+#ifdef WINDOWS
+	MEMORYSTATUSEX statex;
+	statex.dwLength = sizeof(statex); 
 
-	hwinfo::Memory mem = hwinfo::Memory();
-	std::vector<hwinfo::Memory::Module> mdls = mem.modules();
+	if (GlobalMemoryStatusEx(&statex)) {
+		return memory_info{
+			statex.ullTotalPhys,
+			statex.ullAvailPhys
+		};
+	}
+	else return memory_info();
+#else
+	ASSERT_EXP(0)
+#endif
 
-	int64_t t = mem.total_Bytes();
-	int64_t f = mem.free_Bytes();
-	int64_t a = mem.available_Bytes();
-
-	return uint64_t( mem.total_Bytes() );
 }
 
-uint64_t memory::free_ram( ) {
-	hwinfo::Memory mem;
-	return uint64_t( mem.free_Bytes() );;
-}
 #endif

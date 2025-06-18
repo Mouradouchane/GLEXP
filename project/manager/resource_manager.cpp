@@ -44,7 +44,7 @@ ERR load_resources(
 ){
 	ini_struct resources;
 	
-	EXIT_AT_ERR(
+	CRASH_AT_ERR(
 		load_ini_file(resources_map_file_path, resources) , 
 		std::string("failed to load: " + resources_map_file_path)
 	);

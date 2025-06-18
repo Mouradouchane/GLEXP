@@ -18,7 +18,12 @@ enum class MEMORY_UNIT : uint16_t {
 	// no need for TB or higher :)
 };
 
-// x64 & x32 default pointer type
+struct memory_info {
+	uint64_t size = NULL;
+	uint64_t free = NULL;
+};
+
+// default 32bit & 64bit pointer type
 typedef uint64_t* ptr_64;
 typedef uint32_t* ptr_32;
 
@@ -28,19 +33,9 @@ namespace memory {
 	void* alloc(size_t size);
 	void  free(void* pointer , bool is_array = false);
 
-	/*
-		few function for cpu memory "RAM"
-	*/
-	
-	// to get total cpu memory/ram size
-	uint64_t ram_size( );
+	// to query RAM information
+	memory_info get_cpu_memory_info();
 
-	// to get total free cpu memory/ram
-	uint64_t free_ram( );
-
-	// get sizeof current allocated memory
-	uint64_t allocated_ram( );
-
-} // namespace memory 
+} // namespace memory
 
 #endif

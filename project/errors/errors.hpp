@@ -106,14 +106,14 @@ enum class ERR : uint16_t {
 	/*
 		THROW ERROR MESSAGE + FORCE EXIT
 	*/
-	#define EXIT_AT_ERR(EXPRESSION , ERROR_MESSAGE) \
+	#define CRASH_AT_ERR(EXPRESSION , ERROR_MESSAGE) \
 			if(EXPRESSION != ERR::NO_ERR){\
 				display_error_messagebox(\
 					ERROR_MESSAGE," ",__FILE__,__LINE__ \
 				); exit(-1); \
 			}
 
-	#define EXIT_AT_FALSE(EXPRESSION , ERROR_MESSAGE) \
+	#define CRASH_AT_FALSE(EXPRESSION , ERROR_MESSAGE) \
 			if( ! EXPRESSION ){\
 				display_error_messagebox(\
 					ERROR_MESSAGE," ",__FILE__,__LINE__ \
@@ -155,13 +155,13 @@ enum class ERR : uint16_t {
 	/*
 		THROW ERROR MESSAGE + FORCE EXIT
 	*/
-	#define EXIT_AT_ERR(EXPRESSION , ERROR_MESSAGE) \
+	#define CRASH_AT_ERR(EXPRESSION , ERROR_MESSAGE) \
 			if(EXPRESSION != ERR::NO_ERR){ \
 				display_error_messagebox(ERROR_MESSAGE); \
 				exit(-1); \
 			}
 
-	#define EXIT_AT_FALSE(EXPRESSION , ERROR_MESSAGE) \
+	#define CRASH_AT_FALSE(EXPRESSION , ERROR_MESSAGE) \
 			if( ! EXPRESSION ){ \
 				display_error_messagebox(ERROR_MESSAGE); \
 				exit(-1); \

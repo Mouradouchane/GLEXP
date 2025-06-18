@@ -50,7 +50,7 @@ objdir(build_path.."/binaries/") -- obj output folder
 debugging_path = "$(SolutionDir)build"
 
 assimp_dll_lib_path = libs_path.."/assimp/assimp-vc143-mt.lib"
-hwinfo_lib_path = libs_path.."/hwinfo/"
+-- hwinfo_lib_path = libs_path.."/hwinfo/"
 
 filter("configurations:release")
     -- libs dirs "dynamic linking"
@@ -59,7 +59,7 @@ filter("configurations:release")
     links{ libs_path.."/glew/glew32.lib" }
     links{ libs_path.."/glfw/glfw3dll.lib" }
 	-- hwinfo
-    links{ hwinfo_lib_path.."hwinfo_ram.lib" }
+    --links{ hwinfo_lib_path.."hwinfo_ram.lib" }
 	-- assimp
     links{ assimp_dll_lib_path }
 	-- release configs
@@ -76,7 +76,7 @@ filter("configurations:debug")
     links{ libs_path.."/glew/glew32s.lib" }
     links{ libs_path.."/glfw/glfw3.lib" }
 	-- hwinfo
-	links{ hwinfo_lib_path.."hwinfo_ram.lib" }
+	-- links{ hwinfo_lib_path.."hwinfo_ram.lib" }
 	-- assimp
     links{ assimp_dll_lib_path }
 	-- debug configs

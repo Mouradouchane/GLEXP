@@ -124,10 +124,6 @@ ERR init() {
 
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
 
-	// just a hwinfo test
-	uint64_t total_ram = memory::ram_size();
-	uint64_t free_ram  = memory::free_ram();
-
 	// load resources based on ini file
 	ERR err = resource::load_resources("./resources.ini");
 
