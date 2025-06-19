@@ -124,6 +124,14 @@ ERR init() {
 
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
 
+	uint64_t* chunk_1 = (uint64_t*)memory::alloc( mb_to_byte(32) );
+	uint64_t* chunk_2 = (uint64_t*)memory::alloc( mb_to_byte(32) );
+	uint64_t* chunk_3 = (uint64_t*)memory::alloc( mb_to_byte(32) );
+	uint64_t* chunk_4 = (uint64_t*)memory::alloc( mb_to_byte(32) );
+
+	memory::free(chunk_1);
+	memory::free(nullptr);
+
 	// load resources based on ini file
 	ERR err = resource::load_resources("./resources.ini");
 
