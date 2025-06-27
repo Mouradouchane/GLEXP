@@ -1,7 +1,9 @@
 #pragma once 
 
 /*
-	general purpose memory allocator + few memory functions
+	- our main "general purpose" memory allocator
+	- used by other custom allocators => heap , pool , arena , ...
+	- few memory functions
 */
 
 #ifndef MEMORY_HPP
@@ -11,44 +13,69 @@
 #include <string>
 #include <stdint.h>
 
-enum class MEMORY_UNIT : uint16_t {
-	BYTE = 1,
-	KB   = 2,
-	MB   = 3,
-	GB   = 4
-	// no need for TB or higher :)
+enum class ALLOC_SECTION : uint8_t {
+	UNKOWN          = 0,
+	GENERAL_PURPOSE = 1,
+	MODELS          = 2,
+	TEXTURES        = 3,
+	AUDIOS          = 4,
+	ANIMATION       = 5,
+	PHYSICS         = 6,
 };
+
+enum class MEMORY_UNIT : uint8_t {
+	BYTE = 0,  KB = 1,  MB = 2,  GB = 3
+};
+
+// few typedefs for usage :)
+typedef void*     ptr;
+typedef uint8_t*  ptr8;
+typedef uint16_t* ptr16;
+typedef uint32_t* ptr32;
+typedef uint64_t* ptr64;
 
 struct memory_info {
 	uint64_t size = NULL;
 	uint64_t free = NULL;
 };
 
-// default 32bit & 64bit pointer type
-typedef uint64_t* ptr_64;
-typedef uint32_t* ptr_32;
-	
-// convert to byte functions
-uint64_t kb_to_byte(size_t KB) noexcept;
-uint64_t mb_to_byte(size_t MB) noexcept;
-uint64_t gb_to_byte(size_t GB) noexcept;
-// to convert byte values
-double byte_to_kb(size_t byte) noexcept;
-double byte_to_mb(size_t byte) noexcept;
-double byte_to_gb(size_t byte) noexcept;
+struct memory_page {
+	uint32_t allocated = NULL; // allocated size
+	uint32_t free      = NULL; // free size
+	uint32_t size      = NULL; // memory size
+	void*    start     = nullptr; // memory start 
+	void*    end       = nullptr; // memory end 
+	void*    seek      = nullptr; // last free position
+	bool     lapped    = false; // true when seek >= end
+	bool     locked    = false; // lock/unlock for multi-threading
+};
 
-std::string pointer_to_hex_string(ptr_64 pointer);
+// convert "KB,MB,GB" to "BYTES" macros
+#define KB_TO_BYTE(KB) uint64_t(KB) * 1024
+#define MB_TO_BYTE(MB) uint64_t(MB) * 1048576
+#define GB_TO_BYTE(GB) uint64_t(GB) * 1073741824
+
+// convert "BYTES" to "KB,MB,GB" macros
+#define BYTE_TO_KB(BYTES) (BYTES/1024.0f)
+#define BYTE_TO_MB(BYTES) (BYTES/1048576.0f)
+#define BYTE_TO_GB(BYTES) (BYTES/1073741824.0f)
+
+std::string pointer_to_hex_string(ptr64 pointer);
 
 namespace memory {
-	
-	void* alloc(size_t size);
+
+	void* alloc(size_t size, ALLOC_SECTION section = ALLOC_SECTION::UNKOWN);
 	void  free(void* pointer);
 
-	uint64_t allocated_memory_size();
+	uint64_t total_size() noexcept;
+	double   total_size_f(MEMORY_UNIT unit) noexcept;
+	uint64_t sizeof_section(ALLOC_SECTION section) noexcept;
+	double   sizeof_section_f(ALLOC_SECTION section , MEMORY_UNIT unit) noexcept;
 
+	// todo : move it away from namespace memory
 	// to query RAM information
 	memory_info get_cpu_memory_info();
 
-} // namespace memory
+} // namespace memory end
 
 #endif
