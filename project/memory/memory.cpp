@@ -45,7 +45,7 @@ namespace memory {
 	memory namespace functions
 */
 
-uint64_t memory::sizeof_section(ALLOC_SECTION section) noexcept {
+uint64_t memory::sizeof_section(allocation_section section) noexcept {
 	uint8_t _section = (uint8_t)section;
 
 	if (_section < sections_sizes.size()) {
@@ -58,7 +58,7 @@ static std::array<uint32_t, 4> memory_factors = {
 	1.0f , 1024.0f , 1048576.0f ,  1073741824.0f
 };
 
-double memory::sizeof_section_f(ALLOC_SECTION section, MEMORY_UNIT unit) noexcept {
+double memory::sizeof_section_f(allocation_section section, memory_unit unit) noexcept {
 	uint8_t _section = (uint8_t)section;
 
 	if (_section < sections_sizes.size()) {
@@ -74,7 +74,7 @@ uint64_t memory::total_size() noexcept {
 	return memory::allocated_size;
 }
 
-double memory::total_size_f(MEMORY_UNIT unit) noexcept {
+double memory::total_size_f(memory_unit unit) noexcept {
 	if ((uint8_t)unit < 4) {
 		return double(memory::allocated_size) / memory_factors[(uint8_t)unit];
 	}
@@ -82,7 +82,7 @@ double memory::total_size_f(MEMORY_UNIT unit) noexcept {
 }
 
 // todo : handle multi-threaded allocations
-void* memory::alloc(size_t size , ALLOC_SECTION section) {
+void* memory::alloc(size_t size , allocation_section section) {
 
 	CRASH_AT_FALSE(size , "memory::alloc zero size allocation not allowed !")
 	

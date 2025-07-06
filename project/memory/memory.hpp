@@ -9,45 +9,27 @@
 #ifndef MEMORY_HPP
 #define MEMORY_HPP
 
-#include "macros.hpp"
 #include <string>
-#include <stdint.h>
+#include "macros.hpp"
+#include "types.hpp"
 
-enum class ALLOC_SECTION : uint8_t {
-	UNKOWN          = 0,
-	GENERAL_PURPOSE = 1,
-	MODELS          = 2,
-	TEXTURES        = 3,
-	AUDIOS          = 4,
-	ANIMATION       = 5,
-	PHYSICS         = 6,
+enum class allocation_section : uint8_t {
+	UNKOWN    = 0,
+	GENERAL   = 1,
+	MODELS    = 2,
+	TEXTURES  = 3,
+	AUDIOS    = 4,
+	ANIMATION = 5,
+	PHYSICS   = 6,
 };
 
-enum class MEMORY_UNIT : uint8_t {
+enum class memory_unit : u8 {
 	BYTE = 0,  KB = 1,  MB = 2,  GB = 3
 };
 
-// few typedefs for usage :)
-typedef void*     ptr;
-typedef uint8_t*  ptr8;
-typedef uint16_t* ptr16;
-typedef uint32_t* ptr32;
-typedef uint64_t* ptr64;
-
 struct memory_info {
-	uint64_t size = NULL;
-	uint64_t free = NULL;
-};
-
-struct memory_page {
-	uint32_t allocated = NULL; // allocated size
-	uint32_t free      = NULL; // free size
-	uint32_t size      = NULL; // memory size
-	void*    start     = nullptr; // memory start 
-	void*    end       = nullptr; // memory end 
-	void*    seek      = nullptr; // last free position
-	bool     lapped    = false; // true when seek >= end
-	bool     locked    = false; // lock/unlock for multi-threading
+	u64 size = NULL;
+	u64 free = NULL;
 };
 
 // convert "KB,MB,GB" to "BYTES" macros
@@ -63,14 +45,14 @@ struct memory_page {
 std::string pointer_to_hex_string(ptr64 pointer);
 
 namespace memory {
-
-	void* alloc(size_t size, ALLOC_SECTION section = ALLOC_SECTION::UNKOWN);
+	
+	void* alloc(size_t size, allocation_section section = allocation_section::UNKOWN);
 	void  free(void* pointer);
 
 	uint64_t total_size() noexcept;
-	double   total_size_f(MEMORY_UNIT unit) noexcept;
-	uint64_t sizeof_section(ALLOC_SECTION section) noexcept;
-	double   sizeof_section_f(ALLOC_SECTION section , MEMORY_UNIT unit) noexcept;
+	double   total_size_f(memory_unit unit) noexcept;
+	uint64_t sizeof_section(allocation_section section) noexcept;
+	double   sizeof_section_f(allocation_section section , memory_unit unit) noexcept;
 
 	// todo : move it away from namespace memory
 	// to query RAM information

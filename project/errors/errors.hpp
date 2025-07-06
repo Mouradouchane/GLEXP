@@ -120,6 +120,12 @@ enum class ERR : uint16_t {
 				); exit(-1); \
 			}
 
+	#define CRASH_AT_TRUE(EXPRESSION , ERROR_MESSAGE) \
+			if( EXPRESSION ){\
+				display_error_messagebox(\
+					ERROR_MESSAGE," ",__FILE__,__LINE__ \
+				); exit(-1); \
+			}
 	/*
 		THROW ERROR MESSAGE BOX MACROS
 	*/
@@ -167,6 +173,11 @@ enum class ERR : uint16_t {
 				exit(-1); \
 			}
 
+	#define CRASH_AT_TRUE(EXPRESSION , ERROR_MESSAGE) \
+			if( EXPRESSION ){ \
+				display_error_messagebox(ERROR_MESSAGE); \
+				exit(-1); \
+			}
 	/*
 		THROW ERROR MESSAGE BOX MACROS
 	*/
