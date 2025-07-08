@@ -26,28 +26,26 @@ struct registry {
 class heap {
 
 private:
-static const u32 minimum_heap_size_allowed = KB_TO_BYTE(1);
-static const u32 maximum_heap_size_allowed = GB_TO_BYTE(1);
+	static const u32 minimum_heap_size_allowed = KB_TO_BYTE(1);
+	static const u32 maximum_heap_size_allowed = GB_TO_BYTE(1);
 
+private:
 	// heap type/usage
 	allocation_section section = allocation_section::UNKOWN;
 	
 	// heap memory variables
-	u32   alloc  = NULL; // sizeof allocated 
-	u32   free   = NULL; // sizeof available
-	u32   size   = NULL; // heap size
+	u32 alloc = NULL; // sizeof allocated 
+	u32 size  = NULL; // heap size
 
 	byte* start  = nullptr; // heap start
 	byte* end    = nullptr; // heap end
-
 	byte* seek   = nullptr; // last free position
-	bool  lapped = false; // true when seek >= end
 
-	bool  locked = false; // for multi-thread
+	bool is_lapped = false; // true when seek >= end
+	bool is_locked = false; // for multi-thread
 	
-	// heap registry lists
-	registry alloc_list;
-	registry free_list;
+	registry alloc_list; // allocated chunks 
+	registry free_list;  // available chunks 
 
 public:
 	// constructor / destructor
@@ -67,8 +65,8 @@ public:
 
 private:
 	// heap private functions
-	bool lock();
-	bool unlock();
+	void lock();
+	void unlock();
 
 	void merge_free_areas();
 

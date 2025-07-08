@@ -15,18 +15,17 @@ heap::heap(
 	DEBUG_BREAK;
 	
 	// few checks first
-	CRASH_AT_FALSE(size, "memory/heap: zero size allocation not allowed !");
+	CRASH_AT_FALSE(size, "memory/heap: zero size_ allocation not allowed !");
 	CRASH_AT_FALSE(size < heap::minimum_heap_size_allowed , "memory/heap: less than 1KB heap is not allowed");
 	CRASH_AT_FALSE(size > heap::maximum_heap_size_allowed , "memory/heap: bigger than 1GB heap is not allowed");
 	CRASH_AT_FALSE(max_allocation, "memory/heap: zero size allocation list in not allowed")
 	
 	// init heap memory 
 	this->size  = size;
-	this->free  = size;
 	this->start = (byte*)memory::alloc(size, heap_usage);
 	this->end   = (byte*)(this->start) + size;
 	this->seek  = this->start;
-	this->section    = heap_usage;
+	this->section = heap_usage;
 
 	// init heap registers
 	alloc_list.list = (register_info*)memory::alloc(sizeof(register_info)*max_allocation , heap_usage);
@@ -45,30 +44,68 @@ heap::~heap() {
 	heap public function's
 */
 
-void* heap::allocate(u32 size) {
+void* heap::allocate(u32 size_) {
 	DEBUG_BREAK;
-	
-	CRASH_AT_FALSE(size , "heap.alloc: 0 size allocation not allowed !");
-	CRASH_AT_TRUE(size > this->free, "heap.alloc: no memory left for allocation !");
-	
 	this->lock();
+	
 	void* pointer = nullptr;
+	u32 free = (this->end - this->seek);
 
-	if (this->lapped) {
-		// do lookup based allocation
-	}
-
-	if ((this->end - this->seek) >= size) {
-		// else do linear based allocation
+	CRASH_AT_FALSE(size_ , "heap.allocate: 0 size_ allocation not allowed !");
+	CRASH_AT_TRUE(size_ > free, "heap.allocate: no memory left for allocation !");
+	
+	// try to do "first-fit" based allocation if seek not lapped
+	if (!this->is_lapped && free >= size_) {
 		pointer = this->seek;
-		this->seek += size;
-	}
-	else {
+		// update heap variables
+		this->seek  += size_;
+		this->alloc += size_;
 		
+		if (this->seek >= this->end) {
+			this->is_lapped = true;
+		}
+
+		// update alloc_list
+		if (alloc_list.range < alloc_list.size) {
+
+		}
+		else CRASH_AT_FALSE(0, "heap.allocate: ");
+		this->unlock();
+		return pointer;
 	}
 
-	this->unlock();
+	// else try to do look-up based allocation
+	if ( 
+		(free_list.size  - free_list.range)  > 1 && 
+		(alloc_list.size - alloc_list.range) > 0 
+	) {
 
+		// o(n) ! linear look_up for free spot 
+		for (u32 i = 0; i < free_list.range; i++) {
+
+			if (free_list.list[i].size >= size_) {
+				register_info chunk = free_list.list[i];
+
+				// both registers need update
+				if (chunk.size > size_) {
+					this->alloc -= (chunk.size - size_);
+
+					// update free_list
+					free_list.list[i].size -= size_;
+
+					// update alloc_list
+					free_list.range += 1;
+					free_list.list[free_list.range] = ;
+				}
+
+				return chunk.pointer;
+			}
+		}
+	}
+
+
+	// no memory left for allocation
+	CRASH_AT_TRUE(0, "heap.allocate: no memory left for allocation !");
 }
 
 // todo: implement deallocation
@@ -79,7 +116,13 @@ void heap::deallocate(void* pointer) {
 
 
 u32 heap::heap_size(memory_unit return_value_unit) noexcept {
-	return this->size;
+	
+	switch (return_value_unit) {
+	case memory_unit::KB:{
+		return BYTE_TO_KB(this->size);
+	}	
+		default: return this->size;
+	}
 }
 
 u32 heap::allocated(memory_unit return_value_unit) noexcept {
@@ -87,25 +130,22 @@ u32 heap::allocated(memory_unit return_value_unit) noexcept {
 }
 
 u32 heap::available(memory_unit return_value_unit) noexcept {
-	return this->free;
+	return this->size - this->alloc;
 }
 
 /*
 	heap private function's
 */ 
 
-bool heap::lock() {
-	if (this->locked) return false;
-
-	this->locked = true;
-	return true;
+// todo : find better solution if possible -> "thread-id lock/unlock maybe"
+// note : this is might be so bad !
+void heap::lock() {
+	while (this->is_locked);
+	this->is_locked = true;
 }
 
-bool heap::unlock() {
-	if (!this->locked) return false;
-
-	this->locked = false;
-	return true;
+void heap::unlock() {
+	this->is_locked = false;
 }
 
 // this function merge deallocated areas who are next to each others ,
