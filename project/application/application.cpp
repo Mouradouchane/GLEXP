@@ -30,6 +30,8 @@
 #include "memory.hpp"
 #include "resource_manager.hpp"
 
+#include "hash_map.cpp"
+
 namespace application {
 
 std::string  title  = "GLEXP";
@@ -111,7 +113,7 @@ ERR init() {
 
 	// if loading configs from ini failed "it's fine" , we have default configs 
 	config::load_configs_from_file("glexp.ini");
-	
+
 	ASSERT_APP_INIT(create_window());
 
 	ASSERT_APP_INIT(init_glew());
@@ -119,15 +121,19 @@ ERR init() {
 	init_inputs_handling();
 
 	// setup shader program
-	program = new shader("shaders/shader.vert","shaders/shader.frag");
+	program = new shader("shaders/shader.vert", "shaders/shader.frag");
 	//if (program->last_error != ERR::NO_ERR) return ERR::FAILED_TO_CREATE_PROGRAM;
 
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
+
+	u32(*fn)(u32* const& _key) = [](u32* const& _key) -> u32 { 
+		return 0; 
+	};
 	
-	
+	hash_map<u32*, u64> test_map(fn);
 
 	// load resources based on ini file
-	ERR err = resource::load_resources("./resources.ini");
+	// ERR err = resource::load_resources("./resources.ini");
 
 	// load_image textures 
 	// TODO : make texture loader from file_list

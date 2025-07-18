@@ -4,6 +4,20 @@
 #define MEMORY_CPP
 
 #include "macros.hpp"
+
+#ifdef WINDOWS
+	// note: windef's to avoid conflict  with other type like byte,bool,...
+	#ifndef __wtypes_h__
+		#include <wtypes.h>
+	#endif
+
+	#ifndef __WINDEF_
+		#include <windef.h>
+	#endif
+
+	#include <Windows.h>
+#endif
+
 #include "assert.hpp"
 #include "errors.hpp"
 #include "memory.hpp"
@@ -11,11 +25,8 @@
 #include <array>
 #include <sstream>
 #include <map>
-#ifdef WINDOWS
-	#include <Windows.h>
-#endif
 
-// allocated size for each section , in BYTE
+// allocated size for each section , in byte
 static std::array<uint64_t , 8> sections_sizes = {
 	NULL,// 0 , UNKOWN
 	NULL,// 1 , GENERAL_PURPOSE
@@ -23,7 +34,8 @@ static std::array<uint64_t , 8> sections_sizes = {
 	NULL,// 3 , TEXTURES
 	NULL,// 4 , AUDIOS
 	NULL,// 5 , ANIMATION
-	NULL // 6 , PHYSICS
+	NULL,// 6 , PHYSICS
+	NULL // 7 , STDCPP
 };
 
 typedef struct alloc_info {
@@ -31,22 +43,21 @@ typedef struct alloc_info {
 	uint8_t section;
 };
 
-// private for main "memory allocator" namespace 
 namespace memory {
-	
-	// total allocated cpu memory in BYTE
-	static uint64_t allocated_size = NULL;
-
+	// total allocated cpu memory in byte
+	static u64 allocated_size = NULL;
 	// map< pointer , alloc_size >
 	static std::map < ptr, alloc_info > allocations_list = {};
 }
 
+
 /*
 	memory namespace functions
 */
+std::string pointer_to_hex_string(ptr64 pointer);
 
-uint64_t memory::sizeof_section(allocation_section section) noexcept {
-	uint8_t _section = (uint8_t)section;
+u64 memory::sizeof_section(ALLOCATION_SECTION section) noexcept {
+	u8 _section = (u8)section;
 
 	if (_section < sections_sizes.size()) {
 		return sections_sizes[_section];
@@ -54,11 +65,11 @@ uint64_t memory::sizeof_section(allocation_section section) noexcept {
 	else return NULL;
 }
 
-static std::array<uint32_t, 4> memory_factors = {
+static std::array<u32, 4> memory_factors = {
 	1.0f , 1024.0f , 1048576.0f ,  1073741824.0f
 };
 
-double memory::sizeof_section_f(allocation_section section, memory_unit unit) noexcept {
+double memory::sizeof_section_f(ALLOCATION_SECTION section, MEMORY_UNIT unit) noexcept {
 	uint8_t _section = (uint8_t)section;
 
 	if (_section < sections_sizes.size()) {
@@ -74,7 +85,7 @@ uint64_t memory::total_size() noexcept {
 	return memory::allocated_size;
 }
 
-double memory::total_size_f(memory_unit unit) noexcept {
+double memory::total_size_f(MEMORY_UNIT unit) noexcept {
 	if ((uint8_t)unit < 4) {
 		return double(memory::allocated_size) / memory_factors[(uint8_t)unit];
 	}
@@ -82,11 +93,11 @@ double memory::total_size_f(memory_unit unit) noexcept {
 }
 
 // todo : handle multi-threaded allocations
-void* memory::alloc(size_t size , allocation_section section) {
+void* memory::alloc(size_t size , ALLOCATION_SECTION section) {
 
 	CRASH_AT_FALSE(size , "memory::alloc zero size allocation not allowed !")
 	
-	void* pointer = new int8_t[size];
+	void* pointer = new byte[size];
 
 	CRASH_AT_FALSE( (pointer != nullptr) , "memory::alloc failed to allocate memory");
 
@@ -102,7 +113,7 @@ void* memory::alloc(size_t size , allocation_section section) {
 
 	// update alloc list
 	memory::allocations_list.insert({ 
-		(ptr)pointer , alloc_info{size , _section} 
+		(ptr)pointer , alloc_info{size , _section}
 	});
 	
 	return pointer;
@@ -141,6 +152,7 @@ void memory::free(void* pointer) {
 	delete[] pointer;
 }
 
+// TODO: move this to better place !
 std::string pointer_to_hex_string(ptr64 pointer) {
 	std::stringstream s_stream;
 	s_stream << std::hex << pointer;
@@ -149,8 +161,7 @@ std::string pointer_to_hex_string(ptr64 pointer) {
 }
 
 // TODO : implementation for LINUX
-memory_info memory::get_cpu_memory_info() {
-	DEBUG_BREAK;
+memory_info memory::get_cpu_memory_info() noexcept{
 
 #ifdef WINDOWS
 	MEMORYSTATUSEX statex;

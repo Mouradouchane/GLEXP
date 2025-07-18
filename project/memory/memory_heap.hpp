@@ -10,18 +10,8 @@
 #define MEMORY_HEAP_HPP
 
 #include "types.hpp"
+#include "hash_map.hpp"
 #include "memory.hpp"
-
-struct register_info {
-	void* pointer;
-	u32   size;
-};
-
-struct registry {
-	register_info* list = nullptr;
-	u32 size  = NULL;
-	u32 range = NULL;
-};
 
 class heap {
 
@@ -31,7 +21,7 @@ private:
 
 private:
 	// heap type/usage
-	allocation_section section = allocation_section::UNKOWN;
+	ALLOCATION_SECTION section = ALLOCATION_SECTION::UNKOWN;
 	
 	// heap memory variables
 	u32 alloc = NULL; // sizeof allocated 
@@ -41,17 +31,20 @@ private:
 	byte* end    = nullptr; // heap end
 	byte* seek   = nullptr; // last free position
 
-	bool is_lapped = false; // true when seek >= end
 	bool is_locked = false; // for multi-thread
 	
-	registry alloc_list; // allocated chunks 
-	registry free_list;  // available chunks 
+	/* 
+	// for keep-track with allocated/deallocated chunks
+	TODO: correct setup for alloc/free maps
+	hash_map<byte*,u32> alloc_list; 
+	hash_map<byte*,u32> free_list;  
+	*/
 
 public:
 	// constructor / destructor
 	 heap(
 		 u32 size , u32 max_allocation ,
-		 allocation_section heap_usage = allocation_section::UNKOWN
+		 ALLOCATION_SECTION heap_usage = ALLOCATION_SECTION::UNKOWN
 	 );
 	~heap();
 
@@ -59,9 +52,9 @@ public:
 	void* allocate(u32 size);
 	void  deallocate(void* pointer);
 
-	u32 heap_size(memory_unit return_value_unit) noexcept;
-	u32 allocated(memory_unit return_value_unit) noexcept;
-	u32 available(memory_unit return_value_unit) noexcept;
+	u32 heap_size(MEMORY_UNIT return_value_unit) noexcept;
+	u32 allocated(MEMORY_UNIT return_value_unit) noexcept;
+	u32 available(MEMORY_UNIT return_value_unit) noexcept;
 
 private:
 	// heap private functions
