@@ -3,14 +3,27 @@
 #ifndef ARRAY_HPP
 #define ARRAY_HPP
 
+#include <initializer_list>
+#include "memory.hpp"
 #include "types.hpp"
 
-template<typename type, class allocator> class s_array {
+/*
+	class for fixed size array allocated on the heap
+	with few vars and functions 
+*/
+template<typename type> class s_array {
+private:
+	// note: disabled constructors/operators
+	s_array(const s_array& other_array) = delete;
+	s_array(s_array&& other_array) = delete;
+	s_array& operator=(const s_array& other_array) = delete;
+	// ====================================
 
 private:
-	u32   _size = NULL;
-	u32   _len  = NULL;
-	type*   arr = nullptr;
+	u32   _size  = NULL;
+	u32   _len   = NULL;
+	type* _start = nullptr; // memory start
+	type* _end   = nullptr; // memory end
 
 public:
 	// public variables for youre personal use :)
@@ -18,19 +31,46 @@ public:
 	u32 e = NULL;
 
 	// constructor's / destructor
-	 s_array(u32 size);
-	 s_array(u32 size, type const& ...elements);
+	 s_array(u32 elements_count);
+	 s_array(u32 elements_count, std::initializer_list<type> const& elements);
 	~s_array();
 
 	// function's
-	void fill(type const& value) noexcept;
-	void clean( ) noexcept;
+	type* begin() noexcept;
+	type* end()   noexcept;
 
-	type* pointer() noexcept;
+	void insert(u32 index, type const& value);
+	void remove(u32 index);
 
+	u32 elements_count() noexcept;
+	u32 size() noexcept;
+	f64 size_of(MEMORY_UNIT unit) noexcept;
+	
 	// operator's
 	type& operator[](u32 index);
+
+	// few static functions for array
+	static void fill(s_array<type>& _array, type const& fill_value) noexcept;
+	static void sort(
+		s_array<type>& _array,
+		bool (*compare_function)(type const& a, type const& b)
+	);
+};
+
+/*
+	c-style like array , in case i need it for some usage
+*/
+template<typename type> struct c_array {
+	u32   size  = NULL;
+	type* start = nullptr;
+	type* end   = nullptr;  
+
+	/*
+		few static function's for c_array
+	*/
+	static c_array create(u32 elements_count);
+	static void    fill(c_array const& _array , type const& fill_value);
+	static c_array destroy(c_array const& _array);
 };
 
 #endif // !ARRAY_HPP
-
