@@ -5,10 +5,10 @@
 /*
 
 	note: all definition's in array.hpp
-	here only implementation :)
+	here only the implementation :)
 
 */
-#include "array.hpp"
+#include "static_array.hpp"
 #include "assert.hpp"
 
 /*
@@ -31,7 +31,9 @@ template<typename type>	 s_array<type>::s_array(
 
 }
 
-// destructor
+/*
+	destructor
+*/
 template<typename type>	s_array<type>::~s_array() {
 
 	// destroy all array elements
@@ -41,7 +43,7 @@ template<typename type>	s_array<type>::~s_array() {
 }
 
 /*
-	array function's
+	s_array function's
 */
 template<typename type> type* s_array<type>::begin() noexcept {
 	return this->_start;
@@ -51,23 +53,38 @@ template<typename type> type* s_array<type>::end() noexcept {
 	return this->_end;
 }
 
-template<typename type> void s_array<type>::insert(u32 index, type const& value) {
-	CRASH_AT_TRUE(index >= this->_size, "s_array.insert: index out of array range !");
-	this->_len += 1;
-	*(this->_start + index) = value;
+template<typename type> void s_array<type>::set(u32 index, type const& new_element) {
+	CRASH_AT_TRUE(index >= this->_size, "s_array.set: index out of array range !");
+	
+	*(this->_start + index) = new_element;
+	 this->_len  += 1;
 }
 
 template<typename type> void s_array<type>::remove(u32 index) {
-	this->_len = (this->_len > 0) ? this->_len - 1: 0;
+	CRASH_AT_TRUE(index >= this->_size,"s_array.remove: index out of range !");
+
 	*(this->_start + index) = type();
+	 this->_len -= (this->_len > 0) ? this->_len - 1 : 0;
 }
 
-template<typename type> u32 s_array<type>::elements_count() noexcept {
+template<typename type> void s_array<type>::destroy(u32 index) {
+	CRASH_AT_TRUE(index >= this->_size,"s_array.destroy: index out of range !");
+
+	(this->_start + index)->~type(); // destroy
+	(this->_start + index) = type();
+	 this->_len -= (this->_len > 0) ? this->_len - 1 : 0;
+}
+
+template<typename type> u32 s_array<type>::length() noexcept {
 	return this->_len;
 }
 
 template<typename type> u32 s_array<type>::size() noexcept {
 	return this->_size;
+}
+
+template<typename type> u64 s_array<type>::size_of(void) noexcept {
+	return u64(this->_size * sizeof(type));
 }
 
 template<typename type> f64 s_array<type>::size_of(MEMORY_UNIT unit) noexcept {
