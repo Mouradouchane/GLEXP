@@ -14,7 +14,9 @@
 */
 
 heap::heap(
-	u32 size, u32 max_allocation, ALLOCATION_SECTION heap_usage
+	u32 size, 
+	u32 max_allocation, 
+	ALLOCATION_SECTION heap_usage
 ) {
 	DEBUG_BREAK;
 	
@@ -26,7 +28,7 @@ heap::heap(
 	CRASH_AT_FALSE(max_allocation, "memory/heap: zero size allocation list in not allowed")
 	
 	// init heap memory 
-	this->size    = size;
+	this->heap_size    = size;
 	this->start   = (byte*)memory::alloc(size, heap_usage);
 	this->end     = (byte*)(this->start) + size;
 	this->seek    = this->start;
@@ -42,15 +44,20 @@ heap::heap(
 
 // TODO: implement destruction
 heap::~heap() {
+	memory::free( this->start );
 
+	this->start = nullptr;
+	this->end   = nullptr;
+	this->seek  = nullptr;
 }
 
 /*
 	heap public function's
 */
 
-void* heap::allocate(u32 size_) {
+void* heap::allocate(u32 _size) const {
 	ASSERT_EXP(0);
+
 	/*
 	DEBUG_BREAK;
 	this->lock();
@@ -111,51 +118,44 @@ void* heap::allocate(u32 size_) {
 }
 
 // todo: implement deallocation
-void heap::deallocate(void* pointer) {
+void heap::deallocate(void* pointer) const {
 	ASSERT_EXP(0);
 
 }
 
+u32 heap::size() noexcept {
+	return this->heap_size;
+}
 
-u32 heap::heap_size(MEMORY_UNIT return_value_unit) noexcept {
+f32 heap::size(MEMORY_UNIT return_value_unit) noexcept {
 	
 	switch (return_value_unit) {
-	case MEMORY_UNIT::kb:{
-		return BYTE_TO_KB(this->size);
-	}	
-		default: return this->size;
+		case MEMORY_UNIT::kb : return BYTE_TO_KB(this->heap_size);
+		case MEMORY_UNIT::mb : return BYTE_TO_MB(this->heap_size);
+		case MEMORY_UNIT::gb : return BYTE_TO_GB(this->heap_size);
+	
+		default: return f32(this->heap_size);
 	}
 }
 
 u32 heap::allocated(MEMORY_UNIT return_value_unit) noexcept {
-	return this->alloc;
+	return this->alloc_size;
 }
 
 u32 heap::available(MEMORY_UNIT return_value_unit) noexcept {
-	return this->size - this->alloc;
+	return this->heap_size - this->alloc_size;
 }
 
 /*
 	heap private function's
 */ 
 
-// todo : find better solution if possible -> "thread-id lock/unlock maybe"
-// note : this is might be so bad !
-void heap::lock() {
-	while (this->is_locked);
-	this->is_locked = true;
-}
-
-void heap::unlock() {
-	this->is_locked = false;
-}
-
 // this function merge deallocated areas who are next to each others ,
 // it basically merge them into one area 
 void heap::merge_free_areas() {
-
 	// todo : implement
 	ASSERT_EXP(0);
+
 }
 
 

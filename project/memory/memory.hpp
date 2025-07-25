@@ -27,6 +27,11 @@ struct memory_info {
 	u64 free = NULL;
 };
 
+// just text representation
+#define KB *1
+#define MB *1
+#define GB *1
+
 // convert "kb,mb,gb" to "BYTES" macros
 #define KB_TO_BYTE(_kb) uint64_t(_kb) * 1024
 #define MB_TO_BYTE(_mb) uint64_t(_mb) * 1048576

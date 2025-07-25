@@ -95,11 +95,11 @@ double memory::total_size_f(MEMORY_UNIT unit) noexcept {
 // todo : handle multi-threaded allocations
 void* memory::alloc(size_t size , ALLOCATION_SECTION section) {
 
-	CRASH_AT_FALSE(size , "memory::alloc zero size allocation not allowed !")
+	CRASH_AT_TRUE(size < 1, "memory::alloc zero size allocation not allowed !")
 	
 	void* pointer = new byte[size];
 
-	CRASH_AT_FALSE( (pointer != nullptr) , "memory::alloc failed to allocate memory");
+	CRASH_AT_TRUE( (pointer == nullptr) , "memory::alloc failed to allocate memory");
 
 	// update total size
 	memory::allocated_size += size;
