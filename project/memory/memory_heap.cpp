@@ -14,111 +14,140 @@
 */
 
 heap::heap(
-	u32 size, 
+	u32 heap_size, 
 	u32 max_allocation, 
 	ALLOCATION_SECTION heap_usage
-) {
+){
 	DEBUG_BREAK;
 	
 	// few checks first
-	// TODO: change to CRASH_AT_TRUE
-	CRASH_AT_FALSE(size, "memory/heap: zero size_ allocation not allowed !");
-	CRASH_AT_FALSE(size < heap::minimum_heap_size_allowed , "memory/heap: less than 1kb heap is not allowed");
-	CRASH_AT_FALSE(size > heap::maximum_heap_size_allowed , "memory/heap: bigger than 1GB heap is not allowed");
-	CRASH_AT_FALSE(max_allocation, "memory/heap: zero size allocation list in not allowed")
+	// TODO: change to logger
+	CRASH_AT_TRUE(heap_size < 1, "heap: zero size heap not allowed !");
+	CRASH_AT_TRUE(
+		(heap_size < heap::minimum_heap_size_allowed) ||
+		(heap_size > heap::maximum_heap_size_allowed), 
+		// todo : change it to better message later 
+		// when you have logger
+		"heap: heap size not allowed !"
+	);
+	CRASH_AT_TRUE(max_allocation < 1, "heap: max allowed allocations cannot be 0 !");
+	// note: maybe this need to be a logger warning
+	CRASH_AT_TRUE(heap_size < max_allocation, "heap: max allowed allocations larger than the actuall memory !");
 	
-	// init heap memory 
-	this->heap_size    = size;
-	this->start   = (byte*)memory::alloc(size, heap_usage);
-	this->end     = (byte*)(this->start) + size;
-	this->seek    = this->start;
-	this->section = heap_usage;
+	// init heap variables
+	this->max_allowed_allocations = max_allocation;
+	this->section   = heap_usage;
+	this->heap_size = heap_size;
+	this->start     = (byte*)memory::alloc(heap_size, heap_usage);
+	this->end       = (byte*)(this->start + this->heap_size);
+	this->seek      = this->start;
 
-	// todo: setup hash_map with the right args
-	/*
-		this->alloc_list = hash_map<byte*, u32>();
-		this->free_list  = hash_map<byte*, u32>();
-	*/
+	// init alloc/free lists
+	this->alloc_list = (registry_pair*)memory::alloc(sizeof(registry_pair) * this->max_allowed_allocations);
+	this->free_list  = (registry_pair*)memory::alloc(sizeof(registry_pair) * this->max_allowed_allocations);
 	
 }
 
-// TODO: implement destruction
+// TODO: implement destruction , but how
 heap::~heap() {
 	memory::free( this->start );
+	memory::free( this->alloc_list );
+	memory::free( this->free_list );
 
 	this->start = nullptr;
 	this->end   = nullptr;
 	this->seek  = nullptr;
+
+	this->alloc_list = nullptr;
+	this->free_list  = nullptr;
 }
 
 /*
 	heap public function's
 */
 
-void* heap::allocate(u32 _size) const {
-	ASSERT_EXP(0);
+inline void heap::register_allocation(void* pointer, u32 size) {
 
-	/*
-	DEBUG_BREAK;
-	this->lock();
-	void* pointer = nullptr;
-	u32 free = (this->end - this->seek);
+	u32 index = hash_pointer(pointer);
 
-	CRASH_AT_FALSE(size_ , "heap.allocate: 0 size_ allocation not allowed !");
-	CRASH_AT_TRUE(size_ > free, "heap.allocate: no memory left for allocation !");
-	
-	// try to do "first-fit" based allocation if seek not lapped
-	if (this->seek <= end && free >= size_) {
-		pointer = this->seek;
-		// update heap variables
-		this->seek  += size_;
-		this->alloc += size_;
-		
-		// update heap alloc_list
-		if (alloc_list.range < alloc_list.size) {
+	// look for empty spot to inser
+	while ( index < this->maximum_heap_size_allowed) {
 
+		if (this->alloc_list[index].pointer == nullptr) {
+
+			this->alloc_list[index] = registry_pair{ pointer , size };
+			this->registered += 1;
+			return;
 		}
-		else CRASH_AT_FALSE(0, "heap.allocate: ");
-		this->unlock();
+		index += 1;
+	}
+
+	u32 i = 0;
+	while (i < index) {
+
+		if (this->alloc_list[i].pointer == nullptr) {
+
+			this->alloc_list[i] = registry_pair{ pointer , size };
+			this->registered += 1;
+			return;
+		}
+		i += 1;
+	}
+
+	// if no place found in alloc_list
+	CRASH_AT_TRUE(1, "heap::register_allocation : allocation registry is full no place found for new insert !");
+}
+
+void* heap::allocate(u32 _size) {
+	CRASH_AT_TRUE(_size < 1, "heap.allocate: 0 size allocation not allowed !");
+	CRASH_AT_TRUE(_size > this->heap_size, "heap.allocate: size of allocation asked for bigger than the heap !");
+	CRASH_AT_TRUE(this->registered >= this->max_allowed_allocations, "heap.allocate: max allowed allocations is reached !");
+	
+	DEBUG_BREAK;
+	void* pointer   = nullptr;
+	u32  _available = (this->end >= this->seek) ? (this->end - this->seek) : 0;
+
+	if ( (this->seek < this->end) && (_size <= _available) ) {
+		// allocate from seek
+		pointer = this->seek;
+			
+		// update variables
+		this->seek       += _size;
+		this->alloc_size += _size;
+
+		// register the allocation
+		this->register_allocation(pointer, _size);
+			
+		return pointer;
+	}
+	else {
+		// do look-up for a free place
+		// linear search for free place
+		u32 index = 0;
+		this->linear_lookup_for_allocation(index , _size);
+
+		// if no place is found run "merge_free_areas"
+		this->merge_free_areas();
+
+		// try again 
+		this->linear_lookup_for_allocation(index , _size);
+		
+		//if no place found -> crash "no memory left"
+		CRASH_AT_TRUE(0 , "heap.allocate: no memory left for allocation !")
+		
+		// allocate it or allocate portion of it
+		// register the allocation
+		this->register_allocation(pointer, _size);
+		
+		// update variables
+
 		return pointer;
 	}
 
-	// else try to do look-up based allocation
-	if ( 
-		(free_list.size  - free_list.range)  > 1 && 
-		(alloc_list.size - alloc_list.range) > 0 
-	) {
-
-		// o(n) ! linear look_up for free spot 
-		for (u32 i = 0; i < free_list.range; i++) {
-
-			if (free_list.list[i].size >= size_) {
-				pair chunk = free_list.list[i];
-
-				// both registers need update
-				if (chunk.size > size_) {
-					this->alloc -= (chunk.size - size_);
-
-					// update free_list
-					free_list.list[i].size -= size_;
-
-					// update alloc_list
-					free_list.range += 1;
-					free_list.list[free_list.range] = ;
-				}
-
-				return chunk.pointer;
-			}
-		}
-	}
-
-	// no memory left for allocation
-	CRASH_AT_TRUE(0, "heap.allocate: no memory left for allocation !");
-	*/
 }
 
 // todo: implement deallocation
-void heap::deallocate(void* pointer) const {
+void heap::deallocate(void* pointer){
 	ASSERT_EXP(0);
 
 }

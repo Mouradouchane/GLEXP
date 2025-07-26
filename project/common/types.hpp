@@ -29,4 +29,8 @@ typedef float  f32;
 typedef double f64;
 typedef long double f80;
 
+// keys
+typedef u32 h_key32;
+typedef u64 h_key64;
+
 #endif
