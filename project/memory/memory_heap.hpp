@@ -45,7 +45,9 @@ private:
 	byte* seek  = nullptr; // last free position
 
 	u32 registered = NULL;
+	u32 alloc_list_size = NULL;
 	registry_pair* alloc_list = nullptr; // chaining hash table
+	u32 free_list_range = 1;
 	registry_pair* free_list  = nullptr; // sorted list
 
 public:
@@ -73,7 +75,15 @@ private:
 	u32 hash_pointer(void* pointer);
 
 	inline void register_allocation(void* pointer , u32 size);
-	inline void linear_lookup_for_allocation(u32& index , u32 _size);
+	inline void allocate_from_free_list(void** pointer, u32 size , u32 index);
+	inline void unregister_allocation(void* pointer);
+	// this function search the free_list looking for empty spot
+	inline void find_free_location(u32& index_output , u32 _size);
+
+	// sort from bigger to smaller
+	inline void sort_list_by_size(registry_pair* list, u32 size);
+	inline void sort_list_by_address(registry_pair* list, u32 size);
+	inline void init_registry_list(registry_pair* list, u32 size);
 };
 
 

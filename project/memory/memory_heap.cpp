@@ -9,10 +9,11 @@
 #include "assert.hpp"
 #include "memory_heap.hpp"
 
-/*
-	
-*/
+#include <algorithm>
 
+/*
+	constructor
+*/
 heap::heap(
 	u32 heap_size, 
 	u32 max_allocation, 
@@ -26,7 +27,7 @@ heap::heap(
 	CRASH_AT_TRUE(
 		(heap_size < heap::minimum_heap_size_allowed) ||
 		(heap_size > heap::maximum_heap_size_allowed), 
-		// todo : change it to better message later 
+		// todo: change it to better message later 
 		// when you have logger
 		"heap: heap size not allowed !"
 	);
@@ -43,9 +44,13 @@ heap::heap(
 	this->seek      = this->start;
 
 	// init alloc/free lists
-	this->alloc_list = (registry_pair*)memory::alloc(sizeof(registry_pair) * this->max_allowed_allocations);
+	this->alloc_list_size = (this->max_allowed_allocations + u32(this->max_allowed_allocations / 2u));
+	
+	this->alloc_list = (registry_pair*)memory::alloc(sizeof(registry_pair) * this->alloc_list_size);
 	this->free_list  = (registry_pair*)memory::alloc(sizeof(registry_pair) * this->max_allowed_allocations);
 	
+	init_registry_list(this->alloc_list, this->alloc_list_size);
+	init_registry_list(this->free_list, this->max_allowed_allocations);
 }
 
 // TODO: implement destruction , but how
@@ -63,15 +68,71 @@ heap::~heap() {
 }
 
 /*
-	heap public function's
+	heap private function's
 */
+
+inline void heap::sort_list_by_address(registry_pair* list, u32 size) {
+
+	std::sort(list, list + size, [&](const registry_pair& a, const registry_pair& b) -> bool {
+		return a.pointer < b.pointer;
+	});
+}
+
+inline void heap::sort_list_by_size(registry_pair* list, u32 size) {
+
+	std::sort(list, list + size, [&](const registry_pair& a, const registry_pair& b) -> bool {
+		return a.size > b.size;
+	});
+}
+
+inline void heap::init_registry_list(registry_pair* list, u32 size) {
+
+	for (u32 i = 0; i < size; i++) {
+		*(list + i) = registry_pair{nullptr , NULL};
+	}
+
+}
+
+inline void heap::find_free_location(u32& index_output , u32 _size) {
+
+	for (u32 i = 0; i < this->free_list_range; i++) {
+
+		if (this->free_list[i].size >= _size) {
+			index_output = i;
+			return;
+		}
+	}
+
+}
+
+inline void heap::allocate_from_free_list(void** pointer, u32 _size, u32 index) {
+
+	registry_pair _allocation = this->free_list[index];
+
+	*pointer = _allocation.pointer;
+
+	if (_allocation.size > _size) {
+		this->free_list[index].pointer = (byte*)this->free_list[index].pointer + _size;
+		this->free_list[index].size -= _size;
+	}
+	else {
+		this->free_list[index] = registry_pair{ nullptr, NULL};
+	}
+
+	register_allocation(*pointer , _size);
+}
+
+u32 heap::hash_pointer(void* pointer) {
+	return (u64)pointer % this->alloc_list_size;
+}
 
 inline void heap::register_allocation(void* pointer, u32 size) {
 
 	u32 index = hash_pointer(pointer);
+	DEBUG_BREAK;
 
-	// look for empty spot to inser
-	while ( index < this->maximum_heap_size_allowed) {
+	// look for empty spot to insert
+	while ( index < this->alloc_list_size) {
 
 		if (this->alloc_list[index].pointer == nullptr) {
 
@@ -98,15 +159,49 @@ inline void heap::register_allocation(void* pointer, u32 size) {
 	CRASH_AT_TRUE(1, "heap::register_allocation : allocation registry is full no place found for new insert !");
 }
 
+// this function merge deallocated areas who are next to each others ,
+// it basically merge them into one area 
+void heap::merge_free_areas() {
+	DEBUG_BREAK;
+	this->sort_list_by_address(this->free_list, this->free_list_range);
+
+	// merge process
+	registry_pair* s_ptr = this->free_list + 1;
+	registry_pair* e_ptr = this->free_list + this->free_list_range;
+	registry_pair* marker_ptr = this->free_list;
+
+	for (; s_ptr <= e_ptr; s_ptr++) {
+
+		if (((byte*)marker_ptr->pointer + marker_ptr->size) == s_ptr->pointer) {
+
+			marker_ptr->size += s_ptr->size;
+			*s_ptr = registry_pair{ nullptr , NULL };
+
+			continue;
+		}
+		else {
+			marker_ptr = s_ptr;
+		}
+
+	}
+
+	this->sort_list_by_size(this->free_list, this->free_list_range);
+}
+
+
+/*
+	heap public function's
+*/
+
 void* heap::allocate(u32 _size) {
 	CRASH_AT_TRUE(_size < 1, "heap.allocate: 0 size allocation not allowed !");
 	CRASH_AT_TRUE(_size > this->heap_size, "heap.allocate: size of allocation asked for bigger than the heap !");
 	CRASH_AT_TRUE(this->registered >= this->max_allowed_allocations, "heap.allocate: max allowed allocations is reached !");
 	
-	DEBUG_BREAK;
 	void* pointer   = nullptr;
 	u32  _available = (this->end >= this->seek) ? (this->end - this->seek) : 0;
 
+	DEBUG_BREAK;
 	if ( (this->seek < this->end) && (_size <= _available) ) {
 		// allocate from seek
 		pointer = this->seek;
@@ -121,26 +216,31 @@ void* heap::allocate(u32 _size) {
 		return pointer;
 	}
 	else {
-		// do look-up for a free place
-		// linear search for free place
-		u32 index = 0;
-		this->linear_lookup_for_allocation(index , _size);
+		u32 index = this->max_allowed_allocations;
 
-		// if no place is found run "merge_free_areas"
+		// search for empty spot
+		this->find_free_location(index, _size);
+
+		if (index < this->max_allowed_allocations) {
+			allocate_from_free_list(&pointer, _size ,index);
+			return pointer;
+		}
+		/*
+			else : try to merge empty spots is possible
+			       and see if there's any spot for allocation
+		*/ 
 		this->merge_free_areas();
 
-		// try again 
-		this->linear_lookup_for_allocation(index , _size);
+		// search again after the merge process
+		this->find_free_location(index , _size);
 		
-		//if no place found -> crash "no memory left"
-		CRASH_AT_TRUE(0 , "heap.allocate: no memory left for allocation !")
-		
-		// allocate it or allocate portion of it
-		// register the allocation
-		this->register_allocation(pointer, _size);
-		
-		// update variables
+		// if no place found : crash -> "no memory left"
+		CRASH_AT_TRUE(
+			index >= this->max_allowed_allocations,
+			"heap.allocate: no memory left for allocation !"
+		);
 
+		allocate_from_free_list(&pointer, _size, index);
 		return pointer;
 	}
 
@@ -173,18 +273,6 @@ u32 heap::allocated(MEMORY_UNIT return_value_unit) noexcept {
 
 u32 heap::available(MEMORY_UNIT return_value_unit) noexcept {
 	return this->heap_size - this->alloc_size;
-}
-
-/*
-	heap private function's
-*/ 
-
-// this function merge deallocated areas who are next to each others ,
-// it basically merge them into one area 
-void heap::merge_free_areas() {
-	// todo : implement
-	ASSERT_EXP(0);
-
 }
 
 

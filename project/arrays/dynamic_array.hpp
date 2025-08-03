@@ -7,7 +7,7 @@
 #include "memory.hpp"
 #include "types.hpp"
 
-#include "array.cpp"
+#include "static_array.cpp"
 
 template<typename type> class d_array : public s_array<type> {
 private:

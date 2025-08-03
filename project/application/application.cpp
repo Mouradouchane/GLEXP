@@ -28,6 +28,7 @@
 #include "shader.hpp"
 #include "models.hpp"
 #include "memory.hpp"
+#include "memory_heap.hpp"
 #include "resource_manager.hpp"
 
 #include "hash_map.cpp"
@@ -125,12 +126,13 @@ ERR init() {
 	//if (program->last_error != ERR::NO_ERR) return ERR::FAILED_TO_CREATE_PROGRAM;
 
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
+		
+	heap heap1( MB_TO_BYTE(12) , 1024 , ALLOCATION_SECTION::GENERAL);
 
-	u32(*fn)(u32* const& _key) = [](u32* const& _key) -> u32 { 
-		return 0; 
-	};
-	
-	hash_map<u32*, u64> test_map(fn);
+	void* arr1 = heap1.allocate(sizeof(u32) * 32);
+	u32* uinto = (u32*)heap1.allocate(sizeof(u32));
+	f32* arr2  = (f32*)heap1.allocate(sizeof(f32) * 1024);
+
 
 	// load resources based on ini file
 	// ERR err = resource::load_resources("./resources.ini");

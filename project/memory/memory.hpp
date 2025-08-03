@@ -7,7 +7,7 @@
 #include "macros.hpp"
 #include "types.hpp"
 
-enum ALLOCATION_SECTION : uint8_t {
+enum class ALLOCATION_SECTION : uint8_t {
     UNKOWN    = 0,
 	GENERAL   = 1,
 	MODELS    = 2,
