@@ -9,7 +9,7 @@
 	constructor's
 */ 
 template<typename type>	d_array<type>::d_array(u32 elements_count) {
-	CRASH_AT_TRUE(!elements_count, "s_array: 0 size array not allowed !");
+	CRASH_IF(!elements_count, "s_array: 0 size array not allowed !");
 	
 	// todo: implement + "memory allocation solution"
 
@@ -19,7 +19,7 @@ template<typename type>	d_array<type>::d_array(
 	u32 elements_count, 
 	std::initializer_list<type> const& elements 
 ) {
-	CRASH_AT_TRUE(!elements_count, "s_array: 0 size array not allowed !");
+	CRASH_IF(!elements_count, "s_array: 0 size array not allowed !");
 
 	// todo: implement + "memory allocation solution"
 

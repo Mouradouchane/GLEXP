@@ -23,17 +23,17 @@ heap::heap(
 	
 	// few checks first
 	// TODO: change to logger
-	CRASH_AT_TRUE(heap_size < 1, "heap: zero size heap not allowed !");
-	CRASH_AT_TRUE(
+	CRASH_IF(heap_size < 1, "heap: zero size heap not allowed !");
+	CRASH_IF(
 		(heap_size < heap::minimum_heap_size_allowed) ||
 		(heap_size > heap::maximum_heap_size_allowed), 
 		// todo: change it to better message later 
 		// when you have logger
 		"heap: heap size not allowed !"
 	);
-	CRASH_AT_TRUE(max_allocation < 1, "heap: max allowed allocations cannot be 0 !");
+	CRASH_IF(max_allocation < 1, "heap: max allowed allocations cannot be 0 !");
 	// note: maybe this need to be a logger warning
-	CRASH_AT_TRUE(heap_size < max_allocation, "heap: max allowed allocations larger than the actuall memory !");
+	CRASH_IF(heap_size < max_allocation, "heap: max allowed allocations larger than the actuall memory !");
 	
 	// init heap variables
 	this->max_allowed_allocations = max_allocation;
@@ -53,7 +53,7 @@ heap::heap(
 	init_registry_list(this->free_list, this->max_allowed_allocations);
 }
 
-// TODO: implement destruction , but how
+// TODO: call elements destructor's if possible
 heap::~heap() {
 	memory::free( this->start );
 	memory::free( this->alloc_list );
@@ -65,6 +65,28 @@ heap::~heap() {
 
 	this->alloc_list = nullptr;
 	this->free_list  = nullptr;
+}
+
+/*
+	heap public static function's
+*/
+
+u32 heap::minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
+	switch (return_value_unit) {
+		case MEMORY_UNIT::kb: return BYTE_TO_KB(heap::minimum_heap_size_allowed);
+		case MEMORY_UNIT::mb: return BYTE_TO_MB(heap::minimum_heap_size_allowed);
+		case MEMORY_UNIT::gb: return BYTE_TO_GB(heap::minimum_heap_size_allowed);
+		default : return heap::minimum_heap_size_allowed;
+	}
+}
+
+u32 heap::maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
+	switch (return_value_unit) {
+		case MEMORY_UNIT::kb: return BYTE_TO_KB(heap::maximum_heap_size_allowed);
+		case MEMORY_UNIT::mb: return BYTE_TO_MB(heap::maximum_heap_size_allowed);
+		case MEMORY_UNIT::gb: return BYTE_TO_GB(heap::maximum_heap_size_allowed);
+		default: return heap::minimum_heap_size_allowed;
+	}
 }
 
 /*
@@ -129,7 +151,6 @@ u32 heap::hash_pointer(void* pointer) {
 inline void heap::register_allocation(void* pointer, u32 size) {
 
 	u32 index = hash_pointer(pointer);
-	DEBUG_BREAK;
 
 	// look for empty spot to insert
 	while ( index < this->alloc_list_size) {
@@ -156,13 +177,13 @@ inline void heap::register_allocation(void* pointer, u32 size) {
 	}
 
 	// if no place found in alloc_list
-	CRASH_AT_TRUE(1, "heap::register_allocation : allocation registry is full no place found for new insert !");
+	CRASH_IF(1, "heap::register_allocation : allocation registry is full no place found for new insert !");
 }
 
 // this function merge deallocated areas who are next to each others ,
 // it basically merge them into one area 
 void heap::merge_free_areas() {
-	DEBUG_BREAK;
+
 	this->sort_list_by_address(this->free_list, this->free_list_range);
 
 	// merge process
@@ -194,14 +215,13 @@ void heap::merge_free_areas() {
 */
 
 void* heap::allocate(u32 _size) {
-	CRASH_AT_TRUE(_size < 1, "heap.allocate: 0 size allocation not allowed !");
-	CRASH_AT_TRUE(_size > this->heap_size, "heap.allocate: size of allocation asked for bigger than the heap !");
-	CRASH_AT_TRUE(this->registered >= this->max_allowed_allocations, "heap.allocate: max allowed allocations is reached !");
+	CRASH_IF(_size < 1, "heap.allocate: 0 size allocation not allowed !");
+	CRASH_IF(_size > this->heap_size, "heap.allocate: size of allocation asked for bigger than the heap !");
+	CRASH_IF(this->registered >= this->max_allowed_allocations, "heap.allocate: max allowed allocations is reached !");
 	
 	void* pointer   = nullptr;
 	u32  _available = (this->end >= this->seek) ? (this->end - this->seek) : 0;
 
-	DEBUG_BREAK;
 	if ( (this->seek < this->end) && (_size <= _available) ) {
 		// allocate from seek
 		pointer = this->seek;
@@ -216,6 +236,7 @@ void* heap::allocate(u32 _size) {
 		return pointer;
 	}
 	else {
+		DEBUG_BREAK;
 		u32 index = this->max_allowed_allocations;
 
 		// search for empty spot
@@ -235,7 +256,7 @@ void* heap::allocate(u32 _size) {
 		this->find_free_location(index , _size);
 		
 		// if no place found : crash -> "no memory left"
-		CRASH_AT_TRUE(
+		CRASH_IF(
 			index >= this->max_allowed_allocations,
 			"heap.allocate: no memory left for allocation !"
 		);

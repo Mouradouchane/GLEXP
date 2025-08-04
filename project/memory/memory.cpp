@@ -54,6 +54,8 @@ namespace memory {
 /*
 	memory namespace functions
 */
+
+// todo: move this to string file 
 std::string pointer_to_hex_string(ptr64 pointer);
 
 u64 memory::sizeof_section(ALLOCATION_SECTION section) noexcept {
@@ -95,11 +97,11 @@ double memory::total_size_f(MEMORY_UNIT unit) noexcept {
 // todo : handle multi-threaded allocations
 void* memory::alloc(size_t size , ALLOCATION_SECTION section) {
 
-	CRASH_AT_TRUE(size < 1, "memory::alloc zero size allocation not allowed !")
+	CRASH_IF(size < 1, "memory::alloc zero size allocation not allowed !")
 	
 	void* pointer = new byte[size];
 
-	CRASH_AT_TRUE( (pointer == nullptr) , "memory::alloc failed to allocate memory");
+	CRASH_IF( (pointer == nullptr) , "memory::alloc failed to allocate memory");
 
 	// update total size
 	memory::allocated_size += size;
@@ -122,13 +124,13 @@ void* memory::alloc(size_t size , ALLOCATION_SECTION section) {
 // todo : handle multi-threaded deallocations
 void memory::free(void* pointer) {
 	
-	CRASH_AT_FALSE( (pointer != nullptr) , "illegal memory::free null-pointer !");
+	CRASH_IF(pointer == nullptr , "illegal memory::free null-pointer !");
 		
 	// check alloc_list
 	auto allocation = memory::allocations_list.find((ptr64)pointer);
 
-	CRASH_AT_FALSE(
-		(allocation != memory::allocations_list.end()),
+	CRASH_IF(
+		allocation == memory::allocations_list.end(),
 		"memory::free invalid pointer " + pointer_to_hex_string((ptr64)pointer)
 	);
 

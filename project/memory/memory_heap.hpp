@@ -21,7 +21,7 @@ class heap {
 
 private:
 	// heap static variables
-	static const u32 minimum_heap_size_allowed = KB_TO_BYTE(64 KB);
+	static const u32 minimum_heap_size_allowed = KB_TO_BYTE(1 KB);
 	static const u32 maximum_heap_size_allowed = MB_TO_BYTE(512 MB);
 
 	/*
@@ -30,6 +30,11 @@ private:
 	heap(heap const& other) = delete;
 	heap(heap&& other) = delete;
 	heap& operator = (const heap& other) = delete;
+
+public: 
+	// heap public static functions
+	static u32 minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
+	static u32 maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
 
 private:
 	// heap type/usage
@@ -45,8 +50,9 @@ private:
 	byte* seek  = nullptr; // last free position
 
 	u32 registered = NULL;
+
 	u32 alloc_list_size = NULL;
-	registry_pair* alloc_list = nullptr; // chaining hash table
+	registry_pair* alloc_list = nullptr; // open addressing hash-table
 	u32 free_list_range = 1;
 	registry_pair* free_list  = nullptr; // sorted list
 

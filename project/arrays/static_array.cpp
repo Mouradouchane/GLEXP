@@ -15,7 +15,7 @@
 	constructor's
 */ 
 template<typename type>	 s_array<type>::s_array(u32 elements_count) {
-	CRASH_AT_TRUE(!elements_count, "s_array: 0 size array not allowed !");
+	CRASH_IF(!elements_count, "s_array: 0 size array not allowed !");
 	
 	// todo: implement + "memory allocation solution"
 
@@ -24,8 +24,8 @@ template<typename type>	 s_array<type>::s_array(u32 elements_count) {
 template<typename type>	 s_array<type>::s_array(
 	u32 elements_count, std::initializer_list<type> const& elements
 ) {
-	CRASH_AT_TRUE(!elements_count, "s_array: 0 size array not allowed !");
-	CRASH_AT_TRUE(elements_count < elements.size(), "s_array: elements count larger than the array !");
+	CRASH_IF(!elements_count, "s_array: 0 size array not allowed !");
+	CRASH_IF(elements_count < elements.size(), "s_array: elements count larger than the array !");
 
 	// todo: implement + "memory allocation solution"
 
@@ -54,21 +54,21 @@ template<typename type> type* s_array<type>::end() noexcept {
 }
 
 template<typename type> void s_array<type>::set(u32 index, type const& new_element) {
-	CRASH_AT_TRUE(index >= this->_size, "s_array.set: index out of array range !");
+	CRASH_IF(index >= this->_size, "s_array.set: index out of array range !");
 	
 	*(this->_start + index) = new_element;
 	 this->_len  += 1;
 }
 
 template<typename type> void s_array<type>::remove(u32 index) {
-	CRASH_AT_TRUE(index >= this->_size,"s_array.remove: index out of range !");
+	CRASH_IF(index >= this->_size,"s_array.remove: index out of range !");
 
 	*(this->_start + index) = type();
 	 this->_len -= (this->_len > 0) ? this->_len - 1 : 0;
 }
 
 template<typename type> void s_array<type>::destroy(u32 index) {
-	CRASH_AT_TRUE(index >= this->_size,"s_array.destroy: index out of range !");
+	CRASH_IF(index >= this->_size,"s_array.destroy: index out of range !");
 
 	(this->_start + index)->~type(); // destroy
 	(this->_start + index) = type();
@@ -101,7 +101,7 @@ template<typename type> f64 s_array<type>::size_of(MEMORY_UNIT unit) noexcept {
 	array operator's
 */ 
 template<typename type> type& s_array<type>::operator[](u32 index) {
-	CRASH_AT_TRUE(index >= this->_size, "s_array[]: index out of array range !");
+	CRASH_IF(index >= this->_size, "s_array[]: index out of array range !");
 	
 	return *(this->_start + index);
 }

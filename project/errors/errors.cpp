@@ -17,7 +17,7 @@ void display_error_messagebox(
 	uint32_t line
 ) {
 	// NOTE: show function will stop current thread from execution
-	std::string full_message = ("error at " + file) + (" line " + line) + (" from " + function) + (" !\n" + message);
+	std::string full_message = ("file: " + file + "\n") + ("line: " + std::to_string(line) + "\n") + ("code: " + function + "\n") + ("message: " + message);
 	boxer::show(
 		full_message.c_str(),
 		"ERROR",
@@ -36,7 +36,7 @@ void display_warn_messagebox(
 
 	std::thread warning_thread(
 		[&]() {
-			std::string full_message = ("warning from " + file) + (" line " + line) + (" : " + function) + (" !\n" + message);
+			std::string full_message = ("file: " + file + "\n") + ("line: " + std::to_string(line) + "\n") + ("code: " + function + "\n") + ("message: " + message);
 			
 			boxer::show(
 				full_message.c_str(), "WARNING", boxer::Style::Warning, boxer::Buttons::OK
