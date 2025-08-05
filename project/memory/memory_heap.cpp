@@ -259,8 +259,7 @@ void* heap::allocate(u32 _size) {
 		pointer = this->seek;
 			
 		// update variables
-		this->seek       += _size;
-		this->alloc_size += _size;
+		this->seek += _size;
 
 		// register the allocation
 		this->register_allocation(pointer, _size);
@@ -290,7 +289,7 @@ void* heap::allocate(u32 _size) {
 		// if no place found : crash -> "no memory left"
 		CRASH_IF(
 			index >= this->max_allowed_allocations,
-			"heap.allocate: no memory left for allocation !"
+			"heap.allocate: no memory left or found for allocation !"
 		);
 
 		allocate_from_free_list(&pointer, _size, index);

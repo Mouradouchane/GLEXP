@@ -136,11 +136,10 @@ ERR init() {
 
 	u32 sz = heap1.allocated(MEMORY_UNIT::byte);
 	DEBUG_BREAK;
-	heap1.deallocate((byte*)_ptrs[4]);
-	heap1.deallocate((byte*)_ptrs[1]);
+	heap1.deallocate((byte*)_ptrs[7]);
+	heap1.deallocate((byte*)_ptrs[2]);
+	heap1.deallocate((byte*)_ptrs[6]);
 	sz = heap1.allocated(MEMORY_UNIT::byte);
-	heap1.deallocate((byte*)_ptrs[4]);
-
 	heap1.allocate(128*2);
 
 	// load resources based on ini file
