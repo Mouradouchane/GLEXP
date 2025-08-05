@@ -127,19 +127,21 @@ ERR init() {
 
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
 		
-	heap heap1( KB_TO_BYTE(1) , 512 , ALLOCATION_SECTION::GENERAL);
+	heap heap1( KB_TO_BYTE(1) , 32 , ALLOCATION_SECTION::GENERAL);
 
-	void* _ptrs[256] = {};
-	for (u32 i = 0; i < 256; i += 1) {
-		_ptrs[i] = heap1.allocate(4);
+	void* _ptrs[8] = {};
+	for (u32 i = 0; i < 8; i += 1) {
+		_ptrs[i] = heap1.allocate(128);
 	}
 
+	u32 sz = heap1.allocated(MEMORY_UNIT::byte);
 	DEBUG_BREAK;
 	heap1.deallocate((byte*)_ptrs[4]);
-	heap1.deallocate((byte*)_ptrs[5]);
-	heap1.deallocate((byte*)_ptrs[8]);
-	heap1.deallocate((byte*)_ptrs[9]);
+	heap1.deallocate((byte*)_ptrs[1]);
+	sz = heap1.allocated(MEMORY_UNIT::byte);
+	heap1.deallocate((byte*)_ptrs[4]);
 
+	heap1.allocate(128*2);
 
 	// load resources based on ini file
 	// ERR err = resource::load_resources("./resources.ini");

@@ -55,9 +55,6 @@ namespace memory {
 	memory namespace functions
 */
 
-// todo: move this to string file 
-std::string pointer_to_hex_string(ptr64 pointer);
-
 u64 memory::sizeof_section(ALLOCATION_SECTION section) noexcept {
 	u8 _section = (u8)section;
 
@@ -154,7 +151,7 @@ void memory::free(void* pointer) {
 	delete[] pointer;
 }
 
-// TODO: move this to better place !
+// TODO: move this to the right place !!!!!!!!!!!!!!!
 std::string pointer_to_hex_string(ptr64 pointer) {
 	std::stringstream s_stream;
 	s_stream << std::hex << pointer;

@@ -51,10 +51,13 @@ private:
 
 	u32 registered = NULL;
 
+	// open addressing hash-table
 	u32 alloc_list_size = NULL;
-	registry_pair* alloc_list = nullptr; // open addressing hash-table
+	registry_pair* alloc_list = nullptr; 
+	
+	// sorted list
 	u32 free_list_range = 1;
-	registry_pair* free_list  = nullptr; // sorted list
+	registry_pair* free_list  = nullptr; 
 
 public:
 	// constructor / destructor
@@ -82,7 +85,7 @@ private:
 
 	inline void register_allocation(void* pointer , u32 size);
 	inline void allocate_from_free_list(void** pointer, u32 size , u32 index);
-	inline void unregister_allocation(void* pointer);
+	inline void unregister_allocation(u32 _index);
 	// this function search the free_list looking for empty spot
 	inline void find_free_location(u32& index_output , u32 _size);
 

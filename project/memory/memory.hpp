@@ -42,6 +42,9 @@ struct memory_info {
 #define BYTE_TO_MB(_bytes) (_bytes/1048576.0f)
 #define BYTE_TO_GB(_bytes) (_bytes/1073741824.0f)
 
+// TODO: move this to the right place !!!!!!!!!!!!!!!
+std::string pointer_to_hex_string(ptr64 pointer);
+
 /*
 	- main "general purpose" memory allocator
 	- used by other custom allocators => heap,pool,arena,...

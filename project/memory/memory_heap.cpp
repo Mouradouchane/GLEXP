@@ -19,10 +19,9 @@ heap::heap(
 	u32 max_allocation, 
 	ALLOCATION_SECTION heap_usage
 ){
-	DEBUG_BREAK;
-	
-	// few checks first
+
 	// TODO: change to logger
+	// few checks first
 	CRASH_IF(heap_size < 1, "heap: zero size heap not allowed !");
 	CRASH_IF(
 		(heap_size < heap::minimum_heap_size_allowed) ||
@@ -158,6 +157,7 @@ inline void heap::register_allocation(void* pointer, u32 size) {
 		if (this->alloc_list[index].pointer == nullptr) {
 
 			this->alloc_list[index] = registry_pair{ pointer , size };
+			this->alloc_size += size;
 			this->registered += 1;
 			return;
 		}
@@ -170,6 +170,7 @@ inline void heap::register_allocation(void* pointer, u32 size) {
 		if (this->alloc_list[i].pointer == nullptr) {
 
 			this->alloc_list[i] = registry_pair{ pointer , size };
+			this->alloc_size += size;
 			this->registered += 1;
 			return;
 		}
@@ -178,6 +179,37 @@ inline void heap::register_allocation(void* pointer, u32 size) {
 
 	// if no place found in alloc_list
 	CRASH_IF(1, "heap::register_allocation : allocation registry is full no place found for new insert !");
+}
+
+inline void heap::unregister_allocation(u32 _index) {
+	DEBUG_BREAK;
+
+	this->free_list_range += 1;
+	CRASH_IF(
+		this->free_list_range > this->max_allowed_allocations , 
+		"heap.unregister_allocation : free_list if full , this is look like a bug !"
+	);
+
+	u32 i = 0;
+	u32 _size = this->alloc_list[_index].size;
+
+	// look for right place to insert
+	for (	; i < this->free_list_range; i++) {
+		if (this->free_list[i].size < _size) break;
+	}
+
+	// make a room for new registry by shift few elements
+	for (u32 r = this->free_list_range; r > i ; r--) {
+		this->free_list[r-1] = this->free_list[r];
+	}
+
+	// insert
+	this->free_list[i] = this->alloc_list[_index];
+	
+	// remove/unregister allocation
+	this->alloc_size -= this->alloc_list[_index].size;
+	this->alloc_list[_index] = registry_pair{ nullptr , NULL };
+	this->registered -= 1;
 }
 
 // this function merge deallocated areas who are next to each others ,
@@ -267,10 +299,30 @@ void* heap::allocate(u32 _size) {
 
 }
 
-// todo: implement deallocation
 void heap::deallocate(void* pointer){
-	ASSERT_EXP(0);
+	
+	CRASH_IF(
+		(pointer < this->start) || (pointer > this->end) ,
+		"heap.deallocate: invalid pointer " + pointer_to_hex_string((ptr64)pointer) + " , out of range !"
+	);
 
+	u32 index = this->hash_pointer(pointer);
+
+	for (	; index < this->alloc_list_size; index++ ) {
+		if (this->alloc_list[index].pointer == pointer) {
+			unregister_allocation(index);
+			return;
+		}
+	}
+
+	for (u32 i = 0; i < index; i++) {
+		if (this->alloc_list[index].pointer == pointer) {
+			unregister_allocation(index);
+			return;
+		}
+	}
+
+	CRASH_IF(1, "heap.deallocate: pointer " + pointer_to_hex_string((ptr64)pointer) + " not found allocated !");
 }
 
 u32 heap::size() noexcept {
