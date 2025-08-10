@@ -113,14 +113,13 @@ project("tester")
 
 	-- build output path
 	targetdir(build_path) 
-	objdir(build_path.."/binaries/") 
+	objdir(build_path.."/binaries/tester/") 
 
 	-- include dirs
 	files {
-			"tester/**",
-			"libs/ftxui/**"
+			"tester/**"
 	} 
-	includedirs{ "$(SolutionDir)tester/**" , "$(SolutionDir)libs/" }
+	includedirs{ "$(SolutionDir)tester/" , "$(SolutionDir)libs/" }
 
 	filter("configurations:release")
 		-- release configs
@@ -129,10 +128,6 @@ project("tester")
 		debugdir( release_path ) 
 		symbols("Off")
 		optimize("Off")
-		-- link with ftxui library
-		links{ libs_path.."/ftxui/ftxui-component.lib" }
-		links{ libs_path.."/ftxui/ftxui-dom.lib" }
-		links{ libs_path.."/ftxui/ftxui-screen.lib" }
 		
 	filter("configurations:debug")
 		-- debug configs
@@ -141,10 +136,6 @@ project("tester")
 		symbols("On")
 		optimize("Off")
 		debugdir( debugging_path ) 
-		-- link with ftxui library
-		links{ libs_path.."/ftxui/d_ftxui-component.lib" }
-		links{ libs_path.."/ftxui/d_ftxui-dom.lib" }
-		links{ libs_path.."/ftxui/d_ftxui-screen.lib" }
 	
 -- ==============================
 -- ==============================

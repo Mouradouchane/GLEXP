@@ -5,11 +5,9 @@
 
 namespace tester {
 
-	// bool running = false;
-
-	void init();
-	void run();
-	void shutdown();
+	void init(); // setup tests
+	void run(); // take inputs then run tests 
+	void shutdown(); // save results if possible
 }
 
 #endif // !APPLICATION_HPP
