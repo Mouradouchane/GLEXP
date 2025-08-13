@@ -4,11 +4,18 @@
 #define LOG_HPP
 
 #include <string>
+#include "group/group.hpp"
 #include "test/test.hpp"
 
 namespace logger {
 
 	std::string get_user_input();
+
+	void hint(std::string  const& hint_message);
+	void warn(std::string  const& warn_message);
+	void error(std::string const& error_message);
+
+	void print_help();
 
 	void print_test(test const& _test);
 	void print_tests(test* _tests , u32 size);

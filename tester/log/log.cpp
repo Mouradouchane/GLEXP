@@ -5,6 +5,7 @@
 
 #include "tabulate/table.hpp"
 #include <iostream>
+
 #include "log.hpp"
 
 using namespace tabulate;
@@ -58,7 +59,7 @@ void logger::print_group(group& _group) {
 	table[0].format().font_style({FontStyle::bold});
 	table.format().font_align(FontAlign::center);
 
-	for (test& _test : _group.get_tests_list() ) {
+	for (test const& _test : _group.get_tests_list() ) {
 		table.add_row(RowStream{} << _test.get_id() << _test.get_test_name());
 	}
 
@@ -113,6 +114,42 @@ void logger::print_tests_results(test* _test , u32 size) {
 
 void logger::print_group_results(group const& _group) {
 
+}
+
+void inline print_msg(std::string const& title , std::string const& message , Color color) {
+	Table table;
+
+	table.add_row({ title + message });
+	table.format()	
+		.font_color(color)
+		.border_top("")
+		.border_bottom("")
+		.border_left("")
+		.border_right("")
+		.corner("");
+
+	std::cout << table << "\n";
+}
+
+void logger::hint(std::string const& hint_message) {
+	print_msg("Hint: ", hint_message, Color::green);
+}
+
+void logger::warn(std::string const& warn_message) {
+	print_msg("Warn: ", warn_message, Color::yellow);
+}
+
+void logger::error(std::string const& error_message) {
+	print_msg("Error: ", error_message, Color::red);
+}
+
+void logger::print_help() {
+	std::cout << "\nCommands :\n";
+	std::cout << "exit: stop program;\n";
+	std::cout << "save: save result in tester_logs folder;\n";
+	std::cout << "exec_test  'id': run a test using test id;\n";
+	std::cout << "exec_group 'id': run a group of tests using group id;\n";
+	std::cout << "exec_all       : run all the tests;\n";
 }
 
 #endif
