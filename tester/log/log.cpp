@@ -14,7 +14,8 @@ std::string logger::get_user_input() {
 
 	std::string in_str;
 	std::cout << "\n";
-	std::cout << "command: "; std::cin >> in_str;
+	std::cout << "command: "; 
+	std::getline(std::cin ,in_str);
 
 	return in_str;
 }
@@ -31,8 +32,8 @@ void logger::print_test(test const& _test) {
 	std::cout << table << "\n";
 }
 
-void logger::print_tests(test* _tests, u32 size) {
-	std::cout << "Ungrouped Tests: " << size << " tests\n";
+void logger::print_tests(std::map<u64 , test> const& tests) {
+	std::cout << "Ungrouped Tests: " << tests.size() << " tests\n";
 
 	tabulate::Table table;
 	table.add_row({ "ID", "Test-Name" });
@@ -41,16 +42,18 @@ void logger::print_tests(test* _tests, u32 size) {
 	table[0].format().font_style({FontStyle::bold});
 	table.format().font_align(FontAlign::center);
 
-	for (test* _test = _tests; _test != (_tests + size); _test++) {
-		table.add_row(RowStream{} << _test->get_id() << _test->get_test_name());
+	for ( std::pair<u64, test> const& _test : tests) {
+		table.add_row(RowStream{} << _test.second.get_id() << _test.second.get_test_name());
 	}
 
 	std::cout << table << "\n";
 }
 
-void logger::print_group(group& _group) {
+void logger::print_group(group const& _group) {
 
-	std::cout << "Group: " << _group.get_name() << ", ID: " << _group.get_id() << ", Include: " << _group.get_tests_list().size() << " tests\n";
+	std::cout << "Group   : " << _group.get_name() << "\n";
+	std::cout << "ID      : " << _group.get_id() << "\n";
+	std::cout << "Include : " << _group.get_tests_list().size() << " tests\n";
 
 	tabulate::Table table;
 	table.add_row({ "ID", "Test-Name" });
@@ -59,11 +62,19 @@ void logger::print_group(group& _group) {
 	table[0].format().font_style({FontStyle::bold});
 	table.format().font_align(FontAlign::center);
 
-	for (test const& _test : _group.get_tests_list() ) {
+	for (test const& _test : _group.get_tests_list()) {
 		table.add_row(RowStream{} << _test.get_id() << _test.get_test_name());
 	}
 
 	std::cout << table << "\n";
+}
+
+void logger::print_groups(std::map<u64 , group> const& groups){
+
+	for (std::pair<u64 , group> const& _group : groups) {
+		logger::print_group( _group.second );
+	}
+
 }
 
 void logger::print_test_result(test const& _test) {
@@ -90,13 +101,13 @@ void logger::print_test_result(test const& _test) {
 void logger::print_tests_results(test* _test , u32 size) {
 
 	tabulate::Table table;
-	table.add_row({ "ID", "Test-Name" , "execute-time" , "test-result"});
+	table.add_row({ "ID", "Test-Name" , "Execute-Time" , "Test-Result"});
 
 	table[0].format().font_color(Color::magenta);
 	table[0].format().font_style({FontStyle::bold});
 	table.format().font_align(FontAlign::center);
 
-	for (u32 i = 0; i < size; i++) {
+	for (u32 i = 1; i < size; i++) {
 		test_result test = _test[i].get_test_result();
 
 		table.add_row(
@@ -106,7 +117,36 @@ void logger::print_tests_results(test* _test , u32 size) {
 			(test.success ? "successed" : "failed")
 		);
 
-		table[i+1].format().font_background_color( test.success ? Color::green : Color::red);	
+		table[i].format().font_background_color( test.success ? Color::green : Color::red);	
+	}
+
+	std::cout << table << "\n";
+}
+
+void logger::print_tests_results(std::map<u64 , test>& tests) {
+
+	tabulate::Table table;
+	table.add_row({ "ID", "Test-Name" , "Execute-Time" , "Test-Result"});
+
+	table[0].format().font_color(Color::magenta);
+	table[0].format().font_style({FontStyle::bold});
+	table.format().font_align(FontAlign::center);
+	
+	u32 i = 0;
+	for (std::pair<u64 , test> const& pair : tests) {
+		test const& _test = pair.second;
+		test_result _test_result = _test.get_test_result();
+		
+		table.add_row(
+			RowStream{} << 
+			std::to_string(_test_result.id) << _test.get_test_name() <<
+			(_test_result.last_exec_time > 0 ? (std::to_string(_test_result.last_exec_time) + " ns") : "uncounted") <<
+			(_test_result.success ? "successed" : "failed")
+		);
+
+		table[i+1].format().font_background_color( _test_result.success ? Color::green : Color::red);	
+		
+		i++;
 	}
 
 	std::cout << table << "\n";
@@ -114,6 +154,37 @@ void logger::print_tests_results(test* _test , u32 size) {
 
 void logger::print_group_results(group const& _group) {
 
+	std::cout << "Group   : " << _group.get_name() << "\n";
+	std::cout << "ID      : " << _group.get_id()   << "\n";
+	std::cout << "Include : " << _group.get_tests_list().size() << "\n";
+
+	tabulate::Table table;
+	table.add_row({ "ID", "Test-Name" , "Execute-Time" , "Test-Result"});
+
+	table[0].format().font_color(Color::yellow);
+	table[0].format().font_style({FontStyle::bold});
+	table.format().font_align(FontAlign::center);
+
+	std::vector<test> const& tests = _group.get_tests_list();
+	u64 size = tests.size();
+
+	for (u32 i = 0; i < size; i++) {
+		test_result test = tests[i].get_test_result();
+
+		table.add_row(
+			RowStream{} << 
+			std::to_string(test.id) << tests[i].get_test_name() <<
+			(test.last_exec_time > 0 ? (std::to_string(test.last_exec_time) + " ns") : "uncounted") <<
+			(test.success ? "successed" : "failed")
+		);
+
+		table[i+1].format().font_background_color( test.success ? Color::green : Color::red);	
+	}
+
+	std::cout << table << "\n";
+	std::cout << "Group          : " << _group.get_name() << "\n";
+	std::cout << "ID             : " << _group.get_id()   << "\n";
+	std::cout << "Execution-Time : " << ((group&)_group).get_exec_time() << "ns \n";
 }
 
 void inline print_msg(std::string const& title , std::string const& message , Color color) {
@@ -147,6 +218,7 @@ void logger::print_help() {
 	std::cout << "\nCommands :\n";
 	std::cout << "exit: stop program;\n";
 	std::cout << "save: save result in tester_logs folder;\n";
+	std::cout << "list: show all current tests and groups;\n";
 	std::cout << "exec_test  'id': run a test using test id;\n";
 	std::cout << "exec_group 'id': run a group of tests using group id;\n";
 	std::cout << "exec_all       : run all the tests;\n";

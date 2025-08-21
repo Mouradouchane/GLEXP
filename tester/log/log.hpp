@@ -3,6 +3,7 @@
 #ifndef LOG_HPP
 #define LOG_HPP
 
+#include <map>
 #include <string>
 #include "group/group.hpp"
 #include "test/test.hpp"
@@ -18,11 +19,14 @@ namespace logger {
 	void print_help();
 
 	void print_test(test const& _test);
-	void print_tests(test* _tests , u32 size);
-	void print_group(group& _group);
+	void print_tests(std::map<u64 , test> const& tests);
+
+	void print_group(group const& _group);
+	void print_groups(std::map<u64 , group> const& groups);
 
 	void print_test_result(test const& _test);
 	void print_tests_results(test* _test , u32 size);
+	void print_tests_results(std::map<u64, test>& tests);
 	void print_group_results(group const& _group);
 
 	// this function used by init::shutdown() to save results into .log file

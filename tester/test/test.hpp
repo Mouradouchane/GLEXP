@@ -31,14 +31,16 @@ private: // test private variables
 public :
 
 	// constructor / destructor
-	 test(std::string const& test_name , bool (*test_function)() );
+	test() = delete;
+	test(std::string const& test_name , bool (*test_function)() );
 	~test() = default;
 
 	// test public functions
 	u64 get_id() const;
 	std::string get_test_name() const;
+	test_result get_test_result();
 	test_result get_test_result() const;
-	test_result run_test(bool count_test_execution_time = true);
+	test_result run_test( );
 
 }; // class test end
 

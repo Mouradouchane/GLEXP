@@ -29,11 +29,18 @@ public:
 
 	// group public functions
 	u64 get_id() const;
-	std::string get_name() const;
-	std::vector<test> const& get_tests_list();
 
-	void run_few_tests(std::initializer_list<u64> ids,bool count_group_execution_time = true);
-	void run_all_tests(bool count_group_execution_time = true);
+	u64 get_exec_time();
+	u64 get_exec_time() const;
+
+	std::string get_name();
+	std::string get_name() const;
+
+	std::vector<test> const& get_tests_list();
+	std::vector<test> const& get_tests_list() const;
+
+	void run_few_tests(std::initializer_list<u64> ids);
+	void run_all_tests();
 
 }; // class group end
 

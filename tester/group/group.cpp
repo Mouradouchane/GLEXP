@@ -7,7 +7,6 @@
 #include "group.hpp"
 #include "time/time.hpp"
 
-
 bool compare_tests(test const& a, test const& b) noexcept {
 	return a.get_id() < b.get_id();
 }
@@ -39,58 +38,57 @@ u64 group::get_id() const {
 	return this->id;
 }
 
+u64 group::get_exec_time() {
+	return this->last_exec_time;
+}
+u64 group::get_exec_time() const {
+	return this->last_exec_time;
+}
+
+std::string group::get_name(){
+	return std::string(this->name);
+}
+
 std::string group::get_name() const {
-	return this->name;
+	return std::string(this->name);
 }
 
 std::vector<test> const& group::get_tests_list() {
 	return this->tests;
 }
 
-void group::run_few_tests(std::initializer_list<u64> ids , bool count_group_execution_time) {
+std::vector<test> const& group::get_tests_list() const {
+	return this->tests;
+}
+
+void group::run_few_tests(std::initializer_list<u64> ids) {
 
 	// i know its bad but its just for calling few tests :) 
 
-	if (count_group_execution_time) {
-
-		time_point start_time = std::chrono::high_resolution_clock::now();
-		for (u64 id : ids) {
-			for (test& _test : this->tests) {
-				if (_test.get_id() == id) _test.run_test();
-			}
+	time_point start_time = std::chrono::high_resolution_clock::now();
+	for (u64 id : ids) {
+		for (test& _test : this->tests) {
+			if (_test.get_id() == id) _test.run_test();
 		}
-		time_point end_time   = std::chrono::high_resolution_clock::now();
-
-		nano_second duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
-		this->last_exec_time = u64(duration.count());
-
 	}
-	else {
+	time_point  end_time = std::chrono::high_resolution_clock::now();
+	nano_second duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
 
-		this->last_exec_time = 0u;
-		for (u64 id : ids) {
-			for (test& _test : this->tests) {
-				if (_test.get_id() == id) _test.run_test();
-			}
-		}
-		
-	}
-
+	this->last_exec_time = u64(duration.count());
 }
 
-void group::run_all_tests(bool count_group_execution_time) {
+void group::run_all_tests( ) {
 
-	// todo: add time exection counting
-	if (count_group_execution_time) {
-		COUNT_GROUP_EXEC_TIME(this);
-	}
-	else {
-		this->last_exec_time = 0u;
-		for (test& _test : this->tests) {
-			_test.run_test(false);
-		}
+	time_point start_time = std::chrono::steady_clock::now();
+
+	for (test& _test : this->tests) {
+		_test.run_test();
 	}
 
+	time_point  end_time  = std::chrono::steady_clock::now();
+	nano_second duration  = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - start_time);
+		
+	this->last_exec_time = u64(duration.count());
 }
 
 #endif
