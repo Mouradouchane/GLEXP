@@ -24,13 +24,13 @@ namespace logger {
 	void print_group(group const& _group);
 	void print_groups(std::map<u64 , group> const& groups);
 
-	void print_test_result(test const& _test);
+	void print_test_result(test const& _test , std::string& results_str);
 	void print_tests_results(test* _test , u32 size);
-	void print_tests_results(std::map<u64, test>& tests);
-	void print_group_results(group const& _group);
+	void print_tests_results(std::map<u64, test>& tests , std::string& results_str);
+	void print_group_results(group const& _group , std::string& results_str);
 
-	// this function used by init::shutdown() to save results into .log file
-	bool save_result_into_log_file();
+	// used by "save command or application::shutdown()" to save tests results in .log file
+	bool save_tests_results_in_log_file(std::string const& results_as_str);
 
 }
 

@@ -5,10 +5,19 @@
 
 #include "tabulate/table.hpp"
 #include <iostream>
+#include <fstream>
+#include <ostream>
+#include <filesystem> 
 
+#include "time/time.hpp"
 #include "log.hpp"
 
 using namespace tabulate;
+
+// private function's
+std::string test_to_string(test const& _test);
+
+// ==================
 
 std::string logger::get_user_input() {
 
@@ -19,6 +28,49 @@ std::string logger::get_user_input() {
 
 	return in_str;
 }
+
+bool logger::save_tests_results_in_log_file( std::string const& results_as_str ) {
+	
+	if (results_as_str == "") return false;
+	std::string logs_folder_path = "tester_logs";
+
+	// if folder found
+	if (!std::filesystem::exists(logs_folder_path) || !std::filesystem::is_directory(logs_folder_path)) {
+		logger::warn("tester_logs folder not found !");
+		
+		// try to create folder for the logs
+		if ( ! std::filesystem::create_directory(logs_folder_path)) {
+			logger::error("failed to create tester_logs folder !");
+			logger::error("failed to save tests results into .log file !");
+			return false;
+		}
+	}
+
+	logger::hint("tester_logs folder found !");
+
+	std::string file_name = ""; generate_file_name(file_name);
+
+	std::string file_path = "tester_logs/" + file_name;
+	std::ofstream log_file( file_path );
+
+	// try to write to log_file
+	if (log_file.is_open()) { 
+		logger::hint("writing results to " + file_name + " file.");
+		log_file << results_as_str;
+		log_file.close();
+		return true;
+	}
+	else { // failed to write or open log_file
+		logger::error("failed to open file or create " + file_name + " file !");
+		logger::error("failed to save tests results into .log file !");
+		return false;
+	}
+
+}
+
+/*
+	print tests/groups
+*/
 
 void logger::print_test(test const& _test) {
 	tabulate::Table table;
@@ -77,7 +129,12 @@ void logger::print_groups(std::map<u64 , group> const& groups){
 
 }
 
-void logger::print_test_result(test const& _test) {
+
+/*
+	print results of tests/groups
+*/
+
+void logger::print_test_result(test const& _test , std::string& results_str) {
 
 	test_result result = _test.get_test_result();
 
@@ -96,6 +153,8 @@ void logger::print_test_result(test const& _test) {
 
 	table[1].format().font_background_color( result.success ? Color::green : Color::red);	
 	std::cout << table << "\n";
+
+	results_str += test_to_string(_test);
 }
 
 void logger::print_tests_results(test* _test , u32 size) {
@@ -123,7 +182,7 @@ void logger::print_tests_results(test* _test , u32 size) {
 	std::cout << table << "\n";
 }
 
-void logger::print_tests_results(std::map<u64 , test>& tests) {
+void logger::print_tests_results(std::map<u64 , test>& tests , std::string& results_str) {
 
 	tabulate::Table table;
 	table.add_row({ "ID", "Test-Name" , "Execute-Time" , "Test-Result"});
@@ -132,7 +191,7 @@ void logger::print_tests_results(std::map<u64 , test>& tests) {
 	table[0].format().font_style({FontStyle::bold});
 	table.format().font_align(FontAlign::center);
 	
-	u32 i = 0;
+	u64 i = 0;
 	for (std::pair<u64 , test> const& pair : tests) {
 		test const& _test = pair.second;
 		test_result _test_result = _test.get_test_result();
@@ -145,14 +204,14 @@ void logger::print_tests_results(std::map<u64 , test>& tests) {
 		);
 
 		table[i+1].format().font_background_color( _test_result.success ? Color::green : Color::red);	
-		
+		results_str += test_to_string(_test);
 		i++;
 	}
 
 	std::cout << table << "\n";
 }
 
-void logger::print_group_results(group const& _group) {
+void logger::print_group_results(group const& _group, std::string& results_str) {
 
 	std::cout << "Group   : " << _group.get_name() << "\n";
 	std::cout << "ID      : " << _group.get_id()   << "\n";
@@ -168,7 +227,7 @@ void logger::print_group_results(group const& _group) {
 	std::vector<test> const& tests = _group.get_tests_list();
 	u64 size = tests.size();
 
-	for (u32 i = 0; i < size; i++) {
+	for (size_t i = 0; i < size; i++) {
 		test_result test = tests[i].get_test_result();
 
 		table.add_row(
@@ -178,7 +237,8 @@ void logger::print_group_results(group const& _group) {
 			(test.success ? "successed" : "failed")
 		);
 
-		table[i+1].format().font_background_color( test.success ? Color::green : Color::red);	
+		results_str += test_to_string(tests[i]);
+		table[size_t(i+1)].format().font_background_color( test.success ? Color::green : Color::red);	
 	}
 
 	std::cout << table << "\n";
@@ -187,6 +247,29 @@ void logger::print_group_results(group const& _group) {
 	std::cout << "Execution-Time : " << ((group&)_group).get_exec_time() << "ns \n";
 }
 
+std::string test_to_string(test const& _test) {
+	test_result trslt = _test.get_test_result();
+	std::string str_line = "";
+
+	str_line += _test.get_test_name();
+	for (size_t i = str_line.size(); i < 32; i++) {
+		str_line += " ";
+	}
+	std::string time_str = std::to_string(trslt.last_exec_time) + "ns ";
+	str_line += time_str;
+	for (size_t i = time_str.size(); i < 16; i++) {
+		str_line += " ";
+	}
+
+	str_line += (trslt.success ? "successed" : "failed");
+	str_line += "\n";
+
+	return str_line;
+}
+
+/*
+	logger print functions
+*/
 void inline print_msg(std::string const& title , std::string const& message , Color color) {
 	Table table;
 
@@ -216,12 +299,16 @@ void logger::error(std::string const& error_message) {
 
 void logger::print_help() {
 	std::cout << "\nCommands :\n";
-	std::cout << "exit: stop program;\n";
+	std::cout << "exit: save all current results and exit program;\n";
 	std::cout << "save: save result in tester_logs folder;\n";
-	std::cout << "list: show all current tests and groups;\n";
-	std::cout << "exec_test  'id': run a test using test id;\n";
-	std::cout << "exec_group 'id': run a group of tests using group id;\n";
-	std::cout << "exec_all       : run all the tests;\n";
+	std::cout << "list_all: show all current tests and groups;\n";
+	std::cout << "list_tests: show all ungrouped tests;\n";
+	std::cout << "list_groups: show all current groups;\n";
+	std::cout << "clear_console: clear console from text;\n";
+	std::cout << "clear_results: clear all tests results;\n";
+	std::cout << "exec_test  'id1 , id2 , ...': run a test using test id;\n";
+	std::cout << "exec_group 'id1 , id2 , ...': run a group of tests using group id;\n";
+	std::cout << "exec_all: run all the tests;\n";
 }
 
 #endif

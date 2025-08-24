@@ -7,5 +7,5 @@ int main() {
 	tester::run();
 	tester::shutdown();
 
-	return 0;
+	return EXIT_SUCCESS;
 }

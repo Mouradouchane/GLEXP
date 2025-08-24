@@ -54,7 +54,7 @@ project("glexp_project")
 	-- project type
 	kind("WindowedApp")
 	language "C++"
-
+	cppdialect "C++17"
 	-- exe/obj output folder
 	targetdir(build_path) 
 	objdir(build_path.."/binaries/") 
@@ -109,6 +109,7 @@ project("tester")
 	-- project  config
 	kind("ConsoleApp")
 	language "C++"
+	cppdialect "C++17"
 	architecture("x64")
 
 	-- build output path

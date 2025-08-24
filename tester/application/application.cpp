@@ -12,12 +12,19 @@
 #include "test/test.hpp"
 #include "group/group.hpp"
 #include "log/log.hpp"
+#include "string/string_utility.hpp"
 #include "application.hpp"
 
+// few private functions for tester::execute() function
+static inline void exec_all_function();
+static inline void exec_tests_function(std::string& command, std::vector<std::string>* command_toknes);
+static inline void exec_groups_function(std::string& command, std::vector<std::string>* command_toknes);
+	
 namespace tester {
 
-	bool make_log_file = true;
 	bool running = true;
+	// used to save all results in one string to be saved in .log file later
+	std::string results_history;
 
 	std::map<u64, group> groups;
 	std::map<u64, test>  tests;
@@ -25,15 +32,15 @@ namespace tester {
 	bool proto_test_success() {
 		bool x = false;
 		u32  y = x + 2;
-		u64  z = y * x;
-		for (u32 i = 1; i < 150; i++) z = i * x * y;
+		u64  z = u64(y * x);
+		for (size_t i = 1; i < 150; i++) z = i;
 		return true;
 	}
 	bool proto_test_fail() {
-		int y = 1 + 2;
+		int  y = 1 + 2;
 		bool x = false;
-		u64 z = y * x;
-		for (u32 i = 0; i < 100; i++) z = i * x * y;
+		u64  z = u64(y * x);
+		for (size_t i = 0; i < 100; i++) z = i;
 		return false;
 	}
 
@@ -48,20 +55,20 @@ namespace tester {
 	void init() { // setup tests/groups
 
 		tester::add_group(
-			group("stack_tests", {
-				test("test_push_1", proto_test_fail),
-				test("test_push_2", proto_test_success),
-				test("test_pop"   , proto_test_fail),
-				test("test_peek_0", proto_test_success),
-				test("test_per2"  , proto_test_fail),
+			group("s_tests", {
+				test("ph_1"  , proto_test_fail),
+				test("ps_2"  , proto_test_success),
+				test("pp"    , proto_test_fail),
+				test("peek_0", proto_test_success),
+				test("per0"  , proto_test_fail),
 			})
 		);
 
 		tester::add_group(
 			group("g_tests", {
-				test("tesg_push_1", proto_test_success),
-				test("tesg_peek_0", proto_test_fail),
-				test("tesg_per2"  , proto_test_success),
+				test("test_push_1", proto_test_success),
+				test("test_peek_0", proto_test_fail),
+				test("test_per2"  , proto_test_success),
 			})
 		);
 
@@ -74,43 +81,14 @@ namespace tester {
 			})
 		);
 
-		tester::add_test(test("uq_1", proto_test_fail));
-		tester::add_test(test("uq_2", proto_test_success));
-		tester::add_test(test("uq_3", proto_test_success));
-		tester::add_test(test("uq_4", proto_test_success));
-		tester::add_test(test("uq_5", proto_test_success));
-		tester::add_test(test("uq_6", proto_test_fail));
+		tester::add_test(test("ug_1", proto_test_fail));
+		tester::add_test(test("ug_2", proto_test_success));
+		tester::add_test(test("ug_3", proto_test_success));
+		tester::add_test(test("ug_4", proto_test_success));
+		tester::add_test(test("ug_5", proto_test_success));
+		tester::add_test(test("ug_6", proto_test_fail));
 
 		logger::print_help();
-	}
-	
-	std::vector<std::string>* split_string_by_space(std::string const& str) {
-
-		std::vector<std::string>* tokens = new std::vector<std::string>();
-		std::istringstream iss(str);
-		std::string token;
-
-		while (iss >> token) { // Extract words until the end of the stream
-			tokens->push_back(token);
-		}
-		return tokens;
-	}
-
-	std::vector<u64>* strings_to_u64_ids(std::string* start, std::string* end) {
-
-		std::vector<u64>* ids = new std::vector<u64>( u64((end+1) - start) );
-		
-		u64 i = 0;
-		for (std::string* str = start ; str != (end+1); str++) {
-
-			const char* s = str->c_str();
-			char*       e = ((char*)s) + str->size();
-
-			*(ids->begin() + i) = u64( std::strtoul( s, &e , 10) );
-			i++;
-		}
-
-		return ids;
 	}
 
 	void execute(std::string const& user_command) {
@@ -122,14 +100,41 @@ namespace tester {
 
 		std::string command = *command_toknes->begin();
 
-		// find command to execute
+		/*/
+			find command to execute
+		*/ 
+
 		if (command == "help") {
 			logger::print_help();
 			return;
 		}
 
-		if (command == "list") {
+		if (command == "clear_console") {
+		#ifdef _WIN32 || _WIN64
+			system("cls");
+		#else 
+			system("clear");
+		#endif
+			return;
+		}
+
+		if (command == "clear_results") {
+			results_history = "";
+			logger::warn("all current tests results removed from history !");
+			return;
+		}
+
+		if (command == "list_all") {
 			logger::print_groups(groups);
+			logger::print_tests(tests);
+			return;
+		}
+
+		if (command == "list_groups") {
+			logger::print_groups(groups);
+			return;
+		}
+		if (command == "list_tests") {
 			logger::print_tests(tests);
 			return;
 		}
@@ -140,110 +145,22 @@ namespace tester {
 		}
 
 		if (command == "save") {
-			// todo : implement save system
-
+			logger::save_tests_results_in_log_file(results_history);
 			return;
 		}
 
 		if (command == "exec_test") {
-
-			if (command_toknes->size() <= 1) {
-				logger::error("no argument found with command exec_test");
-				logger::hint("exec_test id1 id2 ....");
-				logger::hint("exec_test *");
-
-				return;
-			}
-
-			if ((*command_toknes)[1] == "*") {
-				
-				logger::hint("Start All The Ungrouped Tests ...");
-				for (auto& pair : tests) {
-					pair.second.run_test();
-				}
-				logger::hint("Ungrouped Tests Finished !");
-
-				logger::print_tests_results(tests);
-				
-				return;
-			}
-
-			std::vector<u64>* ids = strings_to_u64_ids(
-				&*(command_toknes->begin() + 1), 
-				&*(command_toknes->rbegin())
-			);
-
-			for (u64 id : *ids) {
-				
-				auto pair = tests.find(id);
-
-				if (pair == tests.end()) {
-					logger::error("Test with ID " + std::to_string(id) + " Not Found !");
-				}
-				else {
-					test& _test = pair->second;
-
-					logger::hint("Test " + _test.get_test_name() + " with ID:" + std::to_string(_test.get_id()) + " Found !");
-					_test.run_test();
-
-					logger::print_test_result(_test);
-				}
-				
-			}
-
-			delete ids;
+			exec_tests_function(command, command_toknes);
 			return;
 		}
 
 		if (command == "exec_group") {
-
-			if (command_toknes->size() <= 1) {
-				logger::error("no argument found with command exec_group");
-				logger::hint("exec_group id1 id2 ....");
-				logger::hint("exec_group *");
-
-				return;
-			}
-
-			if ((*command_toknes)[1] == "*") {
-
-				for (auto& pair : groups) {
-					logger::hint("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
-					pair.second.run_all_tests();
-					logger::hint("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
-
-					logger::print_group_results(pair.second);
-				}
-
-				return;
-			}
-
-			std::vector<u64>* ids = strings_to_u64_ids(
-				&*(command_toknes->begin() + 1), 
-				&*(command_toknes->rbegin())
-			);
-
-			for (u64 id : *ids) {
-				auto pair = groups.find(id);
-
-				if (pair == groups.end()) {
-					logger::error("Group with ID " + std::to_string(id) + " Not Found !");
-				}
-				else {
-					logger::hint("Group " + pair->second.get_name() + " with ID:" + std::to_string(id) + " Found !");
-					pair->second.run_all_tests();
-					logger::hint("Group " + pair->second.get_name() + " Finished in " + std::to_string(pair->second.get_exec_time()) + "ns !");
-
-					logger::print_group_results(pair->second);
-				}
-			}
-
-			delete ids;
+			exec_groups_function(command, command_toknes);
 			return;
 		}
 
 		if (command == "exec_all") {
-
+			exec_all_function();
 			return;
 		}
 
@@ -263,10 +180,140 @@ namespace tester {
 	}
 
 	void shutdown() {
-		// ask for : save test result into .log file
-		
+		std::cout << "press (Y) to save results before exit:";
+
+		std::string command = ""; std::getline(std::cin ,command);
+		std::cout << "\n";
+
+		if(command == "Y" || command == "y") logger::save_tests_results_in_log_file(results_history);
 	}
 
 }
+
+
+/*
+	 private functions for tester
+*/
+
+static inline void exec_all_function() {
+
+	// execute all ungrouped tests
+	for (auto& pair : tester::tests) {
+		pair.second.run_test();
+	}
+	logger::hint("Ungrouped Tests Finished !");
+
+	logger::print_tests_results(tester::tests , tester::results_history);
+
+	// execute all groups
+	for (auto& pair : tester::groups) {
+		logger::hint("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
+		pair.second.run_all_tests();
+		logger::hint("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
+
+		logger::print_group_results(pair.second, tester::results_history);
+	}
+
+}
+
+static inline void exec_tests_function(std::string& command , std::vector<std::string>* command_toknes) {
+
+	if (command_toknes->size() <= 1) {
+		logger::error("no argument found with command exec_test");
+		logger::hint("exec_test id1 id2 ....");
+		logger::hint("exec_test *");
+
+		return;
+	}
+
+	// execute all ungrouped tests
+	if ((*command_toknes)[1] == "*") {
+
+		logger::hint("Start All The Ungrouped Tests ...");
+		for (auto& pair : tester::tests) {
+			pair.second.run_test();
+		}
+		logger::hint("Ungrouped Tests Finished !");
+
+		logger::print_tests_results(tester::tests , tester::results_history);
+
+		return;
+	}
+
+	std::vector<u64>* ids = strings_to_u64_ids(
+		&*(command_toknes->begin() + 1), 
+		&*(command_toknes->rbegin())
+	);
+
+	// execute few ungrouped tests
+	for (u64 id : *ids) {
+
+		auto pair = tester::tests.find(id);
+
+		if (pair == tester::tests.end()) {
+			logger::error("Test with ID " + std::to_string(id) + " Not Found !");
+		}
+		else {
+			test& _test = pair->second;
+
+			logger::hint("Test " + _test.get_test_name() + " with ID:" + std::to_string(_test.get_id()) + " Found !");
+			_test.run_test();
+
+			logger::print_test_result(_test , tester::results_history);
+		}
+
+	}
+
+	delete ids;
+}
+
+static inline void exec_groups_function(std::string& command, std::vector<std::string>* command_toknes) {
+
+	if (command_toknes->size() <= 1) {
+		logger::error("no argument found with command exec_group");
+		logger::hint("exec_group id1 id2 ....");
+		logger::hint("exec_group *");
+
+		return;
+	}
+
+	// execute all groups
+	if ((*command_toknes)[1] == "*") {
+
+		for (auto& pair : tester::groups) {
+			logger::hint("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
+			pair.second.run_all_tests();
+			logger::hint("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
+
+			logger::print_group_results(pair.second , tester::results_history);
+		}
+
+		return;
+	}
+
+	std::vector<u64>* ids = strings_to_u64_ids(
+		&*(command_toknes->begin() + 1), 
+		&*(command_toknes->rbegin())
+	);
+
+	// execute few groups
+	for (u64 id : *ids) {
+		auto pair = tester::groups.find(id);
+
+		if (pair == tester::groups.end()) {
+			logger::error("Group with ID " + std::to_string(id) + " Not Found !");
+		}
+		else {
+			logger::hint("Group " + pair->second.get_name() + " with ID:" + std::to_string(id) + " Found !");
+			pair->second.run_all_tests();
+			logger::hint("Group " + pair->second.get_name() + " Finished in " + std::to_string(pair->second.get_exec_time()) + "ns !");
+
+			logger::print_group_results(pair->second , tester::results_history);
+		}
+	}
+
+	delete ids;
+}
+
 
 #endif // APPLICATION_CPP
