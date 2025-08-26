@@ -11,13 +11,12 @@
 
 #include "time/time.hpp"
 #include "log.hpp"
+#include "string/string_utility.hpp"
 
 using namespace tabulate;
+namespace fs = std::filesystem;
 
-// private function's
-std::string test_to_string(test const& _test);
-
-// ==================
+// ========================================================================
 
 std::string logger::get_user_input() {
 
@@ -64,6 +63,86 @@ bool logger::save_tests_results_in_log_file( std::string const& results_as_str )
 		logger::error("failed to open file or create " + file_name + " file !");
 		logger::error("failed to save tests results into .log file !");
 		return false;
+	}
+
+}
+
+void logger::load_old_tests_from_files(std::map<std::string, old_test_result>& output_map) {
+	
+	fs::path tester_path = "./tester_logs";
+	
+	if ( ! fs::is_directory(tester_path)) {
+		logger::warn("tester_logs folder not found !");
+		return;
+	}
+	
+	logger::hint("searching for log files ...");
+	std::vector<std::string> log_files_list;
+	for (fs::directory_entry const& entry : fs::directory_iterator(tester_path)) {
+
+		// get all .log files names 
+		if (fs::is_regular_file(entry.status())) {
+			std::string file_name = entry.path().string();
+			
+			if ( ends_with(file_name, ".log") ) {
+				log_files_list.push_back(file_name);
+			}
+		}
+	}
+
+	if (log_files_list.size() == 0) {
+		logger::warn("no log file found !");
+		return;
+	}
+
+	// try to load & parse old_results from log files
+	for (std::string const& file_name : log_files_list) {
+
+		std::ifstream log_file(file_name);
+		if (log_file.is_open()) {
+			std::string str_line;
+			logger::hint("loading old results from file " + file_name);
+
+			// load log file data
+			while (std::getline(log_file, str_line)) {
+
+				// parse + process data
+				std::vector<std::string>* values = nullptr;
+				values = split_string_by_space(str_line);
+
+				if ((values != nullptr) && (values->size() >= 3)) {
+
+					bool success = (*(values->begin() + 2) == "successed" ? true : false);
+					if (!success) continue;
+
+					u64 test_time    = string_to_u64(*(values->begin() + 1));
+					std::string name = *(values->begin());
+
+					auto& old_test_itr = output_map.find(*(values->begin()));
+
+					// if aleary in the map
+					if ((old_test_itr != output_map.end())) {
+
+						if (old_test_itr->second.exec_time != 0 && old_test_itr->second.exec_time > test_time) {
+							old_test_itr->second.exec_time = test_time;
+						}
+					}
+					else {
+						output_map.insert(
+							{ name , old_test_result{ success , test_time } }
+						);
+					}
+
+				}
+
+				(values != nullptr) ? delete values : 0;
+			}
+
+		}
+		else logger::error("failed to open file " + file_name);
+
+		log_file.close();
+		logger::hint("loading results from file " + file_name + " is done .");
 	}
 
 }
@@ -139,7 +218,7 @@ void logger::print_test_result(test const& _test , std::string& results_str) {
 	test_result result = _test.get_test_result();
 
 	tabulate::Table table;
-	table.add_row({ "ID", "Test-Name" , "execute-time" , "test-result"});
+	table.add_row({ "ID" , "Test-Name" , "Execute-Time" , "Best-Time" , "Test-Result" });
 
 	table[0].format().font_color(Color::magenta);
 	table[0].format().font_style({FontStyle::bold});
@@ -247,28 +326,9 @@ void logger::print_group_results(group const& _group, std::string& results_str) 
 	std::cout << "Execution-Time : " << ((group&)_group).get_exec_time() << "ns \n";
 }
 
-std::string test_to_string(test const& _test) {
-	test_result trslt = _test.get_test_result();
-	std::string str_line = "";
-
-	str_line += _test.get_test_name();
-	for (size_t i = str_line.size(); i < 32; i++) {
-		str_line += " ";
-	}
-	std::string time_str = std::to_string(trslt.last_exec_time) + "ns ";
-	str_line += time_str;
-	for (size_t i = time_str.size(); i < 16; i++) {
-		str_line += " ";
-	}
-
-	str_line += (trslt.success ? "successed" : "failed");
-	str_line += "\n";
-
-	return str_line;
-}
 
 /*
-	logger print functions
+	log functions
 */
 void inline print_msg(std::string const& title , std::string const& message , Color color) {
 	Table table;

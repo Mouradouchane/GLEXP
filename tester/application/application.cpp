@@ -23,8 +23,10 @@ static inline void exec_groups_function(std::string& command, std::vector<std::s
 namespace tester {
 
 	bool running = true;
+
 	// used to save all results in one string to be saved in .log file later
 	std::string results_history;
+	std::map<std::string, old_test_result> old_tests;
 
 	std::map<u64, group> groups;
 	std::map<u64, test>  tests;
@@ -88,6 +90,7 @@ namespace tester {
 		tester::add_test(test("ug_5", proto_test_success));
 		tester::add_test(test("ug_6", proto_test_fail));
 
+		logger::load_old_tests_from_files(old_tests);
 		logger::print_help();
 	}
 

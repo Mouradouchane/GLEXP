@@ -32,6 +32,7 @@ namespace logger {
 	// used by "save command or application::shutdown()" to save tests results in .log file
 	bool save_tests_results_in_log_file(std::string const& results_as_str);
 
+	void load_old_tests_from_files(std::map<std::string , old_test_result>& output_map);
 }
 
 

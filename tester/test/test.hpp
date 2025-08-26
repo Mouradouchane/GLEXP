@@ -14,6 +14,11 @@ struct test_result {
 	u64  last_exec_time = 0u;
 };
 
+struct old_test_result {
+	bool success     = false;
+	u64  exec_time   = 0u;
+};
+
 // test class to represent test with its variables as object 
 class test {
 
