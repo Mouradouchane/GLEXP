@@ -213,9 +213,12 @@ void logger::print_groups(std::map<u64 , group> const& groups){
 	print results of tests/groups
 */
 
-void logger::print_test_result(test const& _test , std::string& results_str) {
+void logger::print_test_result(test const& _test , std::string& results_str, std::map<std::string,old_test_result>& old_results) {
 
 	test_result result = _test.get_test_result();
+	
+	auto& old_test = old_results.find(_test.get_test_name());
+	u64   old_time = (old_test == old_results.end()) ? 0u : old_test->second.exec_time;
 
 	tabulate::Table table;
 	table.add_row({ "ID" , "Test-Name" , "Execute-Time" , "Best-Time" , "Test-Result" });
@@ -227,44 +230,29 @@ void logger::print_test_result(test const& _test , std::string& results_str) {
 	table.add_row(
 		RowStream{} << std::to_string(_test.get_id()) << _test.get_test_name() <<
 		(result.last_exec_time > 0 ? (std::to_string(result.last_exec_time) + " ns") : "uncounted") <<
+		(old_time > 0 ? std::to_string(old_time) + "ns" : "unkown" ) <<
 		(result.success ? "successed" : "failed")
 	);
 
-	table[1].format().font_background_color( result.success ? Color::green : Color::red);	
+	// log table
+	table[1].format().font_background_color(result.success ? Color::green : Color::red);	
 	std::cout << table << "\n";
 
+	// save test if better time-record
+	if (old_time > result.last_exec_time && result.success) {
+		logger::hint("new time-record for test " + _test.get_test_name() + ", from " + std::to_string(old_time) + "ns to " + std::to_string(result.last_exec_time) + "ns good job .");
+		old_test->second.success   = result.success;
+		old_test->second.exec_time = result.last_exec_time;
+	}
+
+	// save results to string history
 	results_str += test_to_string(_test);
 }
 
-void logger::print_tests_results(test* _test , u32 size) {
+void logger::print_tests_results(std::map<u64 , test>& tests , std::string& results_str, std::map<std::string,old_test_result>& old_results) {
 
 	tabulate::Table table;
-	table.add_row({ "ID", "Test-Name" , "Execute-Time" , "Test-Result"});
-
-	table[0].format().font_color(Color::magenta);
-	table[0].format().font_style({FontStyle::bold});
-	table.format().font_align(FontAlign::center);
-
-	for (u32 i = 1; i < size; i++) {
-		test_result test = _test[i].get_test_result();
-
-		table.add_row(
-			RowStream{} << 
-			std::to_string(test.id) << _test[i].get_test_name() <<
-			(test.last_exec_time > 0 ? (std::to_string(test.last_exec_time) + " ns") : "uncounted") <<
-			(test.success ? "successed" : "failed")
-		);
-
-		table[i].format().font_background_color( test.success ? Color::green : Color::red);	
-	}
-
-	std::cout << table << "\n";
-}
-
-void logger::print_tests_results(std::map<u64 , test>& tests , std::string& results_str) {
-
-	tabulate::Table table;
-	table.add_row({ "ID", "Test-Name" , "Execute-Time" , "Test-Result"});
+	table.add_row({ "ID", "Test-Name" , "Execute-Time" , "Best-Time" , "Test-Result"});
 
 	table[0].format().font_color(Color::magenta);
 	table[0].format().font_style({FontStyle::bold});
@@ -272,32 +260,48 @@ void logger::print_tests_results(std::map<u64 , test>& tests , std::string& resu
 	
 	u64 i = 0;
 	for (std::pair<u64 , test> const& pair : tests) {
+		// get current result and old result
 		test const& _test = pair.second;
 		test_result _test_result = _test.get_test_result();
+
+		auto& old_test = old_results.find(_test.get_test_name());
+		u64   old_time = (old_test == old_results.end()) ? 0u : old_test->second.exec_time;
 		
+		// setup row
 		table.add_row(
 			RowStream{} << 
 			std::to_string(_test_result.id) << _test.get_test_name() <<
 			(_test_result.last_exec_time > 0 ? (std::to_string(_test_result.last_exec_time) + " ns") : "uncounted") <<
+			(old_time > 0 ? std::to_string(old_time)+ "ns" : "unkown" ) <<
 			(_test_result.success ? "successed" : "failed")
 		);
 
-		table[i+1].format().font_background_color( _test_result.success ? Color::green : Color::red);	
+		// save test if better time-record
+		if (old_time > _test_result.last_exec_time && _test_result.success) {
+			logger::hint("new time-record for test " + _test.get_test_name() + ", from " + std::to_string(old_time) + "ns to " + std::to_string(_test_result.last_exec_time) + "ns good job .");
+			old_test->second.success   = _test_result.success;
+			old_test->second.exec_time = _test_result.last_exec_time;
+		}
+
+		table[i+1].format().font_background_color(_test_result.success ? Color::green : Color::red);	
+		// log to the table
 		results_str += test_to_string(_test);
 		i++;
 	}
-
+	
 	std::cout << table << "\n";
 }
 
-void logger::print_group_results(group const& _group, std::string& results_str) {
+void logger::print_group_results(group const& _group, std::string& results_str, std::map<std::string,old_test_result>& old_results) {
 
+	std::cout << "===================================\n";
 	std::cout << "Group   : " << _group.get_name() << "\n";
 	std::cout << "ID      : " << _group.get_id()   << "\n";
 	std::cout << "Include : " << _group.get_tests_list().size() << "\n";
+	std::cout << "===================================\n";
 
 	tabulate::Table table;
-	table.add_row({ "ID", "Test-Name" , "Execute-Time" , "Test-Result"});
+	table.add_row({ "ID" , "Test-Name" , "Execute-Time" , "Best-Time" , "Test-Result" });
 
 	table[0].format().font_color(Color::yellow);
 	table[0].format().font_style({FontStyle::bold});
@@ -307,23 +311,39 @@ void logger::print_group_results(group const& _group, std::string& results_str) 
 	u64 size = tests.size();
 
 	for (size_t i = 0; i < size; i++) {
-		test_result test = tests[i].get_test_result();
+		test_result result = tests[i].get_test_result();
+
+		auto& old_test = old_results.find( tests[i].get_test_name());
+		u64   old_time = (old_test == old_results.end()) ? 0u : old_test->second.exec_time;
 
 		table.add_row(
 			RowStream{} << 
-			std::to_string(test.id) << tests[i].get_test_name() <<
-			(test.last_exec_time > 0 ? (std::to_string(test.last_exec_time) + " ns") : "uncounted") <<
-			(test.success ? "successed" : "failed")
+			std::to_string(result.id) << tests[i].get_test_name() <<
+			(result.last_exec_time > 0 ? (std::to_string(result.last_exec_time) + " ns") : "uncounted") <<
+			(old_time > 0 ? std::to_string(old_time)+ "ns" : "unkown") <<
+			(result.success ? "successed" : "failed")
 		);
 
+		// save test if better time-record
+		if (old_time > result.last_exec_time && result.success) {
+			logger::hint("new time-record for test " + tests[i].get_test_name() + ", from " + std::to_string(old_time) + "ns to " + std::to_string(result.last_exec_time) + "ns good job .");
+			old_test->second.success   = result.success;
+			old_test->second.exec_time = result.last_exec_time;
+		}
+
+		table[size_t(i+1)].format().font_background_color(result.success ? Color::green : Color::red);	
+		
+		// save results to string history
 		results_str += test_to_string(tests[i]);
-		table[size_t(i+1)].format().font_background_color( test.success ? Color::green : Color::red);	
 	}
 
 	std::cout << table << "\n";
+	std::cout << "===================================\n";
 	std::cout << "Group          : " << _group.get_name() << "\n";
 	std::cout << "ID             : " << _group.get_id()   << "\n";
 	std::cout << "Execution-Time : " << ((group&)_group).get_exec_time() << "ns \n";
+	std::cout << "===================================\n";
+
 }
 
 

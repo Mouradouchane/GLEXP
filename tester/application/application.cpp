@@ -206,7 +206,7 @@ static inline void exec_all_function() {
 	}
 	logger::hint("Ungrouped Tests Finished !");
 
-	logger::print_tests_results(tester::tests , tester::results_history);
+	logger::print_tests_results(tester::tests , tester::results_history, tester::old_tests);
 
 	// execute all groups
 	for (auto& pair : tester::groups) {
@@ -214,7 +214,7 @@ static inline void exec_all_function() {
 		pair.second.run_all_tests();
 		logger::hint("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
 
-		logger::print_group_results(pair.second, tester::results_history);
+		logger::print_group_results(pair.second, tester::results_history, tester::old_tests);
 	}
 
 }
@@ -238,7 +238,7 @@ static inline void exec_tests_function(std::string& command , std::vector<std::s
 		}
 		logger::hint("Ungrouped Tests Finished !");
 
-		logger::print_tests_results(tester::tests , tester::results_history);
+		logger::print_tests_results(tester::tests , tester::results_history , tester::old_tests);
 
 		return;
 	}
@@ -262,7 +262,7 @@ static inline void exec_tests_function(std::string& command , std::vector<std::s
 			logger::hint("Test " + _test.get_test_name() + " with ID:" + std::to_string(_test.get_id()) + " Found !");
 			_test.run_test();
 
-			logger::print_test_result(_test , tester::results_history);
+			logger::print_test_result(_test , tester::results_history, tester::old_tests);
 		}
 
 	}
@@ -288,7 +288,7 @@ static inline void exec_groups_function(std::string& command, std::vector<std::s
 			pair.second.run_all_tests();
 			logger::hint("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
 
-			logger::print_group_results(pair.second , tester::results_history);
+			logger::print_group_results(pair.second , tester::results_history, tester::old_tests);
 		}
 
 		return;
@@ -311,7 +311,7 @@ static inline void exec_groups_function(std::string& command, std::vector<std::s
 			pair->second.run_all_tests();
 			logger::hint("Group " + pair->second.get_name() + " Finished in " + std::to_string(pair->second.get_exec_time()) + "ns !");
 
-			logger::print_group_results(pair->second , tester::results_history);
+			logger::print_group_results(pair->second , tester::results_history, tester::old_tests);
 		}
 	}
 
