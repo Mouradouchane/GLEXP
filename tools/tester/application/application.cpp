@@ -31,21 +31,6 @@ namespace tester {
 	std::map<u64, group> groups;
 	std::map<u64, test>  tests;
 
-	bool proto_test_success() {
-		bool x = false;
-		u32  y = x + 2;
-		u64  z = u64(y * x);
-		for (size_t i = 1; i < 150; i++) z = i;
-		return true;
-	}
-	bool proto_test_fail() {
-		int  y = 1 + 2;
-		bool x = false;
-		u64  z = u64(y * x);
-		for (size_t i = 0; i < 100; i++) z = i;
-		return false;
-	}
-
 	void add_group(group& _group) {
 		tester::groups.insert({ _group.get_id() , _group });
 	}
@@ -54,41 +39,11 @@ namespace tester {
 		tester::tests.insert({ _test.get_id() , _test });
 	}
 
-	void init() { // setup tests/groups
+	// setup tests and groups + loading old results from files
+	void init() { 
 
-		tester::add_group(
-			group("s_tests", {
-				test("ph_1"  , proto_test_fail),
-				test("ps_2"  , proto_test_success),
-				test("pp"    , proto_test_fail),
-				test("peek_0", proto_test_success),
-				test("per0"  , proto_test_fail),
-			})
-		);
+	
 
-		tester::add_group(
-			group("g_tests", {
-				test("test_push_1", proto_test_success),
-				test("test_peek_0", proto_test_fail),
-				test("test_per2"  , proto_test_success),
-			})
-		);
-
-		tester::add_group(
-			group("k_tests", {
-				test("kh_1", proto_test_fail),
-				test("kh_2", proto_test_fail),
-				test("k"   , proto_test_fail),
-				test("kk_0", proto_test_fail),
-			})
-		);
-
-		tester::add_test(test("ug_1", proto_test_fail));
-		tester::add_test(test("ug_2", proto_test_success));
-		tester::add_test(test("ug_3", proto_test_success));
-		tester::add_test(test("ug_4", proto_test_success));
-		tester::add_test(test("ug_5", proto_test_success));
-		tester::add_test(test("ug_6", proto_test_fail));
 
 		logger::load_old_tests_from_files(old_tests);
 		logger::print_help();

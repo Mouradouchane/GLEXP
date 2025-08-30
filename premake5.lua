@@ -39,11 +39,13 @@ project("glexp_project")
 	architecture("x64")
 
 	-- project source folders
-	files {"project/**"}
-	files {"libs/**"}
-	files {"./build/shaders/**"}
-	files {"./build/textures/**"}
-	files {"./build/models/**"}
+	files {
+		"project/**",
+		"libs/**",
+		"build/shaders/**",
+		"build/textures/**",
+		"build/models/**",
+	}
 
 	-- program icon
 	filter { "system:windows" }
@@ -66,8 +68,6 @@ project("glexp_project")
 		-- glew / glfw
 		links{ libs_path.."/glew/glew32.lib" }
 		links{ libs_path.."/glfw/glfw3dll.lib" }
-		-- hwinfo
-		--links{ hwinfo_lib_path.."hwinfo_ram.lib" }
 		-- assimp
 		links{ assimp_dll_lib_path }
 		-- release configs
@@ -75,7 +75,7 @@ project("glexp_project")
 		defines {"NDEBUG"}
 		debugdir(debugging_path) 
 		symbols("Off")
-		optimize "Off"    -- TODO: ON LATER
+		optimize("Off")    -- TODO: ON LATER
 
 	filter("configurations:debug")
 		-- libs dirs "static linking"
@@ -93,7 +93,7 @@ project("glexp_project")
 		debugdir(debugging_path) 
 		defines { "DEBUG" }
 		symbols("On")
-		optimize "Off"
+		optimize("Off")
 	
 	-- disable few warning related to libs
 	-- disablewarnings( "C26812" ) -- assimp 
@@ -120,7 +120,7 @@ project("tester")
 	files {
 			"tester/**"
 	} 
-	includedirs{ "$(SolutionDir)tester/" , "$(SolutionDir)libs/" }
+	includedirs{ "$(SolutionDir)tester/" , "$(SolutionDir)libs/"  , "$(SolutionDir)project/" }
 
 	filter("configurations:release")
 		-- release configs
