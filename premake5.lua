@@ -1,143 +1,25 @@
 
--- generate ide solution
-print('\27[34m' .. "============ BUILDING SOLUTION ============" .. '\27[0m')
- 
--- ============ ============ ============ 
--- ============ workspace paths ============== 
-build_path  = "$(SolutionDir)build"
-libs_path    = "$(SolutionDir)libs"
-tester_path = "$(SolutionDir)tester"
+-----------------------------------------------------------------------
+-- prmake5.lua is the main script who call other scripts 
+-- all of them in --> "./build_scripts/premake_lua_scripts" 
+-----------------------------------------------------------------------
 
-assimp_dll_lib_path = libs_path.."/assimp/assimp-vc143-mt.lib"
+location("../..")
 
--- working paths
-debugging_path = "$(SolutionDir)build"
-release_path      = "$(SolutionDir)build"
--- ============ ============ ============ 
--- ============ ============ ============ 
+utility = require("./build_scripts/premake_lua_scripts/utility_functions")
+-- disable debug prints
+utility.active_debug = false
 
--- ============ ============ ============ 
--- ============ workspace setup ============
-workspace("glexp_workspace") 
-    configurations{ 
-        "debug" , "release"
-    }
--- ============ ============ ============ 
-	
-	
--- ============ ============ ============ 
--- ============ glexp project setup ============ 
-project("glexp_project")
+-- workspace setup
+workspace_setup = require("./build_scripts/premake_lua_scripts/workspace_build_script")
 
-	-- exe output folder
-	bindirs(build_path)
-	
-	-- include dirs
-	includedirs{ "project/**" }
-	includedirs{ "libs" }
+-- engine project setup
+-- engine_setup= require("./build_scripts/premake_lua_scripts/engine_build_script")
 
-	architecture("x64")
-
-	-- project source folders
-	files {
-		"project/**",
-		"libs/**",
-		"build/shaders/**",
-		"build/textures/**",
-		"build/models/**",
-	}
-
-	-- program icon
-	filter { "system:windows" }
-		icon("./projec/icon.ico")
-		files { "./project/common/resource.rc"}
-		--vpaths { ['Resources/*'] = { '*.rc', '**.ico' }
-
-	-- project type
-	kind("WindowedApp")
-	language "C++"
-	cppdialect "C++17"
-	-- exe/obj output folder
-	targetdir(build_path) 
-	objdir(build_path.."/binaries/") 
+-- sandbox project setup 
 
 
-	filter("configurations:release")
-		-- libs dirs "dynamic linking"
-		links{ "opengl32.lib" }
-		-- glew / glfw
-		links{ libs_path.."/glew/glew32.lib" }
-		links{ libs_path.."/glfw/glfw3dll.lib" }
-		-- assimp
-		links{ assimp_dll_lib_path }
-		-- release configs
-		targetname "glexp_rx64"
-		defines {"NDEBUG"}
-		debugdir(debugging_path) 
-		symbols("Off")
-		optimize("Off")    -- TODO: ON LATER
+-- tools : tester projet setup
+tester_setup = require("./build_scripts/premake_lua_scripts/tester_build_script")
 
-	filter("configurations:debug")
-		-- libs dirs "static linking"
-		links{ "opengl32.lib" }
-		-- glew / glfw
-		links{ libs_path.."/glew/glew32s.lib" }
-		links{ libs_path.."/glfw/glfw3.lib" }
-		-- hwinfo
-		-- links{ hwinfo_lib_path.."hwinfo_ram.lib" }
-		-- assimp
-		links{ assimp_dll_lib_path }
-		-- debug configs
-		targetname "glexp_dx64"
-		defines("GLEW_STATIC") -- for glew static linking
-		debugdir(debugging_path) 
-		defines { "DEBUG" }
-		symbols("On")
-		optimize("Off")
-	
-	-- disable few warning related to libs
-	-- disablewarnings( "C26812" ) -- assimp 
-	-- disablewarnings( "C26451" ) -- assimp
--- ==============================
--- ==============================
-
-
--- ============ ============ ============ 
--- ============ tester project setup ============
-project("tester")
-
-	-- project  config
-	kind("ConsoleApp")
-	language "C++"
-	cppdialect "C++17"
-	architecture("x64")
-
-	-- build output path
-	targetdir(build_path) 
-	objdir(build_path.."/binaries/tester/") 
-
-	-- include dirs
-	files {
-			"tester/**"
-	} 
-	includedirs{ "$(SolutionDir)tester/" , "$(SolutionDir)libs/"  , "$(SolutionDir)project/" }
-
-	filter("configurations:release")
-		-- release configs
-		targetname "tester"
-		defines {"NDEBUG"}
-		debugdir( release_path ) 
-		symbols("Off")
-		optimize("Off")
-		
-	filter("configurations:debug")
-		-- debug configs
-		targetname "tester"
-		defines {"NDEBUG"}
-		symbols("On")
-		optimize("Off")
-		debugdir( debugging_path ) 
-	
--- ==============================
--- ==============================
-   
+-- tools : models_converter projet setup
