@@ -4,22 +4,23 @@
 -- all of them in --> "./build_scripts/premake_lua_scripts" 
 -----------------------------------------------------------------------
 
-location("../..")
-
-utility = require("./build_scripts/premake_lua_scripts/utility_functions")
--- disable debug prints
+utility = require("./scripts/build_scripts/utility_functions")
 utility.active_debug = false
 
 -- workspace setup
-workspace_setup = require("./build_scripts/premake_lua_scripts/workspace_build_script")
+workspace = require("./scripts/build_scripts/workspace_premake")
+
+-- static lib : common porject setup
+common = require("./scripts/build_scripts/common_premake")
 
 -- engine project setup
--- engine_setup= require("./build_scripts/premake_lua_scripts/engine_build_script")
+engine = require("./scripts/build_scripts/engine_premake")
 
--- sandbox project setup 
-
+-- sandbox project setup
 
 -- tools : tester projet setup
-tester_setup = require("./build_scripts/premake_lua_scripts/tester_build_script")
+tester = require("./scripts/build_scripts/tester_premake")
 
 -- tools : models_converter projet setup
+
+

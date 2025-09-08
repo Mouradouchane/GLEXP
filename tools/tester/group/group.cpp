@@ -4,8 +4,8 @@
 #define GROUP_CPP
 
 #include <algorithm>
+#include "tools/tester/time/time.hpp"
 #include "group.hpp"
-#include "time/time.hpp"
 
 bool compare_tests(test const& a, test const& b) noexcept {
 	return a.get_id() < b.get_id();

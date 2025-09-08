@@ -4,8 +4,8 @@
 #define MEMORY_HPP
 
 #include <string>
-#include "macros.hpp"
-#include "types.hpp"
+#include "common/macros.hpp"
+#include "common/types.hpp"
 
 enum class ALLOCATION_SECTION : uint8_t {
     UNKOWN    = 0,

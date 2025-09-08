@@ -1,21 +1,25 @@
-------------------------------------------------------------
--- this script file here to describe tester project --
-------------------------------------------------------------
+
+-----------------------------------------------------------------------
+-- this script file here to describe common library project --
+-----------------------------------------------------------------------
 utility = require("utility_functions")
 
 local tool = {
-    project_name = "tool_tester",
-    name = "tester",
-    kind = "ConsoleApp",
+    project_name = "common_lib",
+    name = "common",
+    kind = "StaticLib",
     arch = "x64",
     lang = "C++",
     lang_version = "C++17"
 }
 
+
 -- start generate engine project solution
 print('\27[34m' .. "==================================" .. '\27[0m')
-print('\27[34m' .. "GENERATE TESTER PROJECT" .. '\27[0m')
+print('\27[34m' .. "GENERATE COMMON LIB PROJECT" .. '\27[0m')
 
+
+location("../../")
 project(tool.project_name)
 
 -- project config
@@ -25,20 +29,18 @@ language(tool.lang)
 cppdialect(tool.lang_version)
 
 -- build output path
-targetdir(utility.paths.solution_dir .. utility.paths.build)
-objdir(utility.paths.solution_dir .. utility.paths.build .. "/binaries/tester/")
+targetdir(utility.s_paths.build)
+    objdir(utility.s_paths.build .. "/binaries/common/")
 
--- project files and directories 
-files(
-    { "tools/tester/**" }
-)
+files { "../../common/**" }
 includedirs(
-    { "$(SolutionDir)tools/tester/" }
-    -- utility.paths.solution_dir 
+    { 
+        utility.s_paths.root,
+    }
 )
 
 --------------------------------------------
--- tester project --> release config
+-- common project --> release config
 --------------------------------------------
 filter("configurations:release")
 
@@ -53,14 +55,12 @@ optimize("Off")
 --------------------------------------------
 
 --------------------------------------------
--- tester project --> debug config
+-- common project --> debug config
 --------------------------------------------
-filter("configurations:debug")
-
 targetname(tool.name)
 
+debugdir(utility.s_paths.debug)
 defines("DEBUG")
-debugdir(utility.paths.solution_dir .. utility.paths.debug)
 
 symbols("On")
 optimize("Off")

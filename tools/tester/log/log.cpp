@@ -3,15 +3,15 @@
 #ifndef LOG_CPP
 #define LOG_CPP
 
-#include "tabulate/table.hpp"
+#include "libs/tabulate/table.hpp"
 #include <iostream>
 #include <fstream>
 #include <ostream>
 #include <filesystem> 
 
-#include "time/time.hpp"
+#include "tools/tester/time/time.hpp"
+#include "tools/tester/string/string_utility.hpp"
 #include "log.hpp"
-#include "string/string_utility.hpp"
 
 using namespace tabulate;
 namespace fs = std::filesystem;

@@ -1,5 +1,6 @@
 #include <iostream>
-#include "application/application.hpp"
+#include "tools/tester/resource/resource.h"
+#include "tools/tester/application/application.hpp"
 
 int main() {
 

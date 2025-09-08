@@ -8,8 +8,8 @@
 #include <initializer_list>
 
 #include "common/types.hpp"
-#include "test/test.hpp"
-#include "time/time.hpp"
+#include "tools/tester/test/test.hpp"
+#include "tools/tester/time/time.hpp"
 
 class group { // this class --> just to group a bunch of tests together
 

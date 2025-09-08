@@ -5,10 +5,8 @@
 
 utility = require("utility_functions")
 
--- start generate engine project solution
-
 local engine = {
-    project_name= "glexp_engine",
+    project_name= "engine",
     name           =  "glexp",
     kind             = "WindowedApp",
     arch             = "x64",
@@ -16,11 +14,18 @@ local engine = {
     lang_version = "C++17",
 }
 
+local link_with = {
+    common = "common_lib",
+}
+
 print('\27[34m' .. "==================================" .. '\27[0m')
 print('\27[34m' .. "GENERATE ENGINE PROJECT" .. '\27[0m')
 
+-- start generate engine project solution
+--location("../../")
+
 -- prject name
-project( engine.project_name )
+engine_project = project( engine.project_name )
 architecture(engine.arch)
 
 -- project type
@@ -28,41 +33,30 @@ kind( engine.kind )
 language( engine.lang )
 cppdialect( engine.lang_version )
 
-	
 -- compiled binaries output folder
-bindirs( { utility.paths.build .. "/binaries/" } )
+bindirs( { utility.s_paths.build .. "/binaries/" } )
 
 -- compiled exe and obj output folder
-targetdir(utility.paths.build) 
-objdir(utility.paths.build .. "/binaries/") 
+targetdir(utility.s_paths.build) 
+    objdir(utility.s_paths.build .. "/binaries/") 
 
 -- include dirs
 includedirs ( 
     { 
-        utility.paths.common,
-        utility.paths.engine,
-        utility.paths.libs
+        utility.s_paths.root
     } 
 )
 
 -- project source folders
 files( 
     {
-        utility.paths.common,
-        utility.paths.engine,
-        utility.paths.libs ,
-        utility.paths.build .. "/shaders/",
-        utility.paths.build .. "/textures/",
-        utility.paths.build .. "/models/"
+       "../../engine/**"
     } 
 )
 
 -- engine exe icon
 filter ( "system:windows" )
-icon( utility.paths.engine .. "/icon.ico" )
-files( 
-    { utility.paths.engine .. "/common_eng/resource.rc" } 
-)
+icon( utility.s_paths.engine .. "/icon.ico" )
 
 --------------------------------------------
 -- engine project --> release config
@@ -71,9 +65,10 @@ filter("configurations:release")
 
 -- libs we need to link
 links( "opengl32.lib" ) -- opengl32
-links( utility.paths.libs .. "/glew/glew32.lib" ) -- glew
-links( utility.paths.libs .. "/glfw/glfw3dll.lib" ) -- glfw
-links( utility.paths.assimp_dll ) -- assimp
+links( utility.s_paths.root .. "libs/glew/glew32.lib" ) -- glew
+links( utility.s_paths.root .. "libs/glfw/glfw3dll.lib" ) -- glfw
+links( utility.s_paths.assimp_dll ) -- assimp
+links( link_with.common )
 
 -- release name
 targetname( engine.name .. "_rx64" )
@@ -95,9 +90,10 @@ filter("configurations:debug")
 
 -- libs we need to link
 links( "opengl32.lib" ) -- opengl32
-links( utility.paths.libs .. "/glew/glew32s.lib" ) -- glew
-links( utility.paths.libs .. "/glfw/glfw3.lib" ) -- glfw
-links( utility.paths.assimp_dll ) -- assimp
+links( utility.s_paths.root .. "/glew/glew32s.lib" ) -- glew
+links( utility.s_paths.root .. "/glfw/glfw3.lib" ) -- glfw
+links( utility.s_paths.assimp_dll ) -- assimp
+links( link_with.common )
 
 -- engine exe name
 targetname( engine.name .. "_dx64")
@@ -115,7 +111,6 @@ optimize("Off")
 -- disable few warning related to libs
 -- disablewarnings( "C26812" ) -- assimp 
 -- disablewarnings( "C26451" ) -- assimp
-
 
 print("project : " .. engine.project_name)
 print("architecture : " .. engine.arch)

@@ -3,8 +3,8 @@
 #ifndef VECTORS_HPP
 #define VECTORS_HPP
 
-#include "assert.hpp"
-#include "glm/glm.hpp"
+#include "common/assert.hpp"
+#include "libs/glm/glm.hpp"
 
 #define USE_GLM_VECTORS
 

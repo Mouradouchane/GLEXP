@@ -9,8 +9,8 @@
 #ifndef MEMORY_HEAP_HPP
 #define MEMORY_HEAP_HPP
 
-#include "types.hpp"
-#include "memory.hpp"
+#include "common/types.hpp"
+#include "engine/core/memory/memory.hpp"
 
 struct registry_pair {
 	void* pointer = nullptr;

@@ -4,8 +4,8 @@
 #define ASSERT_HPP
 
 #include <cstdlib>
-#include "macros.hpp"
-#include "errors.hpp"
+#include "common/macros.hpp"
+#include "common/errors.hpp"
 
 /*
 	compile-time assert

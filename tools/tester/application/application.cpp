@@ -9,10 +9,10 @@
 #include <cstdlib>
 #include <map>
 
-#include "test/test.hpp"
-#include "group/group.hpp"
-#include "log/log.hpp"
-#include "string/string_utility.hpp"
+#include "tools/tester/test/test.hpp"
+#include "tools/tester/group/group.hpp"
+#include "tools/tester/log/log.hpp"
+#include "tools/tester/string/string_utility.hpp"
 #include "application.hpp"
 
 // few private functions for tester::execute() function

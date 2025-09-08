@@ -3,9 +3,9 @@
 #ifndef TEST_CPP
 #define TEST_CPP
 
+#include "tools/tester/time/time.hpp"
+#include "tools/tester/log/log.hpp"
 #include "test.hpp"
-#include "time/time.hpp"
-#include "log/log.hpp"
 
 /*
 	class test constructor

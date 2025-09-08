@@ -5,8 +5,8 @@
 
 #include <vector>
 #include <string>
-#include "test/test.hpp"
 #include "common/types.hpp"
+#include "tools/tester/test/test.hpp"
 
 std::string test_to_string(test const& _test);
 

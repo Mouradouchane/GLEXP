@@ -6,7 +6,7 @@
 #ifndef MEMORY_HEAP_CPP
 #define MEMORY_HEAP_CPP
 
-#include "assert.hpp"
+#include "common/assert.hpp"
 #include "memory_heap.hpp"
 
 #include <algorithm>

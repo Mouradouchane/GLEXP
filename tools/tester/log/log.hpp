@@ -5,8 +5,8 @@
 
 #include <map>
 #include <string>
-#include "group/group.hpp"
-#include "test/test.hpp"
+#include "tools/tester/group/group.hpp"
+#include "tools/tester/test/test.hpp"
 
 namespace logger {
 
