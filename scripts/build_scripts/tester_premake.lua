@@ -20,8 +20,9 @@ local link_with = {
 print('\27[34m' .. "==================================" .. '\27[0m')
 print('\27[34m' .. "GENERATE TESTER PROJECT" .. '\27[0m')
 
-location("../../")
+
 project(tool.project_name)
+location(paths.ide_projects_dir)
 
 -- project config
 kind(tool.kind)

@@ -22,10 +22,10 @@ print('\27[34m' .. "==================================" .. '\27[0m')
 print('\27[34m' .. "GENERATE ENGINE PROJECT" .. '\27[0m')
 
 -- start generate engine project solution
---location("../../")
 
 -- prject name
 engine_project = project( engine.project_name )
+location(paths.ide_projects_dir)
 architecture(engine.arch)
 
 -- project type
@@ -43,7 +43,9 @@ targetdir(utility.s_paths.build)
 -- include dirs
 includedirs ( 
     { 
-        utility.s_paths.root
+        utility.s_paths.root,
+	utility.s_paths.libs .. "boxer",
+	utility.s_paths.libs
     } 
 )
 
@@ -65,8 +67,8 @@ filter("configurations:release")
 
 -- libs we need to link
 links( "opengl32.lib" ) -- opengl32
-links( utility.s_paths.root .. "libs/glew/glew32.lib" ) -- glew
-links( utility.s_paths.root .. "libs/glfw/glfw3dll.lib" ) -- glfw
+links( utility.s_paths.libs .. "/glew/glew32.lib" ) -- glew
+links( utility.s_paths.libs .. "/glfw/glfw3dll.lib" ) -- glfw
 links( utility.s_paths.assimp_dll ) -- assimp
 links( link_with.common )
 
@@ -90,8 +92,8 @@ filter("configurations:debug")
 
 -- libs we need to link
 links( "opengl32.lib" ) -- opengl32
-links( utility.s_paths.root .. "/glew/glew32s.lib" ) -- glew
-links( utility.s_paths.root .. "/glfw/glfw3.lib" ) -- glfw
+links( utility.s_paths.libs .. "/glew/glew32s.lib" ) -- glew
+links( utility.s_paths.libs .. "/glfw/glfw3.lib" ) -- glfw
 links( utility.s_paths.assimp_dll ) -- assimp
 links( link_with.common )
 

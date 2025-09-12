@@ -3,8 +3,10 @@
 #ifndef GL_MODELS_CPP
 #define GL_MODELS_CPP
 
-#include "glew/glew.h"
-#include "gl_models.hpp"
+#include "libs/glew/glew.h"
+#include "engine/core/errors/glerror_debug.hpp"
+#include "engine/models/gl_models.hpp"
+#include "engine/buffers/gl_buffers.hpp"
 
 /*
 	=========== gl_mesh ===========

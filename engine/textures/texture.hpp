@@ -4,8 +4,8 @@
 #define TEXTUER_HPP
 
 #include <string>
-#include "glew/glew.h"
-#include "glfw/glfw3.h"
+#include "libs/glew/glew.h"
+#include "libs/glfw/glfw3.h"
 
 #include "image.hpp"
 

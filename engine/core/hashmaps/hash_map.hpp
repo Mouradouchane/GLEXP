@@ -5,8 +5,8 @@
 
 #include <vector>
 #include <array>
-#include "types.hpp"
-#include "memory.hpp"
+#include "common/types.hpp"
+#include "engine/core/memory/memory.hpp"
 
 typedef u32 hash_key;
 

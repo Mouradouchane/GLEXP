@@ -4,6 +4,15 @@
 #ifndef MACROS_HPP
 #define MACROS_HPP
 
+/*
+	NOTE: if youre not using visual studio , make sure to change __debugbreak 
+	with the one working for your IDE/DEBUGGER
+*/ 
+#ifdef DEBUG
+	#include <intrin.h>
+	#define DEBUG_BREAK __debugbreak();
+#endif
+
 // maybe (INTPTR_MAX == INT64_MAX) for linux 
 #ifdef _WIN64 or WIN64 or __x86_64__ or _____LP64_____
 	#define X64 // if arch is 64bit

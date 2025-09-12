@@ -5,8 +5,8 @@
 
 #include <stdint.h>
 #include <initializer_list>
-#include "glerror_debug.hpp"
-#include "glew/glew.h"
+#include "engine/core/errors/glerror_debug.hpp"
+#include "libs/glew/glew.h"
 
 
 struct vbo_data_layout {

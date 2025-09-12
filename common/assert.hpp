@@ -4,15 +4,15 @@
 #define ASSERT_HPP
 
 #include <cstdlib>
-#include "common/macros.hpp"
-#include "common/errors.hpp"
+#include "macros.hpp"
+#include "errors.hpp"
 
 /*
 	compile-time assert
 */
 
 #define COMPILE_TIME_ASSERT( CONST_EXPRESSION, MESSAGE ) \
-		static_assert( CONST_EXPRESSION , MESSAGE );
+		static_assert( CONST_EXPRESSION , MESS AGE );
 
 /*
 	run-time assert

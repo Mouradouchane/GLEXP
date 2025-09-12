@@ -3,7 +3,7 @@
 #ifndef APP_HPP
 #define APP_HPP
 
-#include "errors.hpp"
+#include "engine/core/errors/errors.hpp"
 
 namespace application {
 	

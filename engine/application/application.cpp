@@ -16,22 +16,22 @@
 #include <thread>
 
 #define  GLFW_INCLUDE_NONE
-#include "glfw/glfw3.h"
-#include "glew/glew.h"
+#include "libs/glfw/glfw3.h"
+#include "libs/glew/glew.h"
 
-#include "assert.hpp"
-#include "config.hpp"
-#include "glerror_debug.hpp"
-#include "globals.hpp"
-#include "inputs.hpp"
-#include "texture.hpp"
-#include "shader.hpp"
-#include "models.hpp"
-#include "memory.hpp"
-#include "memory_heap.hpp"
-#include "resource_manager.hpp"
+#include "common/assert.hpp"
+#include "common/globals.hpp"
+#include "engine/config/config.hpp"
+#include "engine/core/errors/glerror_debug.hpp"
+#include "engine/core/input/inputs.hpp"
+#include "engine/textures/texture.hpp"
+#include "engine/shaders/shader.hpp"
+#include "engine/models/models.hpp"
+#include "engine/core/memory/memory.hpp"
+#include "engine/core/memory/memory_heap.hpp"
+#include "engine/resource/resource_manager.hpp"
 
-#include "hash_map.cpp"
+#include "engine/core/hashmaps/hash_map.hpp"
 
 namespace application {
 

@@ -8,9 +8,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "glerror_debug.hpp"
-#include "assert.hpp"
-#include "shader.hpp"
+#include "engine/core/errors/glerror_debug.hpp"
+#include "common/assert.hpp"
+#include "engine/shaders/shader.hpp"
 
 
 static std::string* load_shader_source_code(

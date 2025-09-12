@@ -5,16 +5,7 @@
 
 #define _WIN32
 #include <thread>
-
-#include "libs/boxer/boxer.h" // project repo : https://github.com/aaronmjacobs/Boxer
-#ifdef _WIN32
-	#include "libs/boxer/boxer_win.cpp" // project repo : https://github.com/aaronmjacobs/Boxer
-#elif __GNUC__
-	#include "libs/boxer/boxer_linux.cpp" // project repo : https://github.com/aaronmjacobs/Boxer
-#else
-	#error "boxer library can't compile for this system !"
-#endif
-
+#include "libs/boxer/boxer.h" // https://github.com/aaronmjacobs/Boxer
 #include "errors.hpp"
 
 #ifdef DEBUG

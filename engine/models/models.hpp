@@ -5,9 +5,9 @@
 
 #include <string>
 #include <vector>
-#include "errors.hpp"
-#include "vectors.hpp"
-#include "texture.hpp"
+#include "common/vectors.hpp"
+#include "engine/core/errors/errors.hpp"
+#include "engine/textures/texture.hpp"
 
 class mesh {
 

@@ -3,7 +3,7 @@
 #ifndef HASH_MAP_CPP
 #define HASH_MAP_CPP
 
-#include "assert.hpp"
+#include "common/assert.hpp"
 #include "hash_map.hpp"
 
 /*
@@ -11,8 +11,8 @@
 */
 template<typename key, typename value> hash_map<key,value>::hash_map(
 	u32 (*hashing_function)(key const& _key), 
-	u16 map_size = 64,
-	u16 row_size = 16
+	u16 map_size,
+	u16 row_size
 ) {
 	CRASH_IF((map_size == 0) || (row_size == 0) , "hash_map: 0 size hash_map not allowed !")
 

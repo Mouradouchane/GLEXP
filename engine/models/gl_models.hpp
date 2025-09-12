@@ -6,15 +6,15 @@
 #include <string>
 #include <vector>
 
-#include "glew/glew.h"
+#include "libs/glew/glew.h"
 //#include "glm.hpp"
 
-#include "vectors.hpp"
-#include "errors.hpp"
-#include "gl_buffers.hpp"
-#include "texture.hpp"
-#include "shader.hpp"
-#include "models.hpp"
+#include "common/vectors.hpp"
+#include "engine/core/errors/errors.hpp"
+#include "engine/buffers/gl_buffers.hpp"
+#include "engine/textures/texture.hpp"
+#include "engine/shaders/shader.hpp"
+#include "engine/models/models.hpp"
 
 class gl_mesh {
 private:

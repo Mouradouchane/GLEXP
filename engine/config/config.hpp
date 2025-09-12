@@ -3,8 +3,8 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include "errors.hpp"
 #include <string>
+#include "engine/core/errors/errors.hpp"
 
 namespace config {
 

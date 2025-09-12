@@ -4,8 +4,8 @@
 #define ARRAY_HPP
 
 #include <initializer_list>
-#include "memory.hpp"
-#include "types.hpp"
+#include "engine/core/memory/memory.hpp"
+#include "common/types.hpp"
 
 /*
 	class for fixed size array allocated on the heap

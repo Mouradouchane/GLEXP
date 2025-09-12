@@ -5,11 +5,11 @@
 
 #include <vector>
 #include <string>
-#include "ini.h"
-#include "errors.hpp"
-#include "image.hpp"
-#include "texture.hpp"
-#include "models.hpp"
+#include "libs/ini.h"
+#include "engine/core/errors/errors.hpp"
+#include "engine/textures/image.hpp"
+#include "engine/textures/texture.hpp"
+#include "engine/models/models.hpp"
 
 typedef mINI::INIFile ini_file;
 typedef mINI::INIStructure ini_struct;

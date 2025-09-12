@@ -3,7 +3,7 @@
 #ifndef MEMORY_CPP
 #define MEMORY_CPP
 
-#include "macros.hpp"
+#include "common/macros.hpp"
 
 #ifdef WINDOWS
 	// note: windef's to avoid conflict  with other type like byte,bool,...
@@ -18,13 +18,14 @@
 	#include <Windows.h>
 #endif
 
-#include "assert.hpp"
-#include "errors.hpp"
-#include "memory.hpp"
+#include "common/assert.hpp"
+#include "engine/core/errors/errors.hpp"
 
 #include <array>
 #include <sstream>
 #include <map>
+
+#include "memory.hpp"
 
 // allocated size for each section , in byte
 static std::array<uint64_t , 8> sections_sizes = {

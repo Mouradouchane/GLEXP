@@ -5,8 +5,8 @@
 
 #include <string>
 
-#include "glew/glew.h"
-#include "errors.hpp"
+#include "libs/glew/glew.h"
+#include "engine/core/errors/errors.hpp"
 
 // used to represent "vertex shader","fragment shader",...
 struct shader_object{

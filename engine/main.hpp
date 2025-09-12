@@ -6,11 +6,11 @@
 #include "common/targetver.h"
 #define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows 
 // C RunTime Header Files
-#include "common/resource.h"
+#include "engine/icon/resource.h"
 // Windows Header Files
 #include <windows.h>
 
-#include "assert.hpp"
-#include "application.hpp"
+#include "common/assert.hpp"
+#include "engine/application/application.hpp"
 
 #endif

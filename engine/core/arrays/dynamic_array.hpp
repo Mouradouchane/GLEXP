@@ -4,8 +4,8 @@
 #define DYNAMIC_ARRAY_HPP
 
 #include <initializer_list>
-#include "memory.hpp"
-#include "types.hpp"
+#include "common/types.hpp"
+#include "engine/core/memory/memory.hpp"
 
 #include "static_array.cpp"
 

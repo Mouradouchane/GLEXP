@@ -3,11 +3,11 @@
 #ifndef RESOURCE_MANAGER_CPP
 #define RESOURCE_MANAGER_CPP
 
-#include "assimp/Importer.hpp"      // C++ importer interface
-#include "assimp/scene.h"           // Output new_mesh structure
-#include "assimp/postprocess.h"     // Post processing flags
+#include "libs/assimp/Importer.hpp"      // C++ importer interface
+#include "libs/assimp/scene.h"           // Output new_mesh structure
+#include "libs/assimp/postprocess.h"     // Post processing flags
 
-#include "assert.hpp"
+#include "common/assert.hpp"
 #include "resource_manager.hpp"
 
 /*

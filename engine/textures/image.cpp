@@ -4,7 +4,7 @@
 #define IMAGE_CPP
 
 #define  STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "libs/stb_image.h"
 
 #include "image.hpp"
 

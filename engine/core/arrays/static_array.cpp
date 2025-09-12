@@ -8,8 +8,8 @@
 	here only the implementation :)
 
 */
+#include "common/assert.hpp"
 #include "static_array.hpp"
-#include "assert.hpp"
 
 /*
 	constructor's

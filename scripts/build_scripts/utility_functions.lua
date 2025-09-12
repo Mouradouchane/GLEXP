@@ -17,11 +17,12 @@ s_paths = {
     libs = "$(SolutionDir)libs",
     tools = "$(SolutionDir)tools",
     tester = "$(SolutionDir)tools/tester",
+    assimp = "$(SolutionDir)libs/assimp",
     assimp_dll = "$(SolutionDir)libs/assimp/assimp-vc143-mt.lib",
 }
 
 paths = {
-    solution_dir = "$(SolutionDir)",
+    ide_projects_dir = "../../vs_projects",
     root = "../../",
     build = "../../build",
     release = "../../build",
