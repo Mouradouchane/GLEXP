@@ -15,7 +15,8 @@ local engine = {
 }
 
 local link_with = {
-    common = "common_lib",
+    core_debug  = utility.s_paths.debug .. "/core/core.lib" ,
+    core_release = utility.s_paths.release .. "/core/core.lib" 
 }
 
 print('\27[34m' .. "==================================" .. '\27[0m')
@@ -36,16 +37,13 @@ cppdialect( engine.lang_version )
 -- compiled binaries output folder
 bindirs( { utility.s_paths.build .. "/binaries/" } )
 
--- compiled exe and obj output folder
-targetdir(utility.s_paths.build) 
-    objdir(utility.s_paths.build .. "/binaries/") 
 
 -- include dirs
 includedirs ( 
     { 
         utility.s_paths.root,
-	utility.s_paths.libs .. "boxer",
-	utility.s_paths.libs
+		utility.s_paths.libs .. "boxer",
+		utility.s_paths.libs
     } 
 )
 
@@ -65,15 +63,18 @@ icon( utility.s_paths.engine .. "/icon.ico" )
 --------------------------------------------
 filter("configurations:release")
 
+-- compiled exe and obj output folder
+objdir(utility.s_paths.release .. "/engine/")  -- bin's
+
+targetdir(utility.s_paths.build) -- exe path
+targetname( engine.name .. "_x64" ) -- exe name
+
 -- libs we need to link
 links( "opengl32.lib" ) -- opengl32
 links( utility.s_paths.libs .. "/glew/glew32.lib" ) -- glew
 links( utility.s_paths.libs .. "/glfw/glfw3dll.lib" ) -- glfw
 links( utility.s_paths.assimp_dll ) -- assimp
-links( link_with.common )
-
--- release name
-targetname( engine.name .. "_rx64" )
+links( link_with.core_release )
 
 -- few macros for release
 defines (
@@ -90,16 +91,20 @@ optimize("Off")  -- TODO: enable optimizations later
 --------------------------------------------
 filter("configurations:debug")
 
+-- compiled exe and obj output folder
+objdir(utility.s_paths.debug  .. "/engine/")  -- bin's
+
+targetdir(utility.s_paths.build) -- exe path
+targetname( engine.name .. "_dx64") -- exe name 
+
+debugdir(utility.paths.build) 
+
 -- libs we need to link
 links( "opengl32.lib" ) -- opengl32
 links( utility.s_paths.libs .. "/glew/glew32s.lib" ) -- glew
 links( utility.s_paths.libs .. "/glfw/glfw3.lib" ) -- glfw
 links( utility.s_paths.assimp_dll ) -- assimp
-links( link_with.common )
-
--- engine exe name
-targetname( engine.name .. "_dx64")
-debugdir(utility.paths.debug) 
+links( link_with.core_debug )
 
 -- few macros for debug 
 defines ({ "DEBUG" , "GLEW_STATIC" }) -- for glew static linking

@@ -5,7 +5,7 @@
 
 #include <cstdlib>
 #include "macros.hpp"
-#include "errors.hpp"
+#include "core/errors/errors.hpp"
 
 /*
 	compile-time assert

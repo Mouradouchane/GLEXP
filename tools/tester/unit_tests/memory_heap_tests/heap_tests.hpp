@@ -7,5 +7,4 @@ bool create_and_destroy_heap_test_1();
 bool create_and_destroy_heap_test_2();
 
 
-
 #endif

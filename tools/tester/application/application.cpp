@@ -3,6 +3,8 @@
 #ifndef APPLICATION_CPP
 #define APPLICATION_CPP
 
+#define UNIT_TEST
+
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -13,6 +15,12 @@
 #include "tools/tester/group/group.hpp"
 #include "tools/tester/log/log.hpp"
 #include "tools/tester/string/string_utility.hpp"
+
+#include "tools/tester/unit_tests/memory_heap_tests/heap_tests.hpp"
+
+// note: include unit-test headers
+#include "tools/tester/unit_tests/memory_heap_tests/heap_tests.hpp"
+
 #include "application.hpp"
 
 // few private functions for tester::execute() function
@@ -39,10 +47,15 @@ namespace tester {
 		tester::tests.insert({ _test.get_id() , _test });
 	}
 
-	// setup tests and groups + loading old results from files
+	// note: add your tests here
 	void init() { 
 
-	
+		add_group(
+			group("memory_heap", {
+				test("create_and_destroy_heap_test_1" , create_and_destroy_heap_test_1),
+				test("create_and_destroy_heap_test_2" , create_and_destroy_heap_test_2)
+			})
+		);
 
 
 		logger::load_old_tests_from_files(old_tests);

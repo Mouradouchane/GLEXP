@@ -7,7 +7,7 @@
 #ifndef GL_ERRORS_DEBUG_HPP
 #define GL_ERRORS_DEBUG_HPP
 
-#include "common/types.hpp"
+#include "core/types.hpp"
 
 #ifdef DEBUG
 

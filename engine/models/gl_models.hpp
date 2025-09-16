@@ -9,8 +9,8 @@
 #include "libs/glew/glew.h"
 //#include "glm.hpp"
 
-#include "common/vectors.hpp"
-#include "engine/core/errors/errors.hpp"
+#include "core/vectors.hpp"
+#include "core/errors/errors.hpp"
 #include "engine/buffers/gl_buffers.hpp"
 #include "engine/textures/texture.hpp"
 #include "engine/shaders/shader.hpp"

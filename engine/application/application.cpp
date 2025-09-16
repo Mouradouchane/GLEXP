@@ -19,19 +19,19 @@
 #include "libs/glfw/glfw3.h"
 #include "libs/glew/glew.h"
 
-#include "common/assert.hpp"
-#include "common/globals.hpp"
+#include "core/assert.hpp"
+#include "core/globals.hpp"
+#include "core/errors/glerror_debug.hpp"
+#include "core/input/inputs.hpp"
+#include "core/memory/memory.hpp"
+#include "core/memory/memory_heap.hpp"
+#include "core/hashmaps/hash_map.hpp"
+
 #include "engine/config/config.hpp"
-#include "engine/core/errors/glerror_debug.hpp"
-#include "engine/core/input/inputs.hpp"
 #include "engine/textures/texture.hpp"
 #include "engine/shaders/shader.hpp"
 #include "engine/models/models.hpp"
-#include "engine/core/memory/memory.hpp"
-#include "engine/core/memory/memory_heap.hpp"
 #include "engine/resource/resource_manager.hpp"
-
-#include "engine/core/hashmaps/hash_map.hpp"
 
 namespace application {
 
@@ -92,11 +92,6 @@ static ERR create_window() {
 	}
 }
 
-// setup keys handling
-static void init_inputs_handling() {
-	glfwSetKeyCallback(window, key_press_handler);
-	glfwSetMouseButtonCallback(window, mouse_click_handling);
-}
 
 // few objects for testing only
 std::vector<model> models;
@@ -118,8 +113,6 @@ ERR init() {
 	ASSERT_APP_INIT(create_window());
 
 	ASSERT_APP_INIT(init_glew());
-
-	init_inputs_handling();
 
 	// setup shader program
 	program = new shader("shaders/shader.vert", "shaders/shader.frag");

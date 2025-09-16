@@ -9,8 +9,9 @@
 #ifndef MEMORY_HEAP_HPP
 #define MEMORY_HEAP_HPP
 
-#include "common/types.hpp"
-#include "engine/core/memory/memory.hpp"
+#include "core/macros.hpp"
+#include "core/types.hpp"
+#include "memory.hpp"
 
 struct registry_pair {
 	void* pointer = nullptr;
@@ -96,4 +97,9 @@ private:
 };
 
 
+#endif
+
+// only in unit-testing
+#ifdef UNIT_TEST
+	#include "memory_heap.cpp"
 #endif

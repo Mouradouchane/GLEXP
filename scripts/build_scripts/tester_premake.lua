@@ -13,7 +13,8 @@ local tool = {
 }
 
 local link_with = {
-    common = "common_lib",
+    core_debug  = utility.s_paths.debug .. "/core/core.lib" ,
+    core_release = utility.s_paths.release .. "/core/core.lib" 
 }
 
 -- start generate engine project solution
@@ -29,10 +30,6 @@ kind(tool.kind)
 architecture(tool.arch)
 language(tool.lang)
 cppdialect(tool.lang_version)
-
--- build output path
-targetdir(utility.s_paths.build)
-    objdir(utility.s_paths.build .. "/binaries/tester/")
 
 -- project files and directories 
 files(
@@ -53,8 +50,12 @@ includedirs(
 --------------------------------------------
 filter("configurations:release")
 
+-- build output path
+targetdir(utility.s_paths.build .. "/tools/")
+objdir(utility.s_paths.release .. "/tester/")
+
 targetname(tool.name)
-links( link_with.common )
+links( link_with.core_release )
 
 -- few macros for release
 defines({"NDEBUG", "NO_DEBUG"})
@@ -69,8 +70,12 @@ optimize("Off")
 --------------------------------------------
 filter("configurations:debug")
 
+-- build output path
+targetdir(utility.s_paths.build .. "/tools/")
+objdir(utility.s_paths.debug .. "/tester/")
+
 targetname(tool.name)
-links( link_with.common )
+links( link_with.core_debug )
 
 defines("DEBUG")
 debugdir(utility.s_paths.debug)

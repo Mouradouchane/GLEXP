@@ -9,9 +9,9 @@ end
 s_paths = {
     root = "$(SolutionDir)",
     build = "$(SolutionDir)build",
-    release = "$(SolutionDir)build",
-    debug = "$(SolutionDir)build",
-    common = "$(SolutionDir)common",
+    release = "$(SolutionDir)build/__development_output__/release",
+    debug = "$(SolutionDir)build/__development_output__/debug",
+    core = "$(SolutionDir)core",
     engine = "$(SolutionDir)engine",
     sandbox = "$(SolutionDir)sandbox",
     libs = "$(SolutionDir)libs",

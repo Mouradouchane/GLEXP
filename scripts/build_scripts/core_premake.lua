@@ -1,12 +1,12 @@
 
 -----------------------------------------------------------------------
--- this script file here to describe common library project --
+-- this script file here to describe core library project --
 -----------------------------------------------------------------------
 utility = require("utility_functions")
 
 local tool = {
-    project_name = "common_lib",
-    name = "common",
+    project_name = "core",
+    name = "core",
     kind = "StaticLib",
     arch = "x64",
     lang = "C++",
@@ -16,7 +16,7 @@ local tool = {
 
 -- start generate engine project solution
 print('\27[34m' .. "==================================" .. '\27[0m')
-print('\27[34m' .. "GENERATE COMMON LIB PROJECT" .. '\27[0m')
+print('\27[34m' .. "GENERATE CORE LIB PROJECT" .. '\27[0m')
 
 project(tool.project_name)
 location(paths.ide_projects_dir)
@@ -27,21 +27,25 @@ architecture(tool.arch)
 language(tool.lang)
 cppdialect(tool.lang_version)
 
--- build output path
-targetdir(utility.s_paths.build)
-    objdir(utility.s_paths.build .. "/binaries/common/")
-
-files { "../../common/**" }
+files { 
+		"../../core/**" 
+}
 includedirs(
     { 
         utility.s_paths.root,
+		utility.s_paths.libs .. "boxer",
+		utility.s_paths.libs
     }
 )
 
 --------------------------------------------
--- common project --> release config
+-- core project --> release config
 --------------------------------------------
 filter("configurations:release")
+
+-- build output path
+targetdir(utility.s_paths.release .. "/core/")
+objdir(utility.s_paths.release .. "/core/")
 
 targetname(tool.name)
 
@@ -54,11 +58,17 @@ optimize("Off")
 --------------------------------------------
 
 --------------------------------------------
--- common project --> debug config
+-- core project --> debug config
 --------------------------------------------
+filter("configurations:debug")
+
+-- build output path
+targetdir(utility.s_paths.debug .. "/core/")
+objdir(utility.s_paths.debug .. "/core/")
+
 targetname(tool.name)
 
-debugdir(utility.s_paths.debug)
+debugdir(utility.s_paths.build)
 defines("DEBUG")
 
 symbols("On")

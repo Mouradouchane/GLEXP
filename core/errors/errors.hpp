@@ -7,16 +7,6 @@
 #include <string>
 
 /*
-	NOTE: if youre not using visual studio , make sure to change __debugbreak 
-	with the one working for your IDE/DEBUGGER
-*/ 
-#ifdef DEBUG
-	// TODO: move DEBUG_BREAK to debug file
-	#include <intrin.h>
-	#define DEBUG_BREAK __debugbreak();
-#endif
-
-/*
 	all the errors is here in ERR enum
 */
 enum class ERR : uint16_t {
@@ -193,4 +183,8 @@ enum class ERR : uint16_t {
 		}
 #endif
 
+#endif
+
+#ifdef UNIT_TEST
+	#include "errors.cpp"
 #endif

@@ -3,7 +3,7 @@
 #ifndef MEMORY_CPP
 #define MEMORY_CPP
 
-#include "common/macros.hpp"
+#include "core/macros.hpp"
 
 #ifdef WINDOWS
 	// note: windef's to avoid conflict  with other type like byte,bool,...
@@ -18,12 +18,12 @@
 	#include <Windows.h>
 #endif
 
-#include "common/assert.hpp"
-#include "engine/core/errors/errors.hpp"
-
 #include <array>
 #include <sstream>
 #include <map>
+
+#include "core/assert.hpp"
+#include "core/errors/errors.hpp"
 
 #include "memory.hpp"
 

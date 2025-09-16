@@ -8,8 +8,8 @@
 #include <fstream>
 #include <sstream>
 
-#include "engine/core/errors/glerror_debug.hpp"
-#include "common/assert.hpp"
+#include "core/assert.hpp"
+#include "core/errors/glerror_debug.hpp"
 #include "engine/shaders/shader.hpp"
 
 

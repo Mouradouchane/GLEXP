@@ -3,14 +3,22 @@
 #ifndef MAIN_HPP
 #define MAIN_HPP
 
-#include "common/targetver.h"
-#define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows 
+#include "core/macros.hpp"
+#include "core/targetver.h"
+
+#ifdef WINDOWS
+	#define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows 
+#endif
+
 // C RunTime Header Files
 #include "engine/icon/resource.h"
-// Windows Header Files
-#include <windows.h>
 
-#include "common/assert.hpp"
+#ifdef WINDOWS
+	// Windows Header Files
+	#include <windows.h>
+#endif
+
+#include "core/assert.hpp"
 #include "engine/application/application.hpp"
 
 #endif

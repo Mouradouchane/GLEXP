@@ -4,8 +4,8 @@
 #define MEMORY_HPP
 
 #include <string>
-#include "common/macros.hpp"
-#include "common/types.hpp"
+#include "core/macros.hpp"
+#include "core/types.hpp"
 
 enum class ALLOCATION_SECTION : uint8_t {
     UNKOWN    = 0,
@@ -59,7 +59,7 @@ namespace memory {
 	uint64_t sizeof_section(ALLOCATION_SECTION section) noexcept;
 	double   sizeof_section_f(ALLOCATION_SECTION section , MEMORY_UNIT unit) noexcept;
 
-	// todo : move it away from namespace memory
+	// todo : move it to "system info"
 	memory_info get_cpu_memory_info() noexcept;
 
 } // namespace memory end
@@ -102,4 +102,9 @@ template<class T> struct custom_allocator {
 };
 // struct custom_allocator end
 
+#endif
+
+// only in unit-testing
+#ifdef UNIT_TEST
+	#include "memory.cpp"
 #endif

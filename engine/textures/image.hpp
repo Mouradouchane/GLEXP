@@ -3,7 +3,7 @@
 #ifndef IMAGE_HPP
 #define IMAGE_HPP
 
-#include "engine/core/errors/errors.hpp"
+#include "core/errors/errors.hpp"
 #include <string>
 
 class image {

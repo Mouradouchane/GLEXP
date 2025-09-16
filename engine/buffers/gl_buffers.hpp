@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include <initializer_list>
-#include "engine/core/errors/glerror_debug.hpp"
+#include "core/errors/glerror_debug.hpp"
 #include "libs/glew/glew.h"
 
 

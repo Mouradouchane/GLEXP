@@ -7,7 +7,7 @@
 #include "libs/assimp/scene.h"           // Output new_mesh structure
 #include "libs/assimp/postprocess.h"     // Post processing flags
 
-#include "common/assert.hpp"
+#include "core/assert.hpp"
 #include "resource_manager.hpp"
 
 /*

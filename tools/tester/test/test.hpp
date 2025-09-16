@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <initializer_list>
-#include "common/types.hpp"
+#include "core/types.hpp"
 
 struct test_result {
 	u64  id        = NULL;

@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 #include "libs/ini.h"
-#include "engine/core/errors/errors.hpp"
+#include "core/errors/errors.hpp"
 #include "engine/textures/image.hpp"
 #include "engine/textures/texture.hpp"
 #include "engine/models/models.hpp"
