@@ -6,7 +6,7 @@
 #ifndef MEMORY_HEAP_CPP
 #define MEMORY_HEAP_CPP
 
-#include "core/assert.hpp"
+#include "core/errors/assert.hpp"
 #include "memory_heap.hpp"
 
 #include <algorithm>
@@ -14,7 +14,7 @@
 /*
 	constructor
 */
-heap::heap(
+core::heap::heap(
 	u32 heap_size, 
 	u32 max_allocation, 
 	ALLOCATION_SECTION heap_usage
@@ -24,8 +24,8 @@ heap::heap(
 	// few checks first
 	CRASH_IF(heap_size < 1, "heap: zero size heap not allowed !");
 	CRASH_IF(
-		(heap_size < heap::minimum_heap_size_allowed) ||
-		(heap_size > heap::maximum_heap_size_allowed), 
+		(heap_size < core::heap::minimum_heap_size_allowed) ||
+		(heap_size > core::heap::maximum_heap_size_allowed), 
 		// todo: change it to better message later 
 		// when you have logger
 		"heap: heap size not allowed !"
@@ -53,7 +53,7 @@ heap::heap(
 }
 
 // TODO: call elements destructor's if possible
-heap::~heap() {
+core::heap::~heap() {
 	memory::free( this->start );
 	memory::free( this->alloc_list );
 	memory::free( this->free_list );
@@ -70,21 +70,21 @@ heap::~heap() {
 	heap public static function's
 */
 
-u32 heap::minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
+u32 core::heap::minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
 	switch (return_value_unit) {
-		case MEMORY_UNIT::kb: return BYTE_TO_KB(heap::minimum_heap_size_allowed);
-		case MEMORY_UNIT::mb: return BYTE_TO_MB(heap::minimum_heap_size_allowed);
-		case MEMORY_UNIT::gb: return BYTE_TO_GB(heap::minimum_heap_size_allowed);
-		default : return heap::minimum_heap_size_allowed;
+		case MEMORY_UNIT::kb: return BYTE_TO_KB(core::heap::minimum_heap_size_allowed);
+		case MEMORY_UNIT::mb: return BYTE_TO_MB(core::heap::minimum_heap_size_allowed);
+		case MEMORY_UNIT::gb: return BYTE_TO_GB(core::heap::minimum_heap_size_allowed);
+		default : return core::heap::minimum_heap_size_allowed;
 	}
 }
 
-u32 heap::maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
+u32 core::heap::maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
 	switch (return_value_unit) {
-		case MEMORY_UNIT::kb: return BYTE_TO_KB(heap::maximum_heap_size_allowed);
-		case MEMORY_UNIT::mb: return BYTE_TO_MB(heap::maximum_heap_size_allowed);
-		case MEMORY_UNIT::gb: return BYTE_TO_GB(heap::maximum_heap_size_allowed);
-		default: return heap::minimum_heap_size_allowed;
+		case MEMORY_UNIT::kb: return BYTE_TO_KB(core::heap::maximum_heap_size_allowed);
+		case MEMORY_UNIT::mb: return BYTE_TO_MB(core::heap::maximum_heap_size_allowed);
+		case MEMORY_UNIT::gb: return BYTE_TO_GB(core::heap::maximum_heap_size_allowed);
+		default: return core::heap::minimum_heap_size_allowed;
 	}
 }
 
@@ -92,21 +92,21 @@ u32 heap::maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
 	heap private function's
 */
 
-inline void heap::sort_list_by_address(registry_pair* list, u32 size) {
+inline void core::heap::sort_list_by_address(registry_pair* list, u32 size) {
 
 	std::sort(list, list + size, [&](const registry_pair& a, const registry_pair& b) -> bool {
 		return a.pointer < b.pointer;
 	});
 }
 
-inline void heap::sort_list_by_size(registry_pair* list, u32 size) {
+inline void core::heap::sort_list_by_size(registry_pair* list, u32 size) {
 
 	std::sort(list, list + size, [&](const registry_pair& a, const registry_pair& b) -> bool {
 		return a.size > b.size;
 	});
 }
 
-inline void heap::init_registry_list(registry_pair* list, u32 size) {
+inline void core::heap::init_registry_list(registry_pair* list, u32 size) {
 
 	for (u32 i = 0; i < size; i++) {
 		*(list + i) = registry_pair{nullptr , NULL};
@@ -114,7 +114,7 @@ inline void heap::init_registry_list(registry_pair* list, u32 size) {
 
 }
 
-inline void heap::find_free_location(u32& index_output , u32 _size) {
+inline void core::heap::find_free_location(u32& index_output , u32 _size) {
 
 	for (u32 i = 0; i < this->free_list_range; i++) {
 
@@ -126,7 +126,7 @@ inline void heap::find_free_location(u32& index_output , u32 _size) {
 
 }
 
-inline void heap::allocate_from_free_list(void** pointer, u32 _size, u32 index) {
+inline void core::heap::allocate_from_free_list(void** pointer, u32 _size, u32 index) {
 
 	registry_pair _allocation = this->free_list[index];
 
@@ -143,11 +143,11 @@ inline void heap::allocate_from_free_list(void** pointer, u32 _size, u32 index) 
 	register_allocation(*pointer , _size);
 }
 
-u32 heap::hash_pointer(void* pointer) {
+u32 core::heap::hash_pointer(void* pointer) {
 	return (u64)pointer % this->alloc_list_size;
 }
 
-inline void heap::register_allocation(void* pointer, u32 size) {
+inline void core::heap::register_allocation(void* pointer, u32 size) {
 
 	u32 index = hash_pointer(pointer);
 
@@ -178,10 +178,10 @@ inline void heap::register_allocation(void* pointer, u32 size) {
 	}
 
 	// if no place found in alloc_list
-	CRASH_IF(1, "heap::register_allocation : allocation registry is full no place found for new insert !");
+	CRASH_IF(1, "core::heap::register_allocation : allocation registry is full no place found for new insert !");
 }
 
-inline void heap::unregister_allocation(u32 _index) {
+inline void core::heap::unregister_allocation(u32 _index) {
 	DEBUG_BREAK;
 
 	this->free_list_range += 1;
@@ -214,7 +214,7 @@ inline void heap::unregister_allocation(u32 _index) {
 
 // this function merge deallocated areas who are next to each others ,
 // it basically merge them into one area 
-void heap::merge_free_areas() {
+void core::heap::merge_free_areas() {
 
 	this->sort_list_by_address(this->free_list, this->free_list_range);
 
@@ -246,7 +246,7 @@ void heap::merge_free_areas() {
 	heap public function's
 */
 
-void* heap::allocate(u32 _size) {
+void* core::heap::allocate(u32 _size) {
 	CRASH_IF(_size < 1, "heap.allocate: 0 size allocation not allowed !");
 	CRASH_IF(_size > this->heap_size, "heap.allocate: size of allocation asked for bigger than the heap !");
 	CRASH_IF(this->registered >= this->max_allowed_allocations, "heap.allocate: max allowed allocations is reached !");
@@ -298,7 +298,7 @@ void* heap::allocate(u32 _size) {
 
 }
 
-void heap::deallocate(void* pointer){
+void core::heap::deallocate(void* pointer){
 	
 	CRASH_IF(
 		(pointer < this->start) || (pointer > this->end) ,
@@ -324,11 +324,11 @@ void heap::deallocate(void* pointer){
 	CRASH_IF(1, "heap.deallocate: pointer " + pointer_to_hex_string((ptr64)pointer) + " not found allocated !");
 }
 
-u32 heap::size() noexcept {
+u32 core::heap::size() noexcept {
 	return this->heap_size;
 }
 
-f32 heap::size(MEMORY_UNIT return_value_unit) noexcept {
+f32 core::heap::size(MEMORY_UNIT return_value_unit) noexcept {
 	
 	switch (return_value_unit) {
 		case MEMORY_UNIT::kb : return BYTE_TO_KB(this->heap_size);
@@ -339,11 +339,11 @@ f32 heap::size(MEMORY_UNIT return_value_unit) noexcept {
 	}
 }
 
-u32 heap::allocated(MEMORY_UNIT return_value_unit) noexcept {
+u32 core::heap::allocated(MEMORY_UNIT return_value_unit) noexcept {
 	return this->alloc_size;
 }
 
-u32 heap::available(MEMORY_UNIT return_value_unit) noexcept {
+u32 core::heap::available(MEMORY_UNIT return_value_unit) noexcept {
 	return this->heap_size - this->alloc_size;
 }
 

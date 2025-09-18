@@ -22,7 +22,7 @@
 #include <sstream>
 #include <map>
 
-#include "core/assert.hpp"
+#include "core/errors/assert.hpp"
 #include "core/errors/errors.hpp"
 
 #include "memory.hpp"
@@ -39,12 +39,17 @@ static std::array<uint64_t , 8> sections_sizes = {
 	NULL // 7 , STDCPP
 };
 
+static std::array<u32, 4> memory_factors = {
+	1.0f , 1024.0f , 1048576.0f ,  1073741824.0f
+};
+
+
 typedef struct alloc_info {
 	size_t  size;
 	uint8_t section;
 };
 
-namespace memory {
+namespace core::memory {
 	// total allocated cpu memory in byte
 	static u64 allocated_size = NULL;
 	// map< pointer , alloc_size >
@@ -52,11 +57,11 @@ namespace memory {
 }
 
 
+
 /*
 	memory namespace functions
 */
-
-u64 memory::sizeof_section(ALLOCATION_SECTION section) noexcept {
+u64 core::memory::sizeof_section(ALLOCATION_SECTION section) noexcept {
 	u8 _section = (u8)section;
 
 	if (_section < sections_sizes.size()) {
@@ -65,11 +70,8 @@ u64 memory::sizeof_section(ALLOCATION_SECTION section) noexcept {
 	else return NULL;
 }
 
-static std::array<u32, 4> memory_factors = {
-	1.0f , 1024.0f , 1048576.0f ,  1073741824.0f
-};
 
-double memory::sizeof_section_f(ALLOCATION_SECTION section, MEMORY_UNIT unit) noexcept {
+double core::memory::sizeof_section_f(ALLOCATION_SECTION section, MEMORY_UNIT unit) noexcept {
 	uint8_t _section = (uint8_t)section;
 
 	if (_section < sections_sizes.size()) {
@@ -81,28 +83,28 @@ double memory::sizeof_section_f(ALLOCATION_SECTION section, MEMORY_UNIT unit) no
 	else return NULL;
 }
 
-uint64_t memory::total_size() noexcept {
-	return memory::allocated_size;
+uint64_t core::memory::total_size() noexcept {
+	return core::memory::allocated_size;
 }
 
-double memory::total_size_f(MEMORY_UNIT unit) noexcept {
+double core::memory::total_size_f(MEMORY_UNIT unit) noexcept {
 	if ((uint8_t)unit < 4) {
-		return double(memory::allocated_size) / memory_factors[(uint8_t)unit];
+		return double(core::memory::allocated_size) / memory_factors[(uint8_t)unit];
 	}
-	else return double(memory::allocated_size);
+	else return double(core::memory::allocated_size);
 }
 
 // todo : handle multi-threaded allocations
-void* memory::alloc(size_t size , ALLOCATION_SECTION section) {
+void* core::memory::alloc(size_t size , ALLOCATION_SECTION section) {
 
-	CRASH_IF(size < 1, "memory::alloc zero size allocation not allowed !")
+	CRASH_IF(size < 1, "core::memory::alloc zero size allocation not allowed !")
 	
 	void* pointer = new byte[size];
 
-	CRASH_IF( (pointer == nullptr) , "memory::alloc failed to allocate memory");
+	CRASH_IF( (pointer == nullptr) , "core::memory::alloc failed to allocate memory");
 
 	// update total size
-	memory::allocated_size += size;
+	core::memory::allocated_size += size;
 
 	// update section size
 	uint8_t _section = (uint8_t)section;
@@ -112,7 +114,7 @@ void* memory::alloc(size_t size , ALLOCATION_SECTION section) {
 	else sections_sizes[0] += size;
 
 	// update alloc list
-	memory::allocations_list.insert({ 
+	core::memory::allocations_list.insert({ 
 		(ptr)pointer , alloc_info{size , _section}
 	});
 	
@@ -120,20 +122,20 @@ void* memory::alloc(size_t size , ALLOCATION_SECTION section) {
 }
 
 // todo : handle multi-threaded deallocations
-void memory::free(void* pointer) {
+void core::memory::free(void* pointer) {
 	
-	CRASH_IF(pointer == nullptr , "illegal memory::free null-pointer !");
+	CRASH_IF(pointer == nullptr , "illegal core::memory::free null-pointer !");
 		
 	// check alloc_list
-	auto allocation = memory::allocations_list.find((ptr64)pointer);
+	auto allocation = core::memory::allocations_list.find((ptr64)pointer);
 
 	CRASH_IF(
-		allocation == memory::allocations_list.end(),
-		"memory::free invalid pointer " + pointer_to_hex_string((ptr64)pointer)
+		allocation == core::memory::allocations_list.end(),
+		"core::memory::free invalid pointer " + pointer_to_hex_string((ptr64)pointer)
 	);
 
 	// update total size
-	memory::allocated_size = (memory::allocated_size - allocation->second.size) < 0 ? 0 : memory::allocated_size - allocation->second.size;
+	core::memory::allocated_size = (core::memory::allocated_size - allocation->second.size) < 0 ? 0 : core::memory::allocated_size - allocation->second.size;
 	
 	// update section size
 	uint8_t _section = allocation->second.section;
@@ -141,13 +143,13 @@ void memory::free(void* pointer) {
 		sections_sizes[_section] = (sections_sizes[_section] - allocation->second.size) < 0 ? 0 : (sections_sizes[_section] - allocation->second.size);
 	}
 	else {
-		// out of range _section mean there's a bug in memory::alloc
+		// out of range _section mean there's a bug in core::memory::alloc
 		// so we need assert crash
 		ASSERT_EXP(0);
 	}
 
 	// update alloc list
-	memory::allocations_list.erase(allocation->first);
+	core::memory::allocations_list.erase(allocation->first);
 
 	delete[] pointer;
 }
@@ -161,7 +163,7 @@ std::string pointer_to_hex_string(ptr64 pointer) {
 }
 
 // TODO : implementation for LINUX
-memory_info memory::get_cpu_memory_info() noexcept{
+memory_info core::memory::get_cpu_memory_info() noexcept{
 
 #ifdef WINDOWS
 	MEMORYSTATUSEX statex;

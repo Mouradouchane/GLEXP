@@ -4,9 +4,9 @@
 #define GL_MODELS_CPP
 
 #include "libs/glew/glew.h"
-#include "core/errors/glerror_debug.hpp"
+#include "engine/graphics/glerror_debug.hpp"
 #include "engine/models/gl_models.hpp"
-#include "engine/buffers/gl_buffers.hpp"
+#include "engine/graphics/gl_buffers.hpp"
 
 /*
 	=========== gl_mesh ===========

@@ -28,10 +28,10 @@ private:
 
 	using table = std::vector< 
 		pair<key, value>, 
-		custom_allocator<pair<key, value>>
+		core::custom_allocator<pair<key, value>>
 	>;
 
-	std::vector<table , custom_allocator<table>> map;
+	std::vector<table , core::custom_allocator<table>> map;
 
 	hash_key (*hash_function)(key const& _key) = nullptr;
 

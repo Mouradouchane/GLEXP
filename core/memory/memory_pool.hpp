@@ -12,11 +12,15 @@
 
 #include "memory.hpp"
 
-// todo: implement pool allocator
-class pool {
+namespace core {
+
+	// todo: implement pool allocator
+	class pool {
 
 
 
-};
+	}; // class pool end
+
+} // namespace core end
 
 #endif

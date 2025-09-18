@@ -3,8 +3,6 @@
 #ifndef APP_CPP
 #define APP_CPP
 
-#include "application.hpp"
-
 #include <stdlib.h>
 //#include <malloc.h>
 //#include <memory.h>
@@ -19,21 +17,23 @@
 #include "libs/glfw/glfw3.h"
 #include "libs/glew/glew.h"
 
-#include "core/assert.hpp"
-#include "core/globals.hpp"
-#include "core/errors/glerror_debug.hpp"
-#include "core/input/inputs.hpp"
+#include "core/errors/assert.hpp"
 #include "core/memory/memory.hpp"
 #include "core/memory/memory_heap.hpp"
-#include "core/hashmaps/hash_map.hpp"
+#include "core/data_structres/hashmaps/hash_map.hpp"
 
+#include "engine/graphics/glerror_debug.hpp"
 #include "engine/config/config.hpp"
 #include "engine/textures/texture.hpp"
 #include "engine/shaders/shader.hpp"
 #include "engine/models/models.hpp"
 #include "engine/resource/resource_manager.hpp"
 
+#include "application.hpp"
+
 namespace application {
+
+bool running = true;
 
 std::string  title  = "GLEXP";
 GLFWwindow*  window = nullptr;
@@ -164,7 +164,7 @@ ERR run() {
 	*/
 	std::chrono::milliseconds sleep_time(15);
 	
-	while (g_running) {
+	while (application::running) {
 		// process events
 		glfwPollEvents();
 
@@ -180,7 +180,7 @@ ERR run() {
 
 		glfwSwapBuffers(window);
 
-		if(glfwWindowShouldClose(window)) g_running = false;
+		if(glfwWindowShouldClose(window)) application::running = false;
 
 		// fps controll
 		// TODO: make it calculated instead of hard-coded 15ms

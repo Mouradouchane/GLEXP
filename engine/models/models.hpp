@@ -5,8 +5,10 @@
 
 #include <string>
 #include <vector>
-#include "core/vectors.hpp"
+
+#include "core/math/math.hpp"
 #include "core/errors/errors.hpp"
+
 #include "engine/textures/texture.hpp"
 
 class mesh {

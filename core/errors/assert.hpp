@@ -4,7 +4,7 @@
 #define ASSERT_HPP
 
 #include <cstdlib>
-#include "macros.hpp"
+#include "core/macros.hpp"
 #include "core/errors/errors.hpp"
 
 /*

@@ -45,62 +45,68 @@ struct memory_info {
 // TODO: move this to the right place !!!!!!!!!!!!!!!
 std::string pointer_to_hex_string(ptr64 pointer);
 
+namespace core {
+
+	/*
+		- main "general purpose" memory allocator
+		- used by other custom allocators => heap,pool,arena,...
+	*/
+	namespace memory {
+
+		void* alloc(size_t size, ALLOCATION_SECTION section = ALLOCATION_SECTION::UNKOWN);
+		void  free(void* pointer);
+
+		uint64_t total_size() noexcept;
+		double   total_size_f(MEMORY_UNIT unit) noexcept;
+		uint64_t sizeof_section(ALLOCATION_SECTION section) noexcept;
+		double   sizeof_section_f(ALLOCATION_SECTION section, MEMORY_UNIT unit) noexcept;
+
+		// todo : move it to "system info"
+		memory_info get_cpu_memory_info() noexcept;
+
+	} // namespace memory end
+
+
 /*
-	- main "general purpose" memory allocator
-	- used by other custom allocators => heap,pool,arena,...
+	used to allocate/deallocate memory for std library
 */
-namespace memory {
+	template<class T> struct custom_allocator {
 
-	void* alloc(size_t size, ALLOCATION_SECTION section = ALLOCATION_SECTION::UNKOWN);
-	void  free(void* pointer);
+		typedef T value_type;
 
-	uint64_t total_size() noexcept;
-	double   total_size_f(MEMORY_UNIT unit) noexcept;
-	uint64_t sizeof_section(ALLOCATION_SECTION section) noexcept;
-	double   sizeof_section_f(ALLOCATION_SECTION section , MEMORY_UNIT unit) noexcept;
+		custom_allocator() = default;
+		~custom_allocator() = default;
 
-	// todo : move it to "system info"
-	memory_info get_cpu_memory_info() noexcept;
+		template<class elm_type> constexpr custom_allocator(
+			const custom_allocator <elm_type>&
+		) noexcept {
 
-} // namespace memory end
+		}
 
-/*
-	used to allocate/deallocate memory for std library 
-*/
-template<class T> struct custom_allocator {
+		T* allocate(std::size_t size) {
+			return (T*)memory::alloc(size * sizeof(T), ALLOCATION_SECTION::STDCPP);
+		}
 
-    typedef T value_type;
+		void deallocate(T* pointer, std::size_t size) {
+			memory::free(pointer);
+		}
 
-	 custom_allocator() = default;
-	~custom_allocator() = default;
+		template<typename elm_type, typename... Args> void construct(
+			elm_type* p, Args&&... args
+		) {
+			new(p) elm_type(std::forward<Args>(args)...);
+		}
 
-    template<class elm_type> constexpr custom_allocator(
-		const custom_allocator <elm_type>&
-	) noexcept {
-	
-	}
-	
-    T* allocate(std::size_t size) {
-		return (T*)memory::alloc(size * sizeof(T), ALLOCATION_SECTION::STDCPP);
-    }
+		// destructor's caller
+		template<typename obj> void destroy(obj* pointer) {
+			pointer->~obj();
+		}
 
-    void deallocate(T* pointer, std::size_t size) {
-		memory::free(pointer);
-	}
+	};
+	// struct custom_allocator end
 
-	template<typename elm_type, typename... Args> void construct(
-		elm_type* p, Args&&... args
-	) {
-		new(p) elm_type( std::forward<Args>(args)... );
-	}
 
-	// destructor's caller
-	template<typename obj> void destroy(obj* pointer) {
-		pointer->~obj();
-	}
-
-};
-// struct custom_allocator end
+} // core namespace end
 
 #endif
 

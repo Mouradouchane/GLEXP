@@ -18,7 +18,7 @@
 	#include <windows.h>
 #endif
 
-#include "core/assert.hpp"
+#include "core/errors/assert.hpp"
 #include "engine/application/application.hpp"
 
 #endif

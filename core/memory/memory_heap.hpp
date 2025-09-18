@@ -18,84 +18,87 @@ struct registry_pair {
 	u32   size    = NULL;
 };
 
-class heap {
+namespace core {
 
-private:
-	// heap static variables
-	static const u32 minimum_heap_size_allowed = KB_TO_BYTE(1 KB);
-	static const u32 maximum_heap_size_allowed = MB_TO_BYTE(512 MB);
+	class heap {
 
-	/*
-		just disabled constructor's and operator's
-	*/
-	heap(heap const& other) = delete;
-	heap(heap&& other) = delete;
-	heap& operator = (const heap& other) = delete;
+	private:
+		// heap static variables
+		static const u32 minimum_heap_size_allowed = KB_TO_BYTE(1 KB);
+		static const u32 maximum_heap_size_allowed = MB_TO_BYTE(512 MB);
 
-public: 
-	// heap public static functions
-	static u32 minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
-	static u32 maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
+		/*
+			just disabled constructor's and operator's
+		*/
+		heap(heap const& other) = delete;
+		heap(heap&& other) = delete;
+		heap& operator = (const heap& other) = delete;
 
-private:
-	// heap type/usage
-	ALLOCATION_SECTION section = ALLOCATION_SECTION::UNKOWN;
-	
-	// heap memory variables
-	u32 max_allowed_allocations = 1000;
-	u32 alloc_size = NULL;
-	u32 heap_size  = NULL;
+	public:
+		// heap public static functions
+		static u32 minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
+		static u32 maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
 
-	byte* start = nullptr;
-	byte* end   = nullptr;
-	byte* seek  = nullptr; // last free position
+	private:
+		// heap type/usage
+		ALLOCATION_SECTION section = ALLOCATION_SECTION::UNKOWN;
 
-	u32 registered = NULL;
+		// heap memory variables
+		u32 max_allowed_allocations = 1000;
+		u32 alloc_size = NULL;
+		u32 heap_size = NULL;
 
-	// open addressing hash-table
-	u32 alloc_list_size = NULL;
-	registry_pair* alloc_list = nullptr; 
-	
-	// sorted list
-	u32 free_list_range = 1;
-	registry_pair* free_list  = nullptr; 
+		byte* start = nullptr;
+		byte* end = nullptr;
+		byte* seek = nullptr; // last free position
 
-public:
-	// constructor / destructor
-	 heap(
-		 u32 heap_size, 
-		 u32 max_allocation = 1000,
-		 ALLOCATION_SECTION heap_usage = ALLOCATION_SECTION::UNKOWN
-	 );
-	~heap();
+		u32 registered = NULL;
 
-	// heap public functions
-	void* allocate(u32 size);
-	void  deallocate(void* pointer);
+		// open addressing hash-table
+		u32 alloc_list_size = NULL;
+		registry_pair* alloc_list = nullptr;
 
-	u32 size() noexcept;
-	f32 size(MEMORY_UNIT return_value_unit) noexcept;
+		// sorted list
+		u32 free_list_range = 1;
+		registry_pair* free_list = nullptr;
 
-	u32 allocated(MEMORY_UNIT return_value_unit) noexcept;
-	u32 available(MEMORY_UNIT return_value_unit) noexcept;
+	public:
+		// constructor / destructor
+		heap(
+			u32 heap_size,
+			u32 max_allocation = 1000,
+			ALLOCATION_SECTION heap_usage = ALLOCATION_SECTION::UNKOWN
+		);
+		~heap();
 
-private:
-	// heap private functions
-	inline void merge_free_areas();
-	u32 hash_pointer(void* pointer);
+		// heap public functions
+		void* allocate(u32 size);
+		void  deallocate(void* pointer);
 
-	inline void register_allocation(void* pointer , u32 size);
-	inline void allocate_from_free_list(void** pointer, u32 size , u32 index);
-	inline void unregister_allocation(u32 _index);
-	// this function search the free_list looking for empty spot
-	inline void find_free_location(u32& index_output , u32 _size);
+		u32 size() noexcept;
+		f32 size(MEMORY_UNIT return_value_unit) noexcept;
 
-	// sort from bigger to smaller
-	inline void sort_list_by_size(registry_pair* list, u32 size);
-	inline void sort_list_by_address(registry_pair* list, u32 size);
-	inline void init_registry_list(registry_pair* list, u32 size);
-};
+		u32 allocated(MEMORY_UNIT return_value_unit) noexcept;
+		u32 available(MEMORY_UNIT return_value_unit) noexcept;
 
+	private:
+		// heap private functions
+		inline void merge_free_areas();
+		u32 hash_pointer(void* pointer);
+
+		inline void register_allocation(void* pointer, u32 size);
+		inline void allocate_from_free_list(void** pointer, u32 size, u32 index);
+		inline void unregister_allocation(u32 _index);
+		// this function search the free_list looking for empty spot
+		inline void find_free_location(u32& index_output, u32 _size);
+
+		// sort from bigger to smaller
+		inline void sort_list_by_size(registry_pair* list, u32 size);
+		inline void sort_list_by_address(registry_pair* list, u32 size);
+		inline void init_registry_list(registry_pair* list, u32 size);
+	};
+
+}
 
 #endif
 

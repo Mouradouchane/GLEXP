@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include "libs/glew/glew.h"
-#include "core/errors/glerror_debug.hpp"
+#include "engine/graphics/glerror_debug.hpp"
 
 void clear_opengl_errors() {
 	GLenum err = glGetError();
