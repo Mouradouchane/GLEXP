@@ -13,6 +13,10 @@ local tool = {
     lang_version = "C++17"
 }
 
+local link_with = {
+    spdlog_debug  = utility.s_paths.libs .. "/spdlog/spdlogd.lib" ,
+    spdlog_release = utility.s_paths.libs .. "/spdlog/spdlog.lib" 
+}
 
 -- start generate engine project solution
 print('\27[34m' .. "==================================" .. '\27[0m')
@@ -47,6 +51,9 @@ filter("configurations:release")
 targetdir(utility.s_paths.release .. "/core/")
 objdir(utility.s_paths.release .. "/core/")
 
+-- libraries core need to link with
+links( link_with.spdlog_release )
+
 targetname(tool.name)
 
 -- few macros for release
@@ -67,6 +74,9 @@ targetdir(utility.s_paths.debug .. "/core/")
 objdir(utility.s_paths.debug .. "/core/")
 
 targetname(tool.name)
+
+-- libraries core need to link with
+links( link_with.spdlog_debug )
 
 debugdir(utility.s_paths.build)
 defines("DEBUG")
