@@ -29,6 +29,7 @@
 #include "engine/models/models.hpp"
 #include "engine/resource/resource_manager.hpp"
 
+#include "core/logger/logger.hpp"
 #include "application.hpp"
 
 namespace application {
@@ -114,12 +115,15 @@ ERR init() {
 
 	ASSERT_APP_INIT(init_glew());
 
+	core::logger::init(logger_verbosity_level::debug);
+
 	// setup shader program
 	program = new shader("shaders/shader.vert", "shaders/shader.frag");
 	//if (program->last_error != ERR::NO_ERR) return ERR::FAILED_TO_CREATE_PROGRAM;
 
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
-		
+	
+	/*
 	heap heap1( KB_TO_BYTE(1) , 32 , ALLOCATION_SECTION::GENERAL);
 
 	void* _ptrs[8] = {};
@@ -134,6 +138,7 @@ ERR init() {
 	heap1.deallocate((byte*)_ptrs[6]);
 	sz = heap1.allocated(MEMORY_UNIT::byte);
 	heap1.allocate(128*2);
+	*/
 
 	// load resources based on ini file
 	// ERR err = resource::load_resources("./resources.ini");

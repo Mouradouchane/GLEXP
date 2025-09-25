@@ -47,6 +47,9 @@ includedirs(
 --------------------------------------------
 filter("configurations:release")
 
+characterset("Unicode")
+buildoptions({"/utf-8"}) -- for fmt library
+
 -- build output path
 targetdir(utility.s_paths.release .. "/core/")
 objdir(utility.s_paths.release .. "/core/")
@@ -68,6 +71,9 @@ optimize("Off")
 -- core project --> debug config
 --------------------------------------------
 filter("configurations:debug")
+
+characterset("Unicode")
+buildoptions({"/utf-8"}) -- for fmt library
 
 -- build output path
 targetdir(utility.s_paths.debug .. "/core/")

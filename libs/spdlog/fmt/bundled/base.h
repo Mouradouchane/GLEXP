@@ -457,7 +457,7 @@ enum { is_utf8_enabled = "\u00A7"[1] == '\xA7' };
 enum { use_utf8 = !FMT_WIN32 || is_utf8_enabled };
 
 #ifndef FMT_UNICODE
-#  define FMT_UNICODE 1
+    #define FMT_UNICODE 0
 #endif
 
 static_assert(!FMT_UNICODE || use_utf8,

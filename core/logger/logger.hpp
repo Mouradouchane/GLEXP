@@ -11,50 +11,34 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
-// disable all spdlog warnings
-#pragma warning(push, 0) 
-	#include "libs/spdlog/spdlog.h"
-	#include "libs/spdlog/fmt/ostr.h"
-#pragma warning(pop)
-
-#include <stdarg.h>
 // todo : replace std::string with our string 
 #include <string>
+#include <stdarg.h>
+
+// used to control logger verbosity level
+enum class logger_verbosity_level : u8 {
+	trace = 0, 
+	debug,	
+	info,
+	warning, 
+	error,
+	fatal,
+	none, // no messages at all
+};
 
 namespace core {
 
 namespace logger {
 
-	// used to control logger verbosity level
-	enum class verbosity_level : u8 {
-		disable = 0, // no messages at all
-		error,
-		warning, 
-		info, 
-		debug	
-	};
-
-	// logger 
-	enum class log_level : u8 {
-		fatal = 0, // errors who cause crash
-		error, // errors who can be handled 
-		/*
-			note: in debug only !
-		*/
-		warning, // when something is wrong !
-		info,
-		// debug information 
-		debug, 
-		trace	
-	};
+	void init(logger_verbosity_level logger_verbosity_level, u32 backtrace_level = 32);
 
 	// logger public function's
-	inline void fatal(std::string const& message , ...);
-	inline void error(std::string const& message , ...);
-	inline void warn( std::string const& message , ...);
-	inline void info( std::string const& message , ...);
-	inline void debug(std::string const& message , ...);
-	inline void trace(std::string const& message , ...);
+	inline void fatal(std::string const& message);
+	inline void error(std::string const& message);
+	inline void warn (std::string const& message);
+	inline void info (std::string const& message);
+	inline void debug(std::string const& message);
+	inline void trace(std::string const& message);
 
 }; // namespace logger end
 
@@ -64,18 +48,17 @@ namespace logger {
 	logger macros functions
 */
 
-#define CORE_FATAL(MESSAGE , ...) core::logger::fatal(MESSAGE , __VA_ARGS__)
-#define CORE_ERROR(MESSAGE , ...) core::logger::error(MESSAGE , __VA_ARGS__)
+#define CORE_FATAL(...) spdlog::critical(__VA_ARGS__)
+#define CORE_ERROR(...) spdlog::error(__VA_ARGS__)
 
 #ifdef DEBUG // logger debug only functions
-	#define CORE_WARN(MESSAGE  , ...) core::logger::warn(MESSAGE  , __VA_ARGS__)
-	#define CORE_INFO(MESSAGE  , ...) core::logger::info(MESSAGE  , __VA_ARGS__)
-	#define CORE_TRACE(MESSAGE , ...) core::logger::trace(MESSAGE , __VA_ARGS__)
+	#define CORE_WARN(...)  spdlog::warn(__VA_ARGS__)
+	#define CORE_INFO(...)  spdlog::info(__VA_ARGS__)
+	#define CORE_TRACE(...) spdlog::trace(__VA_ARGS__)
 #else 
-	#define CORE_WARN(MESSAGE  , ...)
-	#define CORE_INFO(MESSAGE  , ...)
-	#define CORE_TRACE(MESSAGE , ...)
+	#define CORE_WARN(...)
+	#define CORE_INFO(...)
+	#define CORE_TRACE(...)
 #endif
-
 
 #endif 

@@ -1,12 +1,11 @@
-
 #pragma once 
 
 #ifndef MACROS_HPP
 #define MACROS_HPP
 
 /*
-	NOTE: if youre not using visual studio , make sure to change __debugbreak 
-	with the one working for your IDE/DEBUGGER
+	NOTE: if youre not using visual studio or windows 
+	make sure to change __debugbreak(); with the one working for your IDE/DEBUGGER
 */ 
 #ifdef DEBUG
 	#include <intrin.h>
@@ -15,26 +14,31 @@
 	#define DEBUG_BREAK
 #endif
 
-// maybe (INTPTR_MAX == INT64_MAX) for linux 
-#ifdef _WIN64 or WIN64 or __x86_64__ or _____LP64_____
-	#define X64 // if arch is 64bit
+// current arch x64 or x32 maybe other arch later
+#ifdef _WIN64 || WIN64 || __x86_64__ || _____LP64_____
+	#define X64
 #else 
-	#define X32 // if arch is 32bit
+	#define X32
 #endif
 
-// for windows 
-#ifdef _WIN32 or _WIN64 or WIN32 or WIN64 or WIN or __WINDOWS__ or __WIN32__ or 
+// windows
+#ifdef _WIN32 || _WIN64 || WIN32 || WIN64 || WIN || __WINDOWS__ || __WIN32__
 	#define WINDOWS
 #endif 
 
-// for linux
-#ifdef __GNU__ or __gnu_hurd__ or __gnu_linux__ or __linux__ or linux or __linux
+// linux
+#ifdef __GNU__ || __gnu_hurd__ || __gnu_linux__ || __linux__ || linux || __linux
 	#define LINUX
 #endif
 
-// compile-time failure for undetected systems
-#ifndef WINDOWS or LINUX
-	static_assert(0, "no macro detected for your current operation system :: " __FILE__);
+// when systems is unsupported
+#ifndef WINDOWS || LINUX
+	static_assert(0, "no macro detected f|| your current operation system :: " __FILE__);
 #endif
+
+// warning macros
+#define DISABLE_WARNING_START __pragma(warning(push,0))
+#define DISABLE_WARNING(WARNINGS) __pragma(warning(disable,WARNINGS))
+#define DISABLE_WARNING_END   __pragma(warning(pop))
 
 #endif // !MACROS_HPP

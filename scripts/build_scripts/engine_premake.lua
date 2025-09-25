@@ -63,6 +63,9 @@ icon( utility.s_paths.engine .. "/icon.ico" )
 --------------------------------------------
 filter("configurations:release")
 
+characterset("Unicode")
+buildoptions({"/utf-8"}) -- for fmt library
+
 -- compiled exe and obj output folder
 objdir(utility.s_paths.release .. "/engine/")  -- bin's
 
@@ -90,6 +93,9 @@ optimize("Off")  -- TODO: enable optimizations later
 -- engine project --> debug config
 --------------------------------------------
 filter("configurations:debug")
+
+characterset("Unicode")
+buildoptions({"/utf-8"}) -- for fmt library
 
 -- compiled exe and obj output folder
 objdir(utility.s_paths.debug  .. "/engine/")  -- bin's

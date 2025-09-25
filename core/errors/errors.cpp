@@ -3,14 +3,14 @@
 #ifndef ERRORS_CPP
 #define ERRORS_CPP
 
-#define _WIN32
+#include "core/macros.hpp"
 #include <thread>
 
 #include "libs/boxer/boxer.h" // project repo : https://github.com/aaronmjacobs/Boxer
-#ifdef _WIN32
-	#include "libs/boxer/boxer_win.cpp" // project repo : https://github.com/aaronmjacobs/Boxer
-#elif __GNUC__
-	#include "libs/boxer/boxer_linux.cpp" // project repo : https://github.com/aaronmjacobs/Boxer
+#ifdef WINDOWS
+	#include "libs/boxer/boxer_win.cpp" 
+#elif LINUX
+	#include "libs/boxer/boxer_linux.cpp"
 #else
 	#error "boxer library can't compile for this system !"
 #endif
