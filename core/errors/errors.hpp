@@ -3,8 +3,24 @@
 #ifndef ERRORS_HPP
 #define ERRORS_HPP
 
-#include <stdint.h>
 #include <string>
+#include "core/types.hpp"
+
+namespace core {
+
+	enum class error_type : u16 {
+		unkown = 0,
+		user_error,
+		runtime_error,
+		core_error,
+		fatal_error
+	};
+
+	struct error {
+
+	};
+
+} // namespace core end
 
 /*
 	all the errors is here in ERR enum

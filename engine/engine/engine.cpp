@@ -1,7 +1,7 @@
 #pragma once 
 
-#ifndef APP_CPP
-#define APP_CPP
+#ifndef ENGINE_CPP
+#define ENGINE_CPP
 
 #include <stdlib.h>
 //#include <malloc.h>
@@ -17,6 +17,7 @@
 #include "libs/glfw/glfw3.h"
 #include "libs/glew/glew.h"
 
+#include "core/logger/logger.hpp"
 #include "core/errors/assert.hpp"
 #include "core/memory/memory.hpp"
 #include "core/memory/memory_heap.hpp"
@@ -29,17 +30,28 @@
 #include "engine/models/models.hpp"
 #include "engine/resource/resource_manager.hpp"
 
-#include "core/logger/logger.hpp"
-#include "application.hpp"
+#include "engine.hpp"
 
-namespace application {
+// todo: remove this
+std::vector<model> models;
+model test_model;
+texture test_texutre;
 
-bool running = true;
+// todo: remove this
+std::string textures_list[] = {
+	"textures/wall.jpg",
+	"textures/brick.jpg",
+};
 
-std::string  title  = "GLEXP";
-GLFWwindow*  window = nullptr;
+// engnie variables
+namespace engine {
+	bool         running = true;
 
-shader* program = nullptr;
+	std::string  title  = "GLEXP";
+	GLFWwindow*  window = nullptr;
+
+	shader*      program = nullptr;
+}
 
 static ERR init_glfw() {
 
@@ -79,43 +91,34 @@ static ERR init_glew() {
 static ERR create_window() {
 	
 	// create window
-	window = glfwCreateWindow(
+	engine::window = glfwCreateWindow(
 		config::screen::width, 
 		config::screen::height, 
-		application::title.c_str(), NULL, NULL
+		engine::title.c_str(), NULL, NULL
 	);
 
-	if (window == nullptr) return ERR::FAILED_TO_CREATE_WINDOW;
+	if (engine::window == nullptr) return ERR::FAILED_TO_CREATE_WINDOW;
 	else {
 		//glewExperimental = GL_TRUE;
-		glfwMakeContextCurrent(window);
+		glfwMakeContextCurrent(engine::window);
 		return ERR::NO_ERR;
 	}
 }
 
+namespace engine {
 
-// few objects for testing only
-std::vector<model> models;
-model	   test_model;
-texture test_texutre;
+void init() {
 
-std::string textures_list[] = {
-	"textures/wall.jpg",
-	"textures/brick.jpg",
-};
-
-ERR init() {
-
-	ASSERT_APP_INIT(init_glfw());
+	init_glfw();
 
 	// if loading configs from ini failed "it's fine" , we have default configs 
 	config::load_configs_from_file("glexp.ini");
 
-	ASSERT_APP_INIT(create_window());
+	create_window();
 
-	ASSERT_APP_INIT(init_glew());
+	init_glew();
 
-	core::logger::init(logger_verbosity_level::debug);
+	core::logger::init(logger_verbosity_level::trace);
 
 	// setup shader program
 	program = new shader("shaders/shader.vert", "shaders/shader.frag");
@@ -146,14 +149,13 @@ ERR init() {
 	// load_image textures 
 	// TODO : make texture loader from file_list
 	// if(init_textures() != ERR::NO_ERR) return ERR::FAILED_TO_INIT_TEXTURES;
-
-	return ERR::NO_ERR;
+	
 }
 
-ERR run() {
+void run() {
 
 	if (program == nullptr || program->last_error != ERR::NO_ERR) {
-		return ERR::INVALID_SHADER_PROGRAM;
+		return;
 	}
 
 	program->use();
@@ -167,9 +169,11 @@ ERR run() {
 	/*
 			MAIN LOOP
 	*/
+
+	// todo: add time api in core library
 	std::chrono::milliseconds sleep_time(15);
 	
-	while (application::running) {
+	while (engine::running) {
 		// process events
 		glfwPollEvents();
 
@@ -185,29 +189,33 @@ ERR run() {
 
 		glfwSwapBuffers(window);
 
-		if(glfwWindowShouldClose(window)) application::running = false;
+		if(glfwWindowShouldClose(window)) engine::running = false;
 
 		// fps controll
 		// TODO: make it calculated instead of hard-coded 15ms
 		std::this_thread::sleep_for(sleep_time);
 	}
 
-	return ERR::NO_ERR;
 }
 
-void clean_up() {
+// todo: engine shutdown stages need some work !
+void shutdown() {
 
-	// delete shaders
+	// detected memory leaks 
+	
+	// free memory
 	delete program;
 
-	// free glfw load_image
+	// release librares stuff
 	glfwTerminate();
-	glfwDestroyWindow(application::window);
+	glfwDestroyWindow(engine::window);
 
-	// save changes to files
+	// log to file if needed
+	
+	// save game/engine stuff to files
 
 }
 
-} // application namespace end
+} // engine namespace end
 
 #endif

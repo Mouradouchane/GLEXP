@@ -11,6 +11,16 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
+// disable fmt & spdlog warnings
+DISABLE_WARNING_START
+#pragma warning( disable : 26495,26498,26812,6294,26451,4002,4006,4067)
+	#include <libs/spdlog/spdlog.h>
+	#include <libs/spdlog/sinks/stdout_color_sinks.h>
+	#include <libs/spdlog/sinks/wincolor_sink.h>
+	#include <libs/spdlog/fmt/ostr.h>
+DISABLE_WARNING_END
+
+
 // todo : replace std::string with our string 
 #include <string>
 #include <stdarg.h>
@@ -30,7 +40,11 @@ namespace core {
 
 namespace logger {
 
-	void init(logger_verbosity_level logger_verbosity_level, u32 backtrace_level = 32);
+	void init(logger_verbosity_level level, u32 trace_level = 32);
+
+	logger_verbosity_level get_level();
+	// works in debug only !
+	void set_level(logger_verbosity_level level);
 
 	// logger public function's
 	inline void fatal(std::string const& message);
@@ -40,7 +54,7 @@ namespace logger {
 	inline void debug(std::string const& message);
 	inline void trace(std::string const& message);
 
-}; // namespace logger end
+} // namespace logger end
 
 } // namespace core end
 
@@ -48,16 +62,18 @@ namespace logger {
 	logger macros functions
 */
 
-#define CORE_FATAL(...) spdlog::critical(__VA_ARGS__)
-#define CORE_ERROR(...) spdlog::error(__VA_ARGS__)
+#define CORE_FATAL(...) spdlog::critical(__VA_ARGS__);
+#define CORE_ERROR(...) spdlog::error(__VA_ARGS__);
 
 #ifdef DEBUG // logger debug only functions
-	#define CORE_WARN(...)  spdlog::warn(__VA_ARGS__)
-	#define CORE_INFO(...)  spdlog::info(__VA_ARGS__)
-	#define CORE_TRACE(...) spdlog::trace(__VA_ARGS__)
+	#define CORE_WARN(...)  spdlog::warn(__VA_ARGS__);
+	#define CORE_INFO(...)  spdlog::info(__VA_ARGS__);
+	#define CORE_DEBUG(...) spdlog::debug(__VA_ARGS__);
+	#define CORE_TRACE(...) spdlog::trace(__VA_ARGS__);
 #else 
 	#define CORE_WARN(...)
 	#define CORE_INFO(...)
+	#define CORE_DEBUG(...)
 	#define CORE_TRACE(...)
 #endif
 

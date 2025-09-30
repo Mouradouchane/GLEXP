@@ -6,7 +6,7 @@
 utility = require("utility_functions")
 
 local engine = {
-    project_name= "engine",
+    project_name = "engine",
     name           =  "glexp",
     kind             = "WindowedApp",
     arch             = "x64",
@@ -24,7 +24,7 @@ print('\27[34m' .. "GENERATE ENGINE PROJECT" .. '\27[0m')
 
 -- start generate engine project solution
 
--- prject name
+-- project name
 engine_project = project( engine.project_name )
 location(paths.ide_projects_dir)
 architecture(engine.arch)
@@ -130,3 +130,8 @@ print("architecture : " .. engine.arch)
 print("kind  : " .. engine.kind)
 print("language  : " .. engine.lang_version)
 print('\27[34m' .. "==================================" .. '\27[0m')
+
+
+return {
+	engine_project = engine
+}

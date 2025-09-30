@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include "core/macros.hpp"
 #include "core/errors/errors.hpp"
+#include "core/logger/logger.hpp"
 
 /*
 	compile-time assert
@@ -24,23 +25,19 @@
 
 #ifdef DEBUG
 
-	#define ASSERT_ERR( EXPRESSION ) \
-				if( EXPRESSION != ERR::NO_ERR ) { DEBUG_BREAK; exit(-1); } 
+	#define ASSERT_ERR( EXPRESSION , ASSERT_MESSAGE ) \
+				if( EXPRESSION != ERR::NO_ERR ) { CORE_FATAL(ASSERT_MESSAGE); DEBUG_BREAK; CORE_CRASH(); } 
 
-	#define ASSERT_EXP( EXPRESSION ) \
-				if( ! EXPRESSION ) { DEBUG_BREAK; exit(-1); } 
+	#define ASSERT_EXP( TRUE_CONDITION , ASSERT_MESSAGE) \
+				if(TRUE_CONDITION) { CORE_FATAL(ASSERT_MESSAGE); DEBUG_BREAK; CORE_CRASH(); } 
 
 #else 
-	#define ASSERT_ERR( EXPRESSION ) \
-			if( EXPRESSION != ERR::NO_ERR ) exit(-1); 
+	#define ASSERT_ERR( EXPRESSION , ASSERT_MESSAGE ) \
+			if( EXPRESSION != ERR::NO_ERR ) CORE_CRASH();
 
-	#define ASSERT_EXP( EXPRESSION ) \
-			if( ! EXPRESSION ) exit(-1); 
+	#define ASSERT_EXP( TRUE_CONDITION , ASSERT_MESSAGE ) \
+				if(TRUE_CONDITION) CORE_CRASH();
 
 #endif 
-
-#define ASSERT_APP_INIT( EXPRESSION ) \
-		if( EXPRESSION != ERR::NO_ERR ) return ERR::FAILED_TO_INIT_APPLICATION;
-
 
 #endif

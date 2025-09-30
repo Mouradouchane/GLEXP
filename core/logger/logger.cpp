@@ -4,42 +4,48 @@
 #define LOGGER_CPP
 
 #include "logger.hpp"
+#include "core/errors/assert.hpp"
 
-// disable fmt & spdlog warnings
-DISABLE_WARNING_START
-#pragma warning( disable : 26451,4002,4006,4067)
-	#include <libs/spdlog/spdlog.h>
-	#include <libs/spdlog/sinks/stdout_color_sinks.h>
-	#include <libs/spdlog/fmt/ostr.h>
-DISABLE_WARNING_END
-
+/*
+	logger private variables
+*/
 static u32 back_trace_level = 32;
-static spdlog::logger* spd_stdout_sink;
-static spdlog::logger* xspd_logger;
+static logger_verbosity_level logger_level = logger_verbosity_level::none;
 
-void core::logger::init(logger_verbosity_level logger_verbosity_level , u32 backtrace_level) {
-	
-	auto spd_logger = spdlog::stdout_color_mt("core_logger");
+void core::logger::init(logger_verbosity_level level , u32 trace_level) {
 
-	spdlog::set_default_logger(spd_logger);
+#ifdef WINDOWS
+	AllocConsole();
+#elif LINUX
+	// todo: create console for linux
+	COMPILE_TIME_ASSERT(0,"core::logger::init --> create console in linux not implemented yet !");
+#else 
+	COMPILE_TIME_ASSERT(0,"core::logger::init --> unsupported operation system !");
+#endif
 
 #ifdef DEBUG
-	back_trace_level = backtrace_level;
-	spdlog::enable_backtrace(back_trace_level);
+	logger_level = level;
+	back_trace_level = trace_level;
 	
-	spdlog::set_level( spdlog::level::level_enum(logger_verbosity_level) );
+	spdlog::enable_backtrace(back_trace_level);
+	spdlog::set_level( spdlog::level::level_enum(level) );
 #else 
+	back_trace_level = 0;
+	logger_level = logger_verbosity_level::error;
 	spdlog::set_level( spdlog::level::level_enum::err );
 #endif
-	spdlog::set_pattern("%^[%T] [%l] : %v %$");
 
-	// just a quick test if we are in debug
+	spdlog::set_pattern("%^[%T] [%l] %v %$");
+
+}
+
+logger_verbosity_level core::logger::get_level() {
+	return logger_level;
+}
+
+void core::logger::set_level(logger_verbosity_level level) {
 #ifdef DEBUG
-	spd_logger->info("log info test !");
-	core::logger::warn("log warn test !");
-	core::logger::debug("log debug test !");
-	core::logger::error("log error test !");
-	core::logger::fatal("log fatal test !");
+	spdlog::set_level( spdlog::level::level_enum(level) );
 #endif
 }
 
@@ -75,6 +81,5 @@ inline void core::logger::trace(std::string const& message ){
 	spdlog::trace(message);
 #endif
 }
-
 
 #endif 

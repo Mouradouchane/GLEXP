@@ -23,4 +23,6 @@ tester = require("./scripts/build_scripts/tester_premake")
 
 -- tools : models_converter projet setup
 
+-- startup project
+startproject(engine_project.project_name)
 

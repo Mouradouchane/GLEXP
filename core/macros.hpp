@@ -14,17 +14,17 @@
 	#define DEBUG_BREAK
 #endif
 
-// current arch x64 or x32 maybe other arch later
+// current arch x64 or x32 maybe other arch later 
 #ifdef _WIN64 || WIN64 || __x86_64__ || _____LP64_____
 	#define X64
-#else 
+#else
 	#define X32
 #endif
 
 // windows
 #ifdef _WIN32 || _WIN64 || WIN32 || WIN64 || WIN || __WINDOWS__ || __WIN32__
 	#define WINDOWS
-#endif 
+#endif
 
 // linux
 #ifdef __GNU__ || __gnu_hurd__ || __gnu_linux__ || __linux__ || linux || __linux
@@ -37,8 +37,9 @@
 #endif
 
 // warning macros
-#define DISABLE_WARNING_START __pragma(warning(push,0))
-#define DISABLE_WARNING(WARNINGS) __pragma(warning(disable,WARNINGS))
-#define DISABLE_WARNING_END   __pragma(warning(pop))
+#define DISABLE_WARNING_START __pragma(warning(push,0));
+#define DISABLE_WARNING_END   __pragma(warning(pop));
+
+#define CORE_CRASH() exit(-1);
 
 #endif // !MACROS_HPP
