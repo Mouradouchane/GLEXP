@@ -3,6 +3,11 @@
 #ifndef TEXTUER_HPP
 #define TEXTUER_HPP
 
+/*
+	todo: rework
+*/
+#if 0
+
 #include <string>
 #include "libs/glew/glew.h"
 #include "libs/glfw/glfw3.h"
@@ -65,5 +70,7 @@ public:
 	);
 
 };
+
+#endif
 
 #endif

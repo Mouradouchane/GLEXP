@@ -3,6 +3,11 @@
 #ifndef IMAGE_CPP
 #define IMAGE_CPP
 
+/*
+	todo: rework
+*/
+#if 0
+
 #define  STB_IMAGE_IMPLEMENTATION
 #include "libs/stb_image.h"
 
@@ -30,7 +35,7 @@ bool image::is_loaded() {
 	return this->loaded;
 }
 
-ERR image::get_last_error() {
+core::error image::get_last_error() {
 	return this->last_error;
 }
 
@@ -54,11 +59,11 @@ uint16_t image::get_height() const{
 	return this->height;
 }
 
-ERR image::free_buffer(){
+core::error image::free_buffer(){
 
 	if (this->data == nullptr) {
 		this->loaded = false;
-		return ERR::NULLPTR_IMAGE;
+		return core::error::nullptr_image;
 	}
 
 	stbi_image_free(this->data);
@@ -66,27 +71,27 @@ ERR image::free_buffer(){
 	this->data   = nullptr;
 	this->loaded = false;
 
-	return ERR::NO_ERR;
+	return core::error::NO_ERR;
 }
 
-ERR image::load_image() {
+core::error image::load_image() {
 	int x = 0, y = 0, ch = 0;
 
 	this->data = stbi_load(this->path.c_str(), &x, &y, &ch, 0);
 
 	if (this->data == nullptr) {
 		this->loaded = false;
-		this->last_error = ERR::FAILED_TO_LOAD_IMAGE;
-		return ERR::FAILED_TO_LOAD_IMAGE;
+		this->last_error = core::error::FAILED_TO_LOAD_IMAGE;
+		return core::error::FAILED_TO_LOAD_IMAGE;
 	}
 
 	this->loaded  = true;
 	this->width   = uint16_t(x);
 	this->height  = uint16_t(y);
 	this->channle = ch;
-	this->last_error = ERR::NO_ERR;
+	this->last_error = core::error::NO_ERR;
 
-	return ERR::NO_ERR;
+	return core::error::NO_ERR;
 }
 
 // destructor
@@ -98,5 +103,7 @@ image::~image() {
 		this->data = nullptr;
 	}
 }
+
+#endif
 
 #endif

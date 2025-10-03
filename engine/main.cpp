@@ -23,11 +23,11 @@ int main(
 #endif
 {
 
-    ASSERT_ERR(engine::init());
+    CORE_ASSERT(engine::init() != core::error::none, "failed to init engine");
 
     engine::run();
 
     engine::shutdown();
 
-    return int(ERR::NO_ERR);
+    return int(core::error::none);
 }

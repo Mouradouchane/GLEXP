@@ -3,6 +3,11 @@
 #ifndef GL_MODELS_HPP
 #define GL_MODELS_HPP
 
+/*
+	todo: rework
+*/
+#if 0
+
 #include <string>
 #include <vector>
 
@@ -58,5 +63,7 @@ public:
 	void render(shader const& shader_program);
 };
 // class gl_model end 
+
+#endif
 
 #endif

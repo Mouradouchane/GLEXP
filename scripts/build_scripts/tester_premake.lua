@@ -3,8 +3,8 @@
 ------------------------------------------------------------
 utility = require("utility_functions")
 
-local tool = {
-    project_name = "tool_tester",
+local tester = {
+    project_name = "tester",
     name = "tester",
     kind = "ConsoleApp",
     arch = "x64",
@@ -17,76 +17,85 @@ local link_with = {
     core_release = utility.s_paths.release .. "/core/core.lib" 
 }
 
--- start generate engine project solution
-print('\27[34m' .. "==================================" .. '\27[0m')
-print('\27[34m' .. "GENERATE TESTER PROJECT" .. '\27[0m')
+-- function run( )
+
+	-- start generate engine project solution
+	print('\27[34m' .. "==================================" .. '\27[0m')
+	print('\27[34m' .. "GENERATE TESTER PROJECT" .. '\27[0m')
 
 
-project(tool.project_name)
-location(paths.ide_projects_dir)
+	project(tester.project_name)
+	location(paths.ide_projects_dir)
 
--- project config
-kind(tool.kind)
-architecture(tool.arch)
-language(tool.lang)
-cppdialect(tool.lang_version)
+	-- project config
+	kind(tester.kind)
+	architecture(tester.arch)
+	language(tester.lang)
+	cppdialect(tester.lang_version)
 
--- project files and directories 
-files(
-    { 
-        "../../tools/tester/**" , 
-    }
-)
-includedirs(
-    { 
-        utility.s_paths.root,
-        utility.s_paths.libs .. "/tabulate/",
-        utility.s_paths.libs,
-    }
-)
+	-- project files and directories 
+	files(
+		{ 
+			"../../testers/tester/**" , 
+		}
+	)
+	includedirs(
+		{ 
+			utility.s_paths.root,
+			utility.s_paths.libs .. "/tabulate/",
+			utility.s_paths.libs,
+		}
+	)
 
---------------------------------------------
--- tester project --> release config
---------------------------------------------
-filter("configurations:release")
+	--------------------------------------------
+	-- tester project --> release config
+	--------------------------------------------
+	filter("configurations:release")
 
--- build output path
-targetdir(utility.s_paths.build .. "/tools/")
-objdir(utility.s_paths.release .. "/tester/")
+	-- build output path
+	targetdir(utility.s_paths.build .. "/testers/")
+	objdir(utility.s_paths.release .. "/tester/")
 
-targetname(tool.name)
-links( link_with.core_release )
+	targetname(tester.name)
+	links( link_with.core_release )
 
--- few macros for release
-defines({"NDEBUG", "NO_DEBUG"})
+	-- few macros for release
+	defines({"NDEBUG", "NO_DEBUG"})
 
-symbols("Off")
-optimize("Off")
---------------------------------------------
---------------------------------------------
+	symbols("Off")
+	optimize("Off")
+	--------------------------------------------
+	--------------------------------------------
 
---------------------------------------------
--- tester project --> debug config
---------------------------------------------
-filter("configurations:debug")
+	--------------------------------------------
+	-- tester project --> debug config
+	--------------------------------------------
+	filter("configurations:debug")
 
--- build output path
-targetdir(utility.s_paths.build .. "/tools/")
-objdir(utility.s_paths.debug .. "/tester/")
+	-- build output path
+	targetdir(utility.s_paths.build .. "/testers/")
+	objdir(utility.s_paths.debug .. "/tester/")
 
-targetname(tool.name)
-links( link_with.core_debug )
+	targetname(tester.name)
+	links( link_with.core_debug )
 
-defines("DEBUG")
-debugdir(utility.s_paths.debug)
+	defines("DEBUG")
+	debugdir(utility.s_paths.debug)
 
-symbols("On")
-optimize("Off")
---------------------------------------------
---------------------------------------------
+	symbols("On")
+	optimize("Off")
+	--------------------------------------------
+	--------------------------------------------
 
-print("project : " .. tool.project_name)
-print("architecture : " .. tool.arch)
-print("kind  : " .. tool.kind)
-print("language  : " .. tool.lang_version)
-print('\27[34m' .. "==================================" .. '\27[0m')
+	print("project : " .. tester.project_name)
+	print("architecture : " .. tester.arch)
+	print("kind  : " .. tester.kind)
+	print("language  : " .. tester.lang_version)
+	print('\27[34m' .. "==================================" .. '\27[0m')
+
+-- end -- function run
+
+return {
+	-- run = run,
+	tester_config = tester
+}

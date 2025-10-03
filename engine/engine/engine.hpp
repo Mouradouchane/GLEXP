@@ -10,7 +10,7 @@
 
 namespace engine {
 	
-	void init();
+	core::error init();
 	void run();
 	void shutdown();
 

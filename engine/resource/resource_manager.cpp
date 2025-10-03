@@ -3,6 +3,12 @@
 #ifndef RESOURCE_MANAGER_CPP
 #define RESOURCE_MANAGER_CPP
 
+/*
+	todo : rework
+*/
+
+#if 0
+
 #include "libs/assimp/Importer.hpp"      // C++ importer interface
 #include "libs/assimp/scene.h"           // Output new_mesh structure
 #include "libs/assimp/postprocess.h"     // Post processing flags
@@ -10,12 +16,13 @@
 #include "core/errors/assert.hpp"
 #include "resource_manager.hpp"
 
+
 /*
 	few static functions for processing 3D models and make them ready to use
 */
+
 static mesh* process_mesh( aiMesh* ai_mesh, const aiScene* ai_scene );
 static void  process_node( aiNode* ai_node, const aiScene* ai_scene, model* p_model );
-
 namespace resource {
 	
 namespace {
@@ -25,7 +32,7 @@ namespace {
     //std::vector<shader> shaders;
 }
 
-ERR load_ini_file(
+core::error load_ini_file(
 	std::string const& file_path, ini_struct& dest_ini_object
 ){
 	mINI::INIFile file(file_path);
@@ -35,16 +42,16 @@ ERR load_ini_file(
 		return ERR::FAILED_TO_LOAD_INI_FILE; 
 	}
 
-	return ERR::NO_ERR;
+	return core::error::none;
 }
 
-// todo change return ERR to "engine status"
-ERR load_resources(
+// todo change return core::error to "engine status"
+core::error load_resources(
 	std::string const& resources_map_file_path
 ){
 	ini_struct resources;
 	
-	CRASH_AT_ERR(
+	CRASH_IF(
 		load_ini_file(resources_map_file_path, resources) , 
 		std::string("failed to load: " + resources_map_file_path)
 	);
@@ -71,11 +78,11 @@ ERR load_resources(
 		//resource::load_shaders( resources.get("shaders") );
 	}
 
-	return ERR::NO_ERR;
+	return core::error::none;
 }
 
 
-ERR load_texture(
+core::error load_texture(
 	std::string const& texture_file_path,
 	texture* destination
 ) {
@@ -83,7 +90,7 @@ ERR load_texture(
 
 	image _image(texture_file_path , "" , true);
 
-	if (_image.get_last_error() != ERR::NO_ERR) {
+	if (_image.get_last_error() != core::error::none) {
 		return ERR::FAILED_TO_LOAD_TEXTURE;
 	}
 	if (_image.buffer() == nullptr) {
@@ -92,10 +99,10 @@ ERR load_texture(
 
 	*destination = texture( &_image );
 
-	return ERR::NO_ERR;
+	return core::error::none;
 }
 
-ERR load_textures(
+core::error load_textures(
 	resource_map const& textures_map
 ) {
 	DEBUG_BREAK;
@@ -111,24 +118,24 @@ ERR load_textures(
 	size_t position = 0;
 	for (auto const& item : textures_map) {
 
-		ERR result = resource::load_texture(item.second , &resource::textures[position]);
+		core::error result = resource::load_texture(item.second , &resource::textures[position]);
 		
-		if (result != ERR::NO_ERR) {
+		if (result != core::error::none) {
 			// TODO: display texture loading error in game console
 		}
 		else position += 1;
 	}
 
-	return ERR::NO_ERR;
+	return core::error::none;
 }
 
 // NOTE: models gonna be in RAM not GPU-MEMORY
-ERR load_model( 
+core::error load_model( 
 	std::string const& model_file_path, model* destination 
 ){
 	// DEBUG_BREAK;
 	if (destination == nullptr) {
-		return ERR::NULLPTR_MODEL_OBJET;
+		return core::error::nullptr_model_object;
 	}
 
 	Assimp::Importer importer;
@@ -159,10 +166,10 @@ ERR load_model(
 	// process model by starting from "root ai_node"
 	process_node(ai_scene->mRootNode, ai_scene, destination);
 
-	return ERR::NO_ERR;
+	return core::error::none;
 }
 
-ERR load_models( 
+core::error load_models( 
 	resource_map const& models_map 
 ){
 	DEBUG_BREAK;
@@ -179,7 +186,10 @@ ERR load_models(
 
 		const std::string model_path = itr.second;
 
-		RET_ERR(resource::load_model(model_path, &resource::models[position]));
+		core::error result = resource::load_model(model_path, &resource::models[position]);
+
+		if (result != core::error::none) return result;
+		
 		resource::models[position].name = itr.first;
 
 		// if models vector need resize
@@ -190,11 +200,12 @@ ERR load_models(
 		position += 1;
 	}
 
-	return ERR::NO_ERR;
+	return core::error::none;
 }
 
 
 }
+
 /*
 	============== resource namespace end ================
 */
@@ -270,5 +281,6 @@ static void process_node(
 
 }
 
+#endif
 
 #endif

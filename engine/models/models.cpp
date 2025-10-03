@@ -3,6 +3,11 @@
 #ifndef MODELS_CPP
 #define MODELS_CPP
 
+/*
+	todo: rework
+*/
+#if 0
+
 #include "models.hpp"
 
 /*
@@ -31,5 +36,7 @@ model::~model() {
 		if(ptr_mesh != nullptr) delete ptr_mesh;
 	}
 }
+
+#endif
 
 #endif

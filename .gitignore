@@ -11,6 +11,8 @@
 
 build/binaries
 build/__development_output__
+build/logs
+build/tools
 build/*.pdb
 project/*.aps
 project/*.user

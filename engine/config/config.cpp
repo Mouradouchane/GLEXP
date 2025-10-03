@@ -85,9 +85,9 @@ namespace config {
 		config functions
 	*/
 
-	ERR load_configs_from_file( std::string const& ini_file_path ){
+	core::error load_configs_from_file( std::string const& ini_file_path ){
 
-		ERR result = ERR::NO_ERR;
+		core::error result = core::error::none; 
 		// create a file instance
 		mINI::INIFile file(ini_file_path);
 		
@@ -96,7 +96,7 @@ namespace config {
 
 		// try to read variables from ini file 
 		if (!file.read(configs)) {
-			result = ERR::FAILED_TO_LOAD_INI_FILE; // if failed 
+			result = core::error::failed_to_load_ini_file; // if failed 
 		}
 		else { // check and save variable in config 
 
@@ -112,12 +112,12 @@ namespace config {
 				config::screen::height = height;
 				config::screen::aspect_ratio = (float(width) / float(height));
 			}
-			else result = ERR::UNSUPPORTED_RESOLUTION;
+			else result = core::error::unsupported_resolution;
 
 			if (fov >= MIN_FOV_SUPPORTED && fov <= MAX_FOV_SUPPORTED) {
 				config::screen::fov = uint8_t(fov);
 			}
-			else result = ERR::UNSUPPORTED_FOV_VALUE;
+			else result = core::error::unsupported_fov_value;
 
 		}
 
@@ -149,8 +149,8 @@ namespace config {
 
 	// save current configs to ini file
 	// note: file should exist !
-	ERR save_configs_to_file(std::string const& ini_file_path) {
-		ERR result = ERR::NO_ERR;
+	core::error save_configs_to_file(std::string const& ini_file_path) {
+		core::error result = core::error::none; 
 		
 		mINI::INIFile file(ini_file_path);
 		mINI::INIStructure configs;
@@ -174,7 +174,7 @@ namespace config {
 
 		// try to write new change back to ini file
 		if (!file.write(configs)) {
-			result = ERR::FAILED_TO_WRITE_TO_INI_FILE;
+			result = core::error::failed_to_write_to_ini_file;
 		}
 		
 		return result;

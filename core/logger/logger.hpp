@@ -16,6 +16,8 @@ DISABLE_WARNING_START
 #pragma warning( disable : 26495,26498,26812,6294,26451,4002,4006,4067)
 	#include <libs/spdlog/spdlog.h>
 	#include <libs/spdlog/sinks/stdout_color_sinks.h>
+	#include "spdlog/sinks/daily_file_sink.h"
+	//#include <spdlog/sinks/basic_file_sink.h>
 	#include <libs/spdlog/sinks/wincolor_sink.h>
 	#include <libs/spdlog/fmt/ostr.h>
 DISABLE_WARNING_END
@@ -25,36 +27,37 @@ DISABLE_WARNING_END
 #include <string>
 #include <stdarg.h>
 
-// used to control logger verbosity level
-enum class logger_verbosity_level : u8 {
-	trace = 0, 
-	debug,	
-	info,
-	warning, 
-	error,
-	fatal,
-	none, // no messages at all
-};
 
 namespace core {
 
-namespace logger {
+	namespace logger {
 
-	void init(logger_verbosity_level level, u32 trace_level = 32);
+		// used to control logger verbosity level
+		enum class CORE_API verbosity_level : u8 {
+			trace = 0, 
+			debug,	
+			info,
+			warning, 
+			error,
+			fatal,
+			none, // no messages at all
+		};
 
-	logger_verbosity_level get_level();
-	// works in debug only !
-	void set_level(logger_verbosity_level level);
+		void CORE_API init(std::string const& logger_name, logger::verbosity_level level, u32 trace_level = 32);
 
-	// logger public function's
-	inline void fatal(std::string const& message);
-	inline void error(std::string const& message);
-	inline void warn (std::string const& message);
-	inline void info (std::string const& message);
-	inline void debug(std::string const& message);
-	inline void trace(std::string const& message);
+		logger::verbosity_level CORE_API get_level();
+		// works in debug only !
+		void CORE_API set_level(logger::verbosity_level level);
 
-} // namespace logger end
+		// logger public function's
+		inline void CORE_API fatal(std::string const& message);
+		inline void CORE_API error(std::string const& message);
+		inline void CORE_API warn (std::string const& message);
+		inline void CORE_API info (std::string const& message);
+		inline void CORE_API debug(std::string const& message);
+		inline void CORE_API trace(std::string const& message);
+
+	} // namespace logger end
 
 } // namespace core end
 

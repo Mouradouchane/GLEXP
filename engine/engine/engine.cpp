@@ -32,30 +32,18 @@
 
 #include "engine.hpp"
 
-// todo: remove this
-std::vector<model> models;
-model test_model;
-texture test_texutre;
-
-// todo: remove this
-std::string textures_list[] = {
-	"textures/wall.jpg",
-	"textures/brick.jpg",
-};
-
-// engnie variables
+// engine variables
 namespace engine {
 	bool         running = true;
 
 	std::string  title  = "GLEXP";
 	GLFWwindow*  window = nullptr;
 
-	shader*      program = nullptr;
 }
 
-static ERR init_glfw() {
+static core::error init_glfw() {
 
-	if ( !glfwInit() ) return ERR::FAILED_TO_INIT_GLFW;
+	if ( !glfwInit() ) return core::error::failed_to_init_glfw;
 
 	// get primary monitor information
 	GLFWmonitor* primary_monitor = glfwGetPrimaryMonitor();
@@ -75,20 +63,20 @@ static ERR init_glfw() {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-	return ERR::NO_ERR;
+	return core::error::none;
 }
 
-static ERR init_glew() {
-	if (GLEW_OK != glewInit()) return ERR::FAILED_TO_INIT_GLEW;
+static core::error init_glew() {
+	if (GLEW_OK != glewInit()) return core::error::failed_init_function;
 	else {
 		glViewport(0, 0, config::screen::width , config::screen::height);
 		glClearColor(0, 0, 0, 1.0f); 
 
-		return ERR::NO_ERR; 
+		return core::error::none; 
 	}
 }
 
-static ERR create_window() {
+static core::error create_window() {
 	
 	// create window
 	engine::window = glfwCreateWindow(
@@ -97,17 +85,29 @@ static ERR create_window() {
 		engine::title.c_str(), NULL, NULL
 	);
 
-	if (engine::window == nullptr) return ERR::FAILED_TO_CREATE_WINDOW;
+	if (engine::window == nullptr) return core::error::failed_to_init_window;
 	else {
 		//glewExperimental = GL_TRUE;
 		glfwMakeContextCurrent(engine::window);
-		return ERR::NO_ERR;
+		return core::error::none;
 	}
 }
 
 namespace engine {
 
-void init() {
+core::error init() {
+
+	/*
+		todo: handle init functions errors
+	*/
+	core::logger::init("glexp_engine", core::logger::verbosity_level::trace);
+
+	CORE_INFO ("test info  -> {}", 1);
+	CORE_WARN ("test warn  -> {}", 1);
+	CORE_DEBUG("test debug -> {}", 1);
+	CORE_TRACE("test trace -> file:{} , line:{}", __FILE__ , __LINE__ );
+	CORE_ERROR("test error -> file:{} , line:{}", __FILE__ , __LINE__);
+	CORE_FATAL("test fatal -> file:{} , line:{}", __FILE__ , __LINE__);
 
 	init_glfw();
 
@@ -118,11 +118,6 @@ void init() {
 
 	init_glew();
 
-	core::logger::init(logger_verbosity_level::trace);
-
-	// setup shader program
-	program = new shader("shaders/shader.vert", "shaders/shader.frag");
-	//if (program->last_error != ERR::NO_ERR) return ERR::FAILED_TO_CREATE_PROGRAM;
 
 	std::string opengl_version((const char*)glGetString(GL_VERSION));
 	
@@ -144,27 +139,24 @@ void init() {
 	*/
 
 	// load resources based on ini file
-	// ERR err = resource::load_resources("./resources.ini");
+	// core::error err = resource::load_resources("./resources.ini");
 
 	// load_image textures 
 	// TODO : make texture loader from file_list
-	// if(init_textures() != ERR::NO_ERR) return ERR::FAILED_TO_INIT_TEXTURES;
+	// if(init_textures() != core::error::none) return core::error::FAILED_TO_INIT_TEXTURES;
 	
+	return core::error::none;
 }
 
 void run() {
-
-	if (program == nullptr || program->last_error != ERR::NO_ERR) {
-		return;
-	}
-
-	program->use();
-
+	
+	/*
 	// TODO : make texture or meshes handle "texture uints"
 	glActiveTexture(GL_TEXTURE0);
 	// set texture unit
 	GLint sampler = glGetUniformLocation(program->id,"sampler");
 	glUniform1i(sampler, 0);
+	*/
 
 	/*
 			MAIN LOOP
@@ -201,18 +193,16 @@ void run() {
 // todo: engine shutdown stages need some work !
 void shutdown() {
 
-	// detected memory leaks 
+	// todo: detected memory leaks 
 	
-	// free memory
-	delete program;
 
 	// release librares stuff
 	glfwTerminate();
 	glfwDestroyWindow(engine::window);
 
-	// log to file if needed
+	// todo: log to file if needed
 	
-	// save game/engine stuff to files
+	// todo: save game/engine stuff to files
 
 }
 

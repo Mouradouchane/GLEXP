@@ -3,15 +3,20 @@
 #ifndef SHADER_CPP
 #define SHADER_CPP
 
+/*
+	todo: rework
+*/
+#if 0
+
 #include <string>
 #include <vector>
 #include <fstream>
 #include <sstream>
 
+
 #include "core/errors/assert.hpp"
 #include "engine/graphics/glerror_debug.hpp"
 #include "engine/shaders/shader.hpp"
-
 
 static std::string* load_shader_source_code(
 	std::string const& shader_file_path
@@ -73,10 +78,10 @@ static shader_object create_shader(std::string const& shader_code, GLuint shader
 
 		switch (shader_type) {
 			case GL_VERTEX_SHADER: {
-				shader.last_error = ERR::FAILED_TO_COMPILE_VERTEX_SHADER;
+				shader.last_error = core::error::failed_to_compile_vertex_shader;
 			}break;
 			case GL_FRAGMENT_SHADER: {
-				shader.last_error = ERR::FAILED_TO_COMPILE_FRAGMENT_SHADER;
+				shader.last_error = core::error::failed_to_compile_fragment_shader;
 			}break;
 		}
 
@@ -108,7 +113,7 @@ shader::shader(
 	
 	// check if loading shaders source code failed
 	if (vertex_shader_code == nullptr || fragement_shader_code == nullptr) {
-		this->last_error = ERR::FAILED_TO_LOAD_SHADER_FILE;
+		this->last_error = core::error::FAILED_TO_LOAD_SHADER_FILE;
 
 		if (vertex_shader_code    != nullptr) delete vertex_shader_code;
 		if (fragement_shader_code != nullptr) delete fragement_shader_code;
@@ -121,23 +126,23 @@ shader::shader(
 	this->id = glCreateProgram();
 
 	if (this->id == NULL) {
-		this->last_error = ERR::FAILED_TO_CREATE_PROGRAM;
+		this->last_error = core::error::failed_to_create_program;
 		return;
 	}
 
 	// create vertex shader
 	vertex_shader vertex_shader_object = create_vertex_shader(vertex_shader_code[0] , GL_VERTEX_SHADER);
 	// check for errors
-	if (vertex_shader_object.last_error != ERR::NO_ERR) {
-		this->last_error = ERR::FAILED_TO_CREATE_VERTEX_SHADER;
+	if (vertex_shader_object.last_error != core::error::none) {
+		this->last_error = core::error::failed_to_create_vertex_shader;
 		return;
 	}
 
 	// create fragment shader
 	fragment_shader fragment_shader_object = create_fragment_shader(fragement_shader_code[0] , GL_FRAGMENT_SHADER);
 	// check for errors
-	if (fragment_shader_object.last_error != ERR::NO_ERR) {
-		this->last_error = ERR::FAILED_TO_CREATE_FRAGMENT_SHADER;
+	if (fragment_shader_object.last_error != core::error::none) {
+		this->last_error = core::error::failed_to_create_fragment_shader;
 		return;
 	}
 
@@ -151,7 +156,7 @@ shader::shader(
 	glGetProgramiv(this->id, GL_LINK_STATUS, &operation_result);
 	
 	if (!operation_result) {
-		this->last_error = ERR::FAILED_TO_LINK_PROGRAM;
+		this->last_error = core::error::failed_to_link_program;
 		return;
 	}
 	
@@ -165,7 +170,7 @@ shader::shader(
 	if (glIsShader(fragment_shader_object.id)) {
 		GL_CHECK(glDeleteShader(fragment_shader_object.id));
 	}
-	this->last_error = ERR::NO_ERR;
+	this->last_error = core::error::none;
 }
 
 shader::~shader() {
@@ -191,5 +196,7 @@ void shader::set_bool(GLint uniform_location, bool value) {
 void shader::set_float(GLint uniform_location, float value) {
 	GL_CHECK(glUniform1f( uniform_location, value ));
 }
+
+#endif
 
 #endif

@@ -3,6 +3,11 @@
 #ifndef MODELS_HPP
 #define MODELS_HPP
 
+/*
+	todo: rework
+*/
+#if 0
+
 #include <string>
 #include <vector>
 
@@ -56,5 +61,7 @@ public:
 
 };
 // class model end
+
+#endif
 
 #endif

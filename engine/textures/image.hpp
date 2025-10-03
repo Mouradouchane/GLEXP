@@ -3,6 +3,12 @@
 #ifndef IMAGE_HPP
 #define IMAGE_HPP
 
+/*
+	todo: rework
+*/
+
+#if 0
+
 #include "core/errors/errors.hpp"
 #include <string>
 
@@ -19,7 +25,7 @@ private:
 	uint16_t width   = 0; 
 	uint16_t height  = 0;
 
-	ERR  last_error = ERR::NO_ERR;
+	core::error last_error = core::error::none;
 	bool loaded = false;
 
 public:
@@ -36,9 +42,9 @@ public:
 
 	// functions
 	bool is_loaded();
-	ERR get_last_error();
+	core::error get_last_error();
 
-	ERR load_image();
+	core::error load_image();
 	const uint8_t* buffer() const;
 
 	const std::string* get_name() const;
@@ -46,8 +52,10 @@ public:
 	uint16_t get_width() const;
 	uint16_t get_height() const;
 
-	ERR free_buffer();
+	core::error free_buffer();
 
 };
+
+#endif
 
 #endif

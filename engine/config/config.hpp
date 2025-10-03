@@ -37,13 +37,13 @@ namespace config {
 	/*
 		config functions
 	*/
-	ERR load_configs_from_file(
+	core::error load_configs_from_file(
 		std::string const& ini_file_path
 	);
 	void reset_all_configs_to_default();
 	void reset_resolution_to_default(); 
 
-	ERR save_configs_to_file(
+	core::error save_configs_to_file(
 		std::string const& ini_file_path
 	);
 

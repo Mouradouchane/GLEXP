@@ -10,7 +10,7 @@
 
 // used to represent "vertex shader","fragment shader",...
 struct shader_object{
-	ERR last_error = ERR::NO_ERR;
+	core::error last_error = core::error::none;
 	GLuint type = NULL;
 	GLuint id   = NULL;
 };
@@ -21,7 +21,7 @@ typedef shader_object fragment_shader;
 class shader {
 
 public:
-	ERR    last_error = ERR::NO_ERR;
+	core::error last_error = core::error::none;
 	GLuint id = NULL; // "shader program" id
 
 	shader(std::string const& shader_code, std::string const& fragement_shader_path);

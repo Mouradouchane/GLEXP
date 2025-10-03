@@ -3,6 +3,11 @@
 #ifndef GL_MODELS_CPP
 #define GL_MODELS_CPP
 
+/*
+	todo: rework
+*/
+#if 0
+
 #include "libs/glew/glew.h"
 #include "engine/graphics/glerror_debug.hpp"
 #include "engine/models/gl_models.hpp"
@@ -88,5 +93,6 @@ void gl_model::render(shader const& shader_program) {
 
 }
 
+#endif
 
 #endif

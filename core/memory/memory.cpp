@@ -146,7 +146,7 @@ void core::memory::free(void* pointer) {
 	else {
 		// out of range _section mean there's a bug in core::memory::alloc
 		// so we need assert crash
-		ASSERT_EXP(true,"core::memory::alloc --> out of range _section mean there's a bug !!!");
+		CORE_ASSERT(true,"core::memory::alloc --> out of range _section mean there's a bug !!!");
 	}
 
 	// update alloc list

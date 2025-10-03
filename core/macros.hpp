@@ -14,6 +14,12 @@
 	#define DEBUG_BREAK
 #endif
 
+#ifdef CORE_DLL
+	#define CORE_API __declspec(dllexport)
+#else 
+	#define CORE_API
+#endif
+
 // current arch x64 or x32 maybe other arch later 
 #ifdef _WIN64 || WIN64 || __x86_64__ || _____LP64_____
 	#define X64

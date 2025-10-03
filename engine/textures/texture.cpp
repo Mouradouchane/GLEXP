@@ -3,6 +3,11 @@
 #ifndef TEXTUER_CPP
 #define TEXTUER_CPP
 
+/*
+	todo: rework
+*/
+#if 0
+
 #include "texture.hpp"
 
 /*
@@ -140,5 +145,7 @@ void texture::set_parameter_i(
 	glTexParameteri(GL_TEXTURE_2D, name, value);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
+
+#endif
 
 #endif
