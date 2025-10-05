@@ -14,12 +14,6 @@
 	#define DEBUG_BREAK
 #endif
 
-#ifdef CORE_DLL
-	#define CORE_API __declspec(dllexport)
-#else 
-	#define CORE_API
-#endif
-
 // current arch x64 or x32 maybe other arch later 
 #ifdef _WIN64 || WIN64 || __x86_64__ || _____LP64_____
 	#define X64
@@ -48,4 +42,22 @@
 
 #define CORE_CRASH() exit(-1);
 
-#endif // !MACROS_HPP
+/*
+	dynamic library macros
+*/
+#ifdef CORE_DLL
+	#ifdef WINDOWS
+		#define DLL_EXPORT extern "C" __declspec(dllexport)
+		#define DLL_IMPORT extern "C" __declspec(dllimport)
+	#elif LINUX
+		#define DLL_EXPORT extern "C" __attribute__((visibility("default")))
+		#define DLL_IMPORT 
+	#else
+		#error "unsupported system no 'dynamic library' attribute found !"
+	#endif
+#else 
+	#define DLL_EXPORT
+	#define DLL_IMPORT
+#endif
+
+#endif // ! MACROS_HPP

@@ -26,7 +26,7 @@ namespace core {
 
 	namespace logger {
 
-		void CORE_API init(std::string const& logger_name, verbosity_level level, u32 trace_level) {
+		DLL_EXPORT void init(std::string const& logger_name, verbosity_level level, u32 trace_level) {
 			
 			if (initilized) return;
 
@@ -47,7 +47,7 @@ namespace core {
 			// setup sinks 
 			file_sink->set_level(spdlog::level::level_enum(core::logger::verbosity_level::warning));
 			file_sink->set_pattern("[%T] [%l] %v \n");
-			console_sink->set_pattern("%^[%l] %v %$ [%T]");
+			console_sink->set_pattern("%^[%l] %v %$");
 
 			// create logger
 			spd_logger = std::make_shared<spdlog::logger>(logger_name, sinks.begin() , sinks.end());
@@ -83,43 +83,43 @@ namespace core {
 			logger public function's
 		*/
 
-		verbosity_level CORE_API get_level() {
+		DLL_EXPORT verbosity_level get_level() {
 			return logger_level;
 		}
 
-		void CORE_API set_level(verbosity_level level) {
+		DLL_EXPORT void set_level(verbosity_level level) {
 		#ifdef DEBUG
 			spdlog::set_level(spdlog::level::level_enum(level));
 		#endif
 		}
 
-		inline void CORE_API fatal(std::string const& message) {
+		DLL_EXPORT inline void fatal(std::string const& message) {
 			spdlog::critical(message);
 		}
 
-		inline void CORE_API error(std::string const& message) {
+		DLL_EXPORT inline void error(std::string const& message) {
 			spdlog::error(message);
 		}
 
-		inline void CORE_API warn(std::string const& message) {
+		DLL_EXPORT inline void warn(std::string const& message) {
 		#ifdef DEBUG
 			spdlog::warn(message);
 		#endif
 		}
 
-		inline void CORE_API info(std::string const& message) {
+		DLL_EXPORT inline void  info(std::string const& message) {
 		#ifdef DEBUG
 			spdlog::info(message);
 		#endif
 		}
 
-		inline void CORE_API debug(std::string const& message) {
+		DLL_EXPORT inline void  debug(std::string const& message) {
 		#ifdef DEBUG
 			spdlog::debug(message);
 		#endif
 		}
 
-		inline void CORE_API trace(std::string const& message) {
+		DLL_EXPORT inline void  trace(std::string const& message) {
 		#ifdef DEBUG
 			spdlog::trace(message);
 		#endif

@@ -33,7 +33,7 @@ namespace core {
 	namespace logger {
 
 		// used to control logger verbosity level
-		enum class CORE_API verbosity_level : u8 {
+		enum class verbosity_level : u8 {
 			trace = 0, 
 			debug,	
 			info,
@@ -43,19 +43,19 @@ namespace core {
 			none, // no messages at all
 		};
 
-		void CORE_API init(std::string const& logger_name, logger::verbosity_level level, u32 trace_level = 32);
+		DLL_IMPORT void init(std::string const& logger_name, logger::verbosity_level level, u32 trace_level = 32);
 
-		logger::verbosity_level CORE_API get_level();
+		DLL_IMPORT logger::verbosity_level get_level();
 		// works in debug only !
-		void CORE_API set_level(logger::verbosity_level level);
+		DLL_IMPORT void set_level(logger::verbosity_level level);
 
 		// logger public function's
-		inline void CORE_API fatal(std::string const& message);
-		inline void CORE_API error(std::string const& message);
-		inline void CORE_API warn (std::string const& message);
-		inline void CORE_API info (std::string const& message);
-		inline void CORE_API debug(std::string const& message);
-		inline void CORE_API trace(std::string const& message);
+		DLL_IMPORT inline void fatal(std::string const& message);
+		DLL_IMPORT inline void error(std::string const& message);
+		DLL_IMPORT inline void warn (std::string const& message);
+		DLL_IMPORT inline void info (std::string const& message);
+		DLL_IMPORT inline void debug(std::string const& message);
+		DLL_IMPORT inline void trace(std::string const& message);
 
 	} // namespace logger end
 
