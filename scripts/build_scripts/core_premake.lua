@@ -7,6 +7,7 @@ utility = require("utility_functions")
 local core = {
     project_name = "core",
     name = "core",
+	dll_name = "core_d",
     kind = "StaticLib",
     arch = "x64",
     lang = "C++",
@@ -80,13 +81,13 @@ filter("configurations:dll_release")
 	buildoptions({"/utf-8"}) -- for fmt library
 
 	-- build output path
-	targetdir(utility.s_paths.release .. "/core/")
+	targetdir(utility.s_paths.build)
 	objdir(utility.s_paths.release .. "/core/")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_release )
 
-	targetname(core.name)
+	targetname(core.dll_name)
 
 	-- few macros for release
 	defines({"NDEBUG", "NO_DEBUG" , "CORE_DLL"})
@@ -132,10 +133,10 @@ filter("configurations:dll_debug")
 	buildoptions({"/utf-8"}) -- for fmt library
 
 	-- build output path
-	targetdir(utility.s_paths.debug .. "/core/")
+	targetdir(utility.s_paths.build)
 	objdir(utility.s_paths.debug .. "/core/")
 
-	targetname(core.name)
+	targetname(core.dll_name)
 
 	-- libraries core need to link with
 	links( link_with.spdlog_debug )

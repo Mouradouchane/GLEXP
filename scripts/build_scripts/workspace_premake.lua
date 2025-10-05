@@ -15,5 +15,5 @@ solution = workspace("glexp_workspace")
 location("../../")
 
 configurations(
-    { "debug" , "release" } 
+    { "debug" , "release" , "dll_debug" , "dll_release" } 
 )

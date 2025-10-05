@@ -16,9 +16,10 @@ local engine = {
 }
 
 local link_with = {
-	-- core_lib       = core.core_project.project_name,
-    core_debug  = utility.s_paths.debug .. "/core/core.lib" ,
-    core_release = utility.s_paths.release .. "/core/core.lib" 
+    core_debug        = utility.s_paths.debug   .. "/core/core.lib" ,
+    core_release       = utility.s_paths.release .. "/core/core.lib",
+	core_dll_debug   = utility.s_paths.build  .. "/core_d.lib" ,
+	core_dll_release  = utility.s_paths.build  .. "/core_d.lib" ,
 }
 
 -- function run( )
@@ -96,6 +97,37 @@ local link_with = {
 	--------------------------------------------
 
 	--------------------------------------------
+	-- engine project --> link with dll release config
+	--------------------------------------------
+	filter("configurations:dll_release")
+
+	characterset("Unicode")
+	buildoptions({"/utf-8"}) -- for fmt library
+
+	-- compiled exe and obj output folder
+	objdir(utility.s_paths.release .. "/engine/")  -- bin's
+
+	targetdir(utility.s_paths.build) -- exe path
+	targetname( engine.name .. "_x64" ) -- exe name
+
+	-- libs we need to link
+	links( "opengl32.lib" ) -- opengl32
+	links( utility.s_paths.libs .. "/glew/glew32.lib" ) -- glew
+	links( utility.s_paths.libs .. "/glfw/glfw3dll.lib" ) -- glfw
+	links( utility.s_paths.assimp_dll ) -- assimp
+	links( link_with.core_dll_release )
+
+	-- few macros for release
+	defines (
+		{ "NDEBUG" , "NO_DEBUG" , "CORE_DLL"}
+	)
+
+	symbols("Off")
+	optimize("Off")  -- TODO: enable optimizations later
+	--------------------------------------------
+	--------------------------------------------
+
+	--------------------------------------------
 	-- engine project --> debug config
 	--------------------------------------------
 	filter("configurations:debug")
@@ -120,6 +152,37 @@ local link_with = {
 
 	-- few macros for debug 
 	defines ({ "DEBUG" , "GLEW_STATIC" }) -- for glew static linking
+
+	symbols("On")
+	optimize("Off")
+	----------------------------------------------------
+	----------------------------------------------------
+
+	--------------------------------------------
+	-- engine project --> link with dlls debug config
+	--------------------------------------------
+	filter("configurations:dll_debug")
+
+	characterset("Unicode")
+	buildoptions({"/utf-8"}) -- for fmt library
+
+	-- compiled exe and obj output folder
+	objdir(utility.s_paths.debug  .. "/engine/")  -- bin's
+
+	targetdir(utility.s_paths.build) -- exe path
+	targetname( engine.name .. "_dx64") -- exe name 
+
+	debugdir(utility.paths.build) 
+
+	-- libs we need to link
+	links( "opengl32.lib" ) -- opengl32
+	links( utility.s_paths.libs .. "/glew/glew32s.lib" ) -- glew
+	links( utility.s_paths.libs .. "/glfw/glfw3.lib" ) -- glfw
+	links( utility.s_paths.assimp_dll ) -- assimp
+	links( link_with.core_dll_debug )
+
+	-- few macros for debug 
+	defines ({ "DEBUG" , "GLEW_STATIC" , "CORE_DLL"}) -- for glew static linking
 
 	symbols("On")
 	optimize("Off")

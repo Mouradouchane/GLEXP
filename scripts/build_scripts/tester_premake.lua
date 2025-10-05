@@ -35,8 +35,8 @@ local link_with = {
 
 	-- project files and directories 
 	files(
-		{ 
-			"../../testers/tester/**" , 
+		{
+			utility.paths.tester .. "/**"
 		}
 	)
 	includedirs(

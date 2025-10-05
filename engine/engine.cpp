@@ -4,10 +4,7 @@
 #define ENGINE_CPP
 
 #include <stdlib.h>
-//#include <malloc.h>
-//#include <memory.h>
 #include <tchar.h>
-//#include <iostream>
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
@@ -35,10 +32,8 @@
 // engine variables
 namespace engine {
 	bool         running = true;
-
-	std::string  title  = "GLEXP";
-	GLFWwindow*  window = nullptr;
-
+	std::string  title   = "GLEXP";
+	GLFWwindow*  window  = nullptr;
 }
 
 static core::error init_glfw() {
@@ -97,19 +92,18 @@ namespace engine {
 
 core::error init() {
 
-	/*
-		todo: handle init functions errors
-	*/
 	core::logger::init("glexp_engine", core::logger::verbosity_level::trace);
 
+#if 0
 	CORE_INFO ("test info  -> {}", 1);
 	CORE_WARN ("test warn  -> {}", 1);
 	CORE_DEBUG("test debug -> {}", 1);
 	CORE_TRACE("test trace -> file:{} , line:{}", __FILE__ , __LINE__ );
 	CORE_ERROR("test error -> file:{} , line:{}", __FILE__ , __LINE__);
 	CORE_FATAL("test fatal -> file:{} , line:{}", __FILE__ , __LINE__);
+#endif
 
-	init_glfw();
+	CRASH_IF_ERROR(init_glfw() , "failed to init glfw");
 
 	// if loading configs from ini failed "it's fine" , we have default configs 
 	config::load_configs_from_file("glexp.ini");

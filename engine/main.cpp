@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef MAIN_ENTRY
+#define MAIN_ENTRY
+
 #include "core/macros.hpp"
 
 #ifdef WINDOWS
@@ -10,7 +13,7 @@
     #include <windows.h>
 #endif
 
-#include "engine/engine/engine.hpp"
+#include "engine/engine.hpp"
 
 #ifdef WINDOWS
 int APIENTRY wWinMain(
@@ -31,3 +34,5 @@ int main(
 
     return int(core::error::none);
 }
+
+#endif
