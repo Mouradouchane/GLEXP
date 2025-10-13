@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include "core/errors/assert.hpp"
+#include "core/assert.hpp"
 #include "logger.hpp"
 
 /*
@@ -26,7 +26,7 @@ namespace core {
 
 	namespace logger {
 
-		DLL_EXPORT void init(std::string const& logger_name, verbosity_level level, u32 trace_level) {
+		void init(std::string const& logger_name, verbosity_level level, u32 trace_level) {
 			
 			if (initilized) return;
 
@@ -83,43 +83,43 @@ namespace core {
 			logger public function's
 		*/
 
-		DLL_EXPORT verbosity_level get_level() {
+		verbosity_level get_level() {
 			return logger_level;
 		}
 
-		DLL_EXPORT void set_level(verbosity_level level) {
+		 void set_level(verbosity_level level) {
 		#ifdef DEBUG
 			spdlog::set_level(spdlog::level::level_enum(level));
 		#endif
 		}
 
-		DLL_EXPORT inline void fatal(std::string const& message) {
+		 void fatal(std::string const& message) {
 			spdlog::critical(message);
 		}
 
-		DLL_EXPORT inline void error(std::string const& message) {
+		 void error(std::string const& message) {
 			spdlog::error(message);
 		}
 
-		DLL_EXPORT inline void warn(std::string const& message) {
+		 void warn(std::string const& message) {
 		#ifdef DEBUG
 			spdlog::warn(message);
 		#endif
 		}
 
-		DLL_EXPORT inline void  info(std::string const& message) {
+		 void info(std::string const& message) {
 		#ifdef DEBUG
 			spdlog::info(message);
 		#endif
 		}
 
-		DLL_EXPORT inline void  debug(std::string const& message) {
+		 void debug(std::string const& message) {
 		#ifdef DEBUG
 			spdlog::debug(message);
 		#endif
 		}
 
-		DLL_EXPORT inline void  trace(std::string const& message) {
+		 void trace(std::string const& message) {
 		#ifdef DEBUG
 			spdlog::trace(message);
 		#endif

@@ -3,7 +3,7 @@
 #ifndef HASH_MAP_CPP
 #define HASH_MAP_CPP
 
-#include "core/errors/assert.hpp"
+#include "core/assert.hpp"
 #include "hash_map.hpp"
 
 /*

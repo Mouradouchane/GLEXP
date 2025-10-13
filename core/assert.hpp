@@ -7,7 +7,7 @@
 #include <string>
 
 #include "core/macros.hpp"
-#include "core/errors/errors.hpp"
+#include "core/status/status.hpp"
 #include "core/logger/logger.hpp"
 
 /*

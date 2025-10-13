@@ -3,17 +3,17 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
-/*
-	here is the core logger as namespace
-	logger used by core it's self and all other projects
-*/
-
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
+/*
+	logger --> used to log information to "console,files,gui" !
+	todo: add log info to ui-console !
+*/
+
 // disable fmt & spdlog warnings
 DISABLE_WARNING_START
-#pragma warning( disable : 26495,26498,26812,6294,26451,4002,4006,4067)
+#pragma warning(disable : 26495,26498,26812,6294,26451,4002,4006,4067);
 	#include <libs/spdlog/spdlog.h>
 	#include <libs/spdlog/sinks/stdout_color_sinks.h>
 	#include "spdlog/sinks/daily_file_sink.h"
@@ -22,11 +22,9 @@ DISABLE_WARNING_START
 	#include <libs/spdlog/fmt/ostr.h>
 DISABLE_WARNING_END
 
-
 // todo : replace std::string with our string 
 #include <string>
 #include <stdarg.h>
-
 
 namespace core {
 
@@ -37,25 +35,25 @@ namespace core {
 			trace = 0, 
 			debug,	
 			info,
-			warning, 
+			warning,
 			error,
 			fatal,
 			none, // no messages at all
 		};
 
-		DLL_IMPORT void init(std::string const& logger_name, logger::verbosity_level level, u32 trace_level = 32);
+		DLL_API void init(std::string const& logger_name, logger::verbosity_level level, u32 trace_level = 32);
 
-		DLL_IMPORT logger::verbosity_level get_level();
+		DLL_API logger::verbosity_level get_level();
 		// works in debug only !
-		DLL_IMPORT void set_level(logger::verbosity_level level);
+		DLL_API void set_level(logger::verbosity_level level);
 
 		// logger public function's
-		DLL_IMPORT inline void fatal(std::string const& message);
-		DLL_IMPORT inline void error(std::string const& message);
-		DLL_IMPORT inline void warn (std::string const& message);
-		DLL_IMPORT inline void info (std::string const& message);
-		DLL_IMPORT inline void debug(std::string const& message);
-		DLL_IMPORT inline void trace(std::string const& message);
+		DLL_API void fatal(std::string const& message);
+		DLL_API void error(std::string const& message);
+		DLL_API void warn (std::string const& message);
+		DLL_API void info (std::string const& message);
+		DLL_API void debug(std::string const& message);
+		DLL_API void trace(std::string const& message);
 
 	} // namespace logger end
 

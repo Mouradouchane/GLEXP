@@ -4,8 +4,8 @@
 #define ENGINE_HPP
 
 #include "core/macros.hpp"
-#include "core/errors/assert.hpp"
-#include "core/errors/errors.hpp"
+#include "core/assert.hpp"
+#include "core/status/status.hpp"
 
 namespace engine {
 	

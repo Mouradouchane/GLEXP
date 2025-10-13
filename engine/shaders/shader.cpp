@@ -14,7 +14,7 @@
 #include <sstream>
 
 
-#include "core/errors/assert.hpp"
+#include "core/assert.hpp"
 #include "engine/graphics/glerror_debug.hpp"
 #include "engine/shaders/shader.hpp"
 

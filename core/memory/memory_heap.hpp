@@ -36,7 +36,7 @@ namespace core {
 
 	public:
 		// heap public static functions
-		static u32 minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
+		static f32 minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
 		static u32 maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
 
 	private:

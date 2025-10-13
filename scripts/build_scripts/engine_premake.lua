@@ -119,7 +119,7 @@ local link_with = {
 
 	-- few macros for release
 	defines (
-		{ "NDEBUG" , "NO_DEBUG" , "CORE_DLL"}
+		{ "NDEBUG" , "NO_DEBUG" , "DLL_IMPORT"}
 	)
 
 	symbols("Off")
@@ -181,8 +181,8 @@ local link_with = {
 	links( utility.s_paths.assimp_dll ) -- assimp
 	links( link_with.core_dll_debug )
 
-	-- few macros for debug 
-	defines ({ "DEBUG" , "GLEW_STATIC" , "CORE_DLL"}) -- for glew static linking
+	-- few macros for debug
+	defines ({ "DEBUG" , "GLEW_STATIC" , "DLL_IMPORT"}) -- for glew static linking
 
 	symbols("On")
 	optimize("Off")

@@ -4,7 +4,7 @@
 #define CONFIG_HPP
 
 #include <string>
-#include "core/errors/errors.hpp"
+#include "core/status/status.hpp"
 
 namespace config {
 

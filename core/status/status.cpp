@@ -8,7 +8,7 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-#include "errors.hpp"
+#include "status.hpp"
 
 static const std::map<core::error, std::string> error_codes = {
 	{core::error::none , "000"},
@@ -97,7 +97,7 @@ static const std::map<core::error, std::string> error_strings = {
 
 namespace core {
 
-	DLL_EXPORT error_info error_to_string(core::error error_code) {
+	DLL_API error_info error_to_string(core::error error_code) {
 
 		auto str_itr  = error_strings.find(error_code);
 
@@ -108,6 +108,6 @@ namespace core {
 		return error_info{ "undefined", str_itr->second , false };
 	}
 
-} // namespace core end
+} // namespace core
 
 #endif

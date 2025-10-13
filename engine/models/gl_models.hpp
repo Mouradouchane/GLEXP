@@ -15,7 +15,7 @@
 //#include "glm.hpp"
 
 #include "core/math/math.hpp"
-#include "core/errors/errors.hpp"
+#include "core/status/status.hpp"
 
 #include "engine/graphics/gl_buffers.hpp"
 #include "engine/textures/texture.hpp"

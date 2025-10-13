@@ -90,7 +90,7 @@ filter("configurations:dll_release")
 	targetname(core.dll_name)
 
 	-- few macros for release
-	defines({"NDEBUG", "NO_DEBUG" , "CORE_DLL"})
+	defines({"NDEBUG", "NO_DEBUG" , "DLL_EXPORT"})
 
 	symbols("Off")
 	optimize("Off")
@@ -142,7 +142,7 @@ filter("configurations:dll_debug")
 	links( link_with.spdlog_debug )
 
 	debugdir(utility.s_paths.build)
-	defines({"DEBUG", "CORE_DLL"})
+	defines({"DEBUG", "DLL_EXPORT"})
 
 	symbols("On")
 	optimize("Off")

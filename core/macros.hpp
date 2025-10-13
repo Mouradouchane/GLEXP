@@ -15,25 +15,25 @@
 #endif
 
 // current arch x64 or x32 maybe other arch later 
-#ifdef _WIN64 || WIN64 || __x86_64__ || _____LP64_____
+#if defined(_WIN64) || defined(WIN64) || defined(__x86_64__) || defined(_____LP64_____)
 	#define X64
 #else
 	#define X32
 #endif
 
 // windows
-#ifdef _WIN32 || _WIN64 || WIN32 || WIN64 || WIN || __WINDOWS__ || __WIN32__
+#if defined(_WIN32) || defined(_WIN64) || defined(WIN32) || defined(WIN64) || defined(WIN) || defined(__WINDOWS__) || defined(__WIN32__)
 	#define WINDOWS
-#endif
-
 // linux
-#ifdef __GNU__ || __gnu_hurd__ || __gnu_linux__ || __linux__ || linux || __linux
+#elif defined(__GNU__) || defined(__gnu_hurd__) || defined(__gnu_linux__) || defined(__linux__) || defined(linux) || defined(__linux)
 	#define LINUX
 #endif
 
 // when systems is unsupported
-#ifndef WINDOWS || LINUX
-	static_assert(0, "no macro detected f|| your current operation system :: " __FILE__);
+#if defined(WINDOWS) || defined(LINUX)
+
+#else
+	static_assert(0, "compile-time-assert --> unsupported operation system , " __LINE__ " " __FILE__);
 #endif
 
 // warning macros
@@ -45,19 +45,21 @@
 /*
 	dynamic library macros
 */
-#ifdef CORE_DLL
-	#ifdef WINDOWS
-		#define DLL_EXPORT extern "C" __declspec(dllexport)
-		#define DLL_IMPORT extern "C" __declspec(dllimport)
-	#elif LINUX
-		#define DLL_EXPORT extern "C" __attribute__((visibility("default")))
-		#define DLL_IMPORT 
+#ifdef DLL_EXPORT
+	#if defined(WINDOWS)
+		#define DLL_API extern "C" __declspec(dllexport)
+	#elif defined(LINUX)
+		#define DLL_API extern "C" __attribute__((visibility("default")))
 	#else
-		#error "unsupported system no 'dynamic library' attribute found !"
+		static_assert(0, "compile-time-error --> unsupported operation system , line:" __LINE__ " file:" __FILE__);
 	#endif
-#else 
-	#define DLL_EXPORT
-	#define DLL_IMPORT
+
+#else
+	#ifdef DLL_IMPORT
+		#define DLL_API extern "C" __declspec(dllimport)
+	#else 
+		#define DLL_API
+	#endif
 #endif
 
-#endif // ! MACROS_HPP
+#endif // MACROS_HPP

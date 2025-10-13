@@ -8,7 +8,7 @@
 	here only the implementation :)
 
 */
-#include "core/errors/assert.hpp"
+#include "core/assert.hpp"
 #include "static_array.hpp"
 
 /*

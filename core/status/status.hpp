@@ -6,10 +6,34 @@
 #include <string>
 #include "core/types.hpp"
 
-/*
-	enum errors contain all the errors used in all the projects/tools
-*/
 namespace core {
+
+	class status {
+
+		public:
+			enum class status_type : u16 {
+				warn,
+				error,
+				fatal
+			};
+
+			typedef u16 status_code;
+
+		public:
+			status::status_type _type;
+			status::status_code _code;
+
+			// constructor's
+			status() = default;
+			status(status_type _status_type , status_code _status_code);
+			// destructor
+			~status() = default;
+	
+	}; // class status
+
+
+	// todo: change from error enum to custom solution for the developer to craft 
+	// todo: change from errors to status
 
 	struct error_info {
 		std::string code;
@@ -17,6 +41,9 @@ namespace core {
 		bool is_fatal;
 	};
 
+	/*
+		enum errors contain all the errors used in all the projects/tools
+	*/
 	enum class error : u16 {
 		none = 0,
 
@@ -70,7 +97,7 @@ namespace core {
 	/*
 		public functions
 	*/
-	DLL_IMPORT error_info error_to_string(core::error error_code);
+	DLL_API error_info error_to_string(core::error error_code);
 
 } // namespace core
 

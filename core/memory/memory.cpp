@@ -6,7 +6,7 @@
 #include "core/macros.hpp"
 
 #ifdef WINDOWS
-	// note: windef's to avoid conflict  with other type like byte,bool,...
+	// note: windef's to avoid conflict with other type like byte,bool,...
 	#ifndef __wtypes_h__
 		#include <wtypes.h>
 	#endif
@@ -22,8 +22,8 @@
 #include <sstream>
 #include <map>
 
-#include "core/errors/assert.hpp"
-#include "core/errors/errors.hpp"
+#include "core/assert.hpp"
+#include "core/status/status.hpp"
 #include "core/logger/logger.hpp"
 
 #include "memory.hpp"

@@ -27,20 +27,20 @@ struct memory_info {
 	u64 free = NULL;
 };
 
-// just text representation
-#define KB *1
-#define MB *1
-#define GB *1
+// example: fn(2 KB) --> fn(2 *1024)
+#define KB *1024u
+#define MB *1048576u
+#define GB *1073741824u
 
 // convert "kb,mb,gb" to "BYTES" macros
-#define KB_TO_BYTE(_kb) uint64_t(_kb) * 1024
-#define MB_TO_BYTE(_mb) uint64_t(_mb) * 1048576
-#define GB_TO_BYTE(_gb) uint64_t(_gb) * 1073741824
+#define KB_TO_BYTE(_KB) u64(_KB) * 1024u
+#define MB_TO_BYTE(_MB) u64(_MB) * 1048576u
+#define GB_TO_BYTE(_GB) u64(_GB) * 1073741824u
 
 // convert "BYTES" to "kb,mb,gb" macros
-#define BYTE_TO_KB(_bytes) (_bytes/1024.0f)
-#define BYTE_TO_MB(_bytes) (_bytes/1048576.0f)
-#define BYTE_TO_GB(_bytes) (_bytes/1073741824.0f)
+#define BYTE_TO_KB(_BYTE) (_BYTE / 1024.0f)
+#define BYTE_TO_MB(_BYTE) (_BYTE / 1048576.0f)
+#define BYTE_TO_GB(_BYTE) (_BYTE / 1073741824.0f)
 
 // TODO: move this to the right place !!!!!!!!!!!!!!!
 std::string pointer_to_hex_string(ptr64 pointer);

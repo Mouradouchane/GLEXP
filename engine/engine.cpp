@@ -15,7 +15,7 @@
 #include "libs/glew/glew.h"
 
 #include "core/logger/logger.hpp"
-#include "core/errors/assert.hpp"
+#include "core/assert.hpp"
 #include "core/memory/memory.hpp"
 #include "core/memory/memory_heap.hpp"
 #include "core/data_structres/hashmaps/hash_map.hpp"

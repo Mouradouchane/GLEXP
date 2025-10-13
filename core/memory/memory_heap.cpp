@@ -6,7 +6,7 @@
 #ifndef MEMORY_HEAP_CPP
 #define MEMORY_HEAP_CPP
 
-#include "core/errors/assert.hpp"
+#include "core/assert.hpp"
 #include "memory_heap.hpp"
 
 #include <algorithm>
@@ -70,7 +70,7 @@ core::heap::~heap() {
 	heap public static function's
 */
 
-u32 core::heap::minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
+f32 core::heap::minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
 	switch (return_value_unit) {
 		case MEMORY_UNIT::kb: return BYTE_TO_KB(core::heap::minimum_heap_size_allowed);
 		case MEMORY_UNIT::mb: return BYTE_TO_MB(core::heap::minimum_heap_size_allowed);
