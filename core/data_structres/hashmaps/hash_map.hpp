@@ -23,7 +23,7 @@ template<typename _key, typename _val> struct pair {
 template<typename key, typename value> class hash_map {
 
 private:
-	u16 _size = 64;
+	u16 size__ = 64;
 	u16 _row  = 16;
 
 	using table = std::vector< 

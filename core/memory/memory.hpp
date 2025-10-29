@@ -1,116 +1,13 @@
 #pragma once 
 
-#ifndef MEMORY_HPP
-#define MEMORY_HPP
+#ifndef CORE_MEMORY_HPP
+#define CORE_MEMORY_HPP
 
-#include <string>
-#include "core/macros.hpp"
-#include "core/types.hpp"
+#include "core/memory/global_memory.hpp"
+#include "core/memory/memory_heap.hpp"
+#include "core/memory/memory_pool.hpp"
+#include "core/memory/memory_arena.hpp"
 
-enum class ALLOCATION_SECTION : uint8_t {
-    UNKOWN    = 0,
-	GENERAL   = 1,
-	MODELS    = 2,
-	TEXTURES  = 3,
-	AUDIOS    = 4,
-	ANIMATION = 5,
-	PHYSICS   = 6,
-    STDCPP    = 7,
-};
+// todo : make allocators act as one using onion and avoid OOP if possible 
 
-enum class MEMORY_UNIT : u8 {
-	byte = 0,  kb = 1,  mb = 2,  gb = 3
-};
-
-struct memory_info {
-	u64 size = NULL;
-	u64 free = NULL;
-};
-
-// example: fn(2 KB) --> fn(2 *1024)
-#define KB *1024u
-#define MB *1048576u
-#define GB *1073741824u
-
-// convert "kb,mb,gb" to "BYTES" macros
-#define KB_TO_BYTE(_KB) u64(_KB) * 1024u
-#define MB_TO_BYTE(_MB) u64(_MB) * 1048576u
-#define GB_TO_BYTE(_GB) u64(_GB) * 1073741824u
-
-// convert "BYTES" to "kb,mb,gb" macros
-#define BYTE_TO_KB(_BYTE) (_BYTE / 1024.0f)
-#define BYTE_TO_MB(_BYTE) (_BYTE / 1048576.0f)
-#define BYTE_TO_GB(_BYTE) (_BYTE / 1073741824.0f)
-
-// TODO: move this to the right place !!!!!!!!!!!!!!!
-std::string pointer_to_hex_string(ptr64 pointer);
-
-namespace core {
-
-	/*
-		- main "general purpose" memory allocator
-		- used by other custom allocators => heap,pool,arena,...
-	*/
-	namespace memory {
-
-		void* alloc(size_t size, ALLOCATION_SECTION section = ALLOCATION_SECTION::UNKOWN);
-		void  free(void* pointer);
-
-		uint64_t total_size() noexcept;
-		double   total_size_f(MEMORY_UNIT unit) noexcept;
-		uint64_t sizeof_section(ALLOCATION_SECTION section) noexcept;
-		double   sizeof_section_f(ALLOCATION_SECTION section, MEMORY_UNIT unit) noexcept;
-
-		// todo : move it to "system info"
-		memory_info get_cpu_memory_info() noexcept;
-
-	} // namespace memory end
-
-
-/*
-	used to allocate/deallocate memory for std library
-*/
-	template<class T> struct custom_allocator {
-
-		typedef T value_type;
-
-		custom_allocator() = default;
-		~custom_allocator() = default;
-
-		template<class elm_type> constexpr custom_allocator(
-			const custom_allocator <elm_type>&
-		) noexcept {
-
-		}
-
-		T* allocate(std::size_t size) {
-			return (T*)memory::alloc(size * sizeof(T), ALLOCATION_SECTION::STDCPP);
-		}
-
-		void deallocate(T* pointer, std::size_t size) {
-			memory::free(pointer);
-		}
-
-		template<typename elm_type, typename... Args> void construct(
-			elm_type* p, Args&&... args
-		) {
-			new(p) elm_type(std::forward<Args>(args)...);
-		}
-
-		// destructor's caller
-		template<typename obj> void destroy(obj* pointer) {
-			pointer->~obj();
-		}
-
-	};
-	// struct custom_allocator end
-
-
-} // core namespace end
-
-#endif
-
-// only in unit-testing
-#ifdef UNIT_TEST
-	#include "memory.cpp"
 #endif

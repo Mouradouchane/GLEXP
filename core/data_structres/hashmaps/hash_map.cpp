@@ -17,10 +17,10 @@ template<typename key, typename value> hash_map<key,value>::hash_map(
 	CRASH_IF((map_size == 0) || (row_size == 0) , "hash_map: 0 size hash_map not allowed !")
 
 	this->hash_function = hashing_function;
-	this->_size = map_size;
+	this->size__ = map_size;
 	this->_row = row_size;
 
-	this->map = std::vector<table, custom_allocator<table>>(this->_size);
+	this->map = std::vector<table, custom_allocator<table>>(this->size__);
 
 	for (table& _table : this->map) {
 		_table = table(this->_row);
@@ -42,7 +42,7 @@ template<typename key, typename value> bool hash_map<key,value>::insert(
 	key const& _key , value const& _value
 ) {
 	hash_key hash = this->hash_function(_key);
-	ASSERT_EXP(hash >= this->_size, "hash::insert : hash function result out of range !");
+	ASSERT_EXP(hash >= this->size__, "hash::insert : hash function result out of range !");
 
 	// check for duplication --> no allowed 
 	if (this->search(_key)) return false;

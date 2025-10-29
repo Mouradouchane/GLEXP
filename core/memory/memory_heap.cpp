@@ -1,5 +1,5 @@
 /*
-	memory heap implementation
+	global_memory memory_heap implementation
 */
 #pragma once
 
@@ -14,49 +14,49 @@
 /*
 	constructor
 */
-core::heap::heap(
+core::memory_heap::memory_heap(
 	u32 heap_size, 
 	u32 max_allocation, 
-	ALLOCATION_SECTION heap_usage
+	memory_usage heap_usage
 ){
 
 	// TODO: change to logger
 	// few checks first
-	CRASH_IF(heap_size < 1, "heap: zero size heap not allowed !");
+	CRASH_IF(heap_size < 1, "memory_heap: zero size memory_heap not allowed !");
 	CRASH_IF(
-		(heap_size < core::heap::minimum_heap_size_allowed) ||
-		(heap_size > core::heap::maximum_heap_size_allowed), 
+		(heap_size < core::memory_heap::minimum_heap_size_allowed) ||
+		(heap_size > core::memory_heap::maximum_heap_size_allowed), 
 		// todo: change it to better message later 
 		// when you have logger
-		"heap: heap size not allowed !"
+		"memory_heap: memory_heap size not allowed !"
 	);
-	CRASH_IF(max_allocation < 1, "heap: max allowed allocations cannot be 0 !");
+	CRASH_IF(max_allocation < 1, "memory_heap: max allowed allocations cannot be 0 !");
 	// note: maybe this need to be a logger warning
-	CRASH_IF(heap_size < max_allocation, "heap: max allowed allocations larger than the actuall memory !");
+	CRASH_IF(heap_size < max_allocation, "memory_heap: max allowed allocations larger than the actuall global_memory !");
 	
-	// init heap variables
+	// init memory_heap variables
 	this->max_allowed_allocations = max_allocation;
 	this->section   = heap_usage;
 	this->heap_size = heap_size;
-	this->start     = (byte*)memory::alloc(heap_size, heap_usage);
+	this->start     = (byte*)global_memory::allocate(heap_size, heap_usage);
 	this->end       = (byte*)(this->start + this->heap_size);
 	this->seek      = this->start;
 
-	// init alloc/free lists
+	// init allocate/deallocate lists
 	this->alloc_list_size = (this->max_allowed_allocations + u32(this->max_allowed_allocations / 2u));
 	
-	this->alloc_list = (registry_pair*)memory::alloc(sizeof(registry_pair) * this->alloc_list_size);
-	this->free_list  = (registry_pair*)memory::alloc(sizeof(registry_pair) * this->max_allowed_allocations);
+	this->alloc_list = (registry_pair*)global_memory::allocate(sizeof(registry_pair) * this->alloc_list_size);
+	this->free_list  = (registry_pair*)global_memory::allocate(sizeof(registry_pair) * this->max_allowed_allocations);
 	
 	init_registry_list(this->alloc_list, this->alloc_list_size);
 	init_registry_list(this->free_list, this->max_allowed_allocations);
 }
 
 // TODO: call elements destructor's if possible
-core::heap::~heap() {
-	memory::free( this->start );
-	memory::free( this->alloc_list );
-	memory::free( this->free_list );
+core::memory_heap::~memory_heap() {
+	global_memory::deallocate( this->start );
+	global_memory::deallocate( this->alloc_list );
+	global_memory::deallocate( this->free_list );
 
 	this->start = nullptr;
 	this->end   = nullptr;
@@ -67,46 +67,46 @@ core::heap::~heap() {
 }
 
 /*
-	heap public static function's
+	memory_heap public static function's
 */
 
-f32 core::heap::minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
+f32 core::memory_heap::minimum_size_allowed(memory_unit return_value_unit) noexcept {
 	switch (return_value_unit) {
-		case MEMORY_UNIT::kb: return BYTE_TO_KB(core::heap::minimum_heap_size_allowed);
-		case MEMORY_UNIT::mb: return BYTE_TO_MB(core::heap::minimum_heap_size_allowed);
-		case MEMORY_UNIT::gb: return BYTE_TO_GB(core::heap::minimum_heap_size_allowed);
-		default : return core::heap::minimum_heap_size_allowed;
+		case memory_unit::kb: return BYTE_TO_KB(core::memory_heap::minimum_heap_size_allowed);
+		case memory_unit::mb: return BYTE_TO_MB(core::memory_heap::minimum_heap_size_allowed);
+		case memory_unit::gb: return BYTE_TO_GB(core::memory_heap::minimum_heap_size_allowed);
+		default : return core::memory_heap::minimum_heap_size_allowed;
 	}
 }
 
-u32 core::heap::maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept {
+u32 core::memory_heap::maximum_size_allowed(memory_unit return_value_unit) noexcept {
 	switch (return_value_unit) {
-		case MEMORY_UNIT::kb: return BYTE_TO_KB(core::heap::maximum_heap_size_allowed);
-		case MEMORY_UNIT::mb: return BYTE_TO_MB(core::heap::maximum_heap_size_allowed);
-		case MEMORY_UNIT::gb: return BYTE_TO_GB(core::heap::maximum_heap_size_allowed);
-		default: return core::heap::minimum_heap_size_allowed;
+		case memory_unit::kb: return BYTE_TO_KB(core::memory_heap::maximum_heap_size_allowed);
+		case memory_unit::mb: return BYTE_TO_MB(core::memory_heap::maximum_heap_size_allowed);
+		case memory_unit::gb: return BYTE_TO_GB(core::memory_heap::maximum_heap_size_allowed);
+		default: return core::memory_heap::minimum_heap_size_allowed;
 	}
 }
 
 /*
-	heap private function's
+	memory_heap private function's
 */
 
-inline void core::heap::sort_list_by_address(registry_pair* list, u32 size) {
+inline void core::memory_heap::sort_list_by_address(registry_pair* list, u32 size) {
 
 	std::sort(list, list + size, [&](const registry_pair& a, const registry_pair& b) -> bool {
 		return a.pointer < b.pointer;
 	});
 }
 
-inline void core::heap::sort_list_by_size(registry_pair* list, u32 size) {
+inline void core::memory_heap::sort_list_by_size(registry_pair* list, u32 size) {
 
 	std::sort(list, list + size, [&](const registry_pair& a, const registry_pair& b) -> bool {
 		return a.size > b.size;
 	});
 }
 
-inline void core::heap::init_registry_list(registry_pair* list, u32 size) {
+inline void core::memory_heap::init_registry_list(registry_pair* list, u32 size) {
 
 	for (u32 i = 0; i < size; i++) {
 		*(list + i) = registry_pair{nullptr , NULL};
@@ -114,11 +114,11 @@ inline void core::heap::init_registry_list(registry_pair* list, u32 size) {
 
 }
 
-inline void core::heap::find_free_location(u32& index_output , u32 _size) {
+inline void core::memory_heap::find_free_location(u32& index_output , u32 size__) {
 
 	for (u32 i = 0; i < this->free_list_range; i++) {
 
-		if (this->free_list[i].size >= _size) {
+		if (this->free_list[i].size >= size__) {
 			index_output = i;
 			return;
 		}
@@ -126,28 +126,28 @@ inline void core::heap::find_free_location(u32& index_output , u32 _size) {
 
 }
 
-inline void core::heap::allocate_from_free_list(void** pointer, u32 _size, u32 index) {
+inline void core::memory_heap::allocate_from_free_list(void** pointer, u32 size__, u32 index) {
 
 	registry_pair _allocation = this->free_list[index];
 
 	*pointer = _allocation.pointer;
 
-	if (_allocation.size > _size) {
-		this->free_list[index].pointer = (byte*)this->free_list[index].pointer + _size;
-		this->free_list[index].size -= _size;
+	if (_allocation.size > size__) {
+		this->free_list[index].pointer = (byte*)this->free_list[index].pointer + size__;
+		this->free_list[index].size -= size__;
 	}
 	else {
 		this->free_list[index] = registry_pair{ nullptr, NULL};
 	}
 
-	register_allocation(*pointer , _size);
+	register_allocation(*pointer , size__);
 }
 
-u32 core::heap::hash_pointer(void* pointer) {
+u32 core::memory_heap::hash_pointer(void* pointer) {
 	return (u64)pointer % this->alloc_list_size;
 }
 
-inline void core::heap::register_allocation(void* pointer, u32 size) {
+inline void core::memory_heap::register_allocation(void* pointer, u32 size) {
 
 	u32 index = hash_pointer(pointer);
 
@@ -178,24 +178,24 @@ inline void core::heap::register_allocation(void* pointer, u32 size) {
 	}
 
 	// if no place found in alloc_list
-	CRASH_IF(1, "core::heap::register_allocation : allocation registry is full no place found for new insert !");
+	CRASH_IF(1, "core::memory_heap::register_allocation : allocation registry is full no place found for new insert !");
 }
 
-inline void core::heap::unregister_allocation(u32 _index) {
+inline void core::memory_heap::unregister_allocation(u32 _index) {
 	DEBUG_BREAK;
 
 	this->free_list_range += 1;
 	CRASH_IF(
 		this->free_list_range > this->max_allowed_allocations , 
-		"heap.unregister_allocation : free_list if full , this is look like a bug !"
+		"memory_heap.unregister_allocation : free_list if full , this is look like a bug !"
 	);
 
 	u32 i = 0;
-	u32 _size = this->alloc_list[_index].size;
+	u32 size__ = this->alloc_list[_index].size;
 
 	// look for right place to insert
 	for (	; i < this->free_list_range; i++) {
-		if (this->free_list[i].size < _size) break;
+		if (this->free_list[i].size < size__) break;
 	}
 
 	// make a room for new registry by shift few elements
@@ -214,7 +214,7 @@ inline void core::heap::unregister_allocation(u32 _index) {
 
 // this function merge deallocated areas who are next to each others ,
 // it basically merge them into one area 
-void core::heap::merge_free_areas() {
+void core::memory_heap::merge_free_areas() {
 
 	this->sort_list_by_address(this->free_list, this->free_list_range);
 
@@ -243,26 +243,26 @@ void core::heap::merge_free_areas() {
 
 
 /*
-	heap public function's
+	memory_heap public function's
 */
 
-void* core::heap::allocate(u32 _size) {
-	CRASH_IF(_size < 1, "heap.allocate: 0 size allocation not allowed !");
-	CRASH_IF(_size > this->heap_size, "heap.allocate: size of allocation asked for bigger than the heap !");
-	CRASH_IF(this->registered >= this->max_allowed_allocations, "heap.allocate: max allowed allocations is reached !");
+void* core::memory_heap::allocate(u32 size__) {
+	CRASH_IF(size__ < 1, "memory_heap.allocate: 0 size allocation not allowed !");
+	CRASH_IF(size__ > this->heap_size, "memory_heap.allocate: size of allocation asked for bigger than the memory_heap !");
+	CRASH_IF(this->registered >= this->max_allowed_allocations, "memory_heap.allocate: max allowed allocations is reached !");
 	
 	void* pointer   = nullptr;
 	u32  _available = (this->end >= this->seek) ? (this->end - this->seek) : 0;
 
-	if ( (this->seek < this->end) && (_size <= _available) ) {
+	if ( (this->seek < this->end) && (size__ <= _available) ) {
 		// allocate from seek
 		pointer = this->seek;
 			
 		// update variables
-		this->seek += _size;
+		this->seek += size__;
 
 		// register the allocation
-		this->register_allocation(pointer, _size);
+		this->register_allocation(pointer, size__);
 			
 		return pointer;
 	}
@@ -271,10 +271,10 @@ void* core::heap::allocate(u32 _size) {
 		u32 index = this->max_allowed_allocations;
 
 		// search for empty spot
-		this->find_free_location(index, _size);
+		this->find_free_location(index, size__);
 
 		if (index < this->max_allowed_allocations) {
-			allocate_from_free_list(&pointer, _size ,index);
+			allocate_from_free_list(&pointer, size__ ,index);
 			return pointer;
 		}
 		/*
@@ -284,25 +284,25 @@ void* core::heap::allocate(u32 _size) {
 		this->merge_free_areas();
 
 		// search again after the merge process
-		this->find_free_location(index , _size);
+		this->find_free_location(index , size__);
 		
-		// if no place found : crash -> "no memory left"
+		// if no place found : crash -> "no global_memory left"
 		CRASH_IF(
 			index >= this->max_allowed_allocations,
-			"heap.allocate: no memory left or found for allocation !"
+			"memory_heap.allocate: no global_memory left or found for allocation !"
 		);
 
-		allocate_from_free_list(&pointer, _size, index);
+		allocate_from_free_list(&pointer, size__, index);
 		return pointer;
 	}
 
 }
 
-void core::heap::deallocate(void* pointer){
+void core::memory_heap::deallocate(void* pointer){
 	
 	CRASH_IF(
 		(pointer < this->start) || (pointer > this->end) ,
-		"heap.deallocate: invalid pointer " + pointer_to_hex_string((ptr64)pointer) + " , out of range !"
+		"memory_heap.deallocate: invalid pointer " + pointer_to_hex_string((ptr64)pointer) + " , out of range !"
 	);
 
 	u32 index = this->hash_pointer(pointer);
@@ -321,29 +321,29 @@ void core::heap::deallocate(void* pointer){
 		}
 	}
 
-	CRASH_IF(1, "heap.deallocate: pointer " + pointer_to_hex_string((ptr64)pointer) + " not found allocated !");
+	CRASH_IF(1, "memory_heap.deallocate: pointer " + pointer_to_hex_string((ptr64)pointer) + " not found allocated !");
 }
 
-u32 core::heap::size() noexcept {
+u32 core::memory_heap::size() noexcept {
 	return this->heap_size;
 }
 
-f32 core::heap::size(MEMORY_UNIT return_value_unit) noexcept {
+f32 core::memory_heap::size(memory_unit return_value_unit) noexcept {
 	
 	switch (return_value_unit) {
-		case MEMORY_UNIT::kb : return BYTE_TO_KB(this->heap_size);
-		case MEMORY_UNIT::mb : return BYTE_TO_MB(this->heap_size);
-		case MEMORY_UNIT::gb : return BYTE_TO_GB(this->heap_size);
+		case memory_unit::kb : return BYTE_TO_KB(this->heap_size);
+		case memory_unit::mb : return BYTE_TO_MB(this->heap_size);
+		case memory_unit::gb : return BYTE_TO_GB(this->heap_size);
 	
 		default: return f32(this->heap_size);
 	}
 }
 
-u32 core::heap::allocated(MEMORY_UNIT return_value_unit) noexcept {
+u32 core::memory_heap::allocated(memory_unit return_value_unit) noexcept {
 	return this->alloc_size;
 }
 
-u32 core::heap::available(MEMORY_UNIT return_value_unit) noexcept {
+u32 core::memory_heap::available(memory_unit return_value_unit) noexcept {
 	return this->heap_size - this->alloc_size;
 }
 

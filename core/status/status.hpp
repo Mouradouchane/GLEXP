@@ -13,8 +13,7 @@ namespace core {
 		public:
 			enum class status_type : u16 {
 				warn,
-				error,
-				fatal
+				error
 			};
 
 			typedef u16 status_code;

@@ -48,8 +48,8 @@ namespace core {
 			if(TRUE_CONDITION) {\
 				CORE_FATAL("ASSERT_:{}", ASSERT_MESSAGE); \
 				CORE_TRACE("CODE:{}", #TRUE_CONDITION); \
-				CORE_TRACE("FILE:{}", __FILE__); \
 				CORE_TRACE("LINE:{}", __LINE__); \
+				CORE_TRACE("FILE:{}", __FILE__); \
 				DEBUG_BREAK; \
 				CORE_CRASH(); \
 			}
@@ -58,8 +58,8 @@ namespace core {
 			if(TRUE_CONDITION) {\
 				CORE_FATAL("CRASH_IF:{}", CRASH_MESSAGE); \
 				CORE_TRACE("CODE:{}", #TRUE_CONDITION); \
-				CORE_TRACE("FILE:{}", __FILE__); \
 				CORE_TRACE("LINE:{}", __LINE__); \
+				CORE_TRACE("FILE:{}", __FILE__); \
 				DEBUG_BREAK; \
 				CORE_CRASH(); \
 			}
@@ -68,8 +68,8 @@ namespace core {
 				if(ERROR_ENUM != core::error::none) {\
 					CORE_FATAL("CRASH_IF_ERROR:{}", CRASH_MESSAGE); \
 					CORE_TRACE("CODE:{}", #ERROR_ENUM); \
-					CORE_TRACE("FILE:{}", __FILE__); \
 					CORE_TRACE("LINE:{}", __LINE__); \
+					CORE_TRACE("FILE:{}", __FILE__); \
 					DEBUG_BREAK; \
 					CORE_CRASH(); \
 				}
@@ -101,10 +101,10 @@ namespace core {
 			}
 
 #else
-	#define CORE_ASSERT(TRUE_CONDITION , ASSERT_MESSAGE)   if(TRUE_CONDITION) exit(-1);
-	#define CORE_ASSERT_ERR(ERROR_ENUM , ASSERT_MESSAGE)  if(ERROR_ENUM != core::error::none) exit(-1);
-	#define CRASH_IF(TRUE_CONDITION , CRASH_MESSAGE)   if(TRUE_CONDITION) exit(-1);
-	#define CRASH_IF_ERROR(ERROR_ENUM , CRASH_MESSAGE) if(ERROR_ENUM != core::error::none) exit(-1);
+	#define CORE_ASSERT(TRUE_CONDITION , ASSERT_MESSAGE) if(TRUE_CONDITION) exit(-1);
+	#define CORE_ASSERT_ERR(ERROR_ENUM , ASSERT_MESSAGE) if(ERROR_ENUM != core::error::none) exit(-1);
+	#define CRASH_IF(TRUE_CONDITION , CRASH_MESSAGE)     if(TRUE_CONDITION) exit(-1);
+	#define CRASH_IF_ERROR(ERROR_ENUM , CRASH_MESSAGE)   if(ERROR_ENUM != core::error::none) exit(-1);
 
 #endif 
 

@@ -10,6 +10,8 @@
 #include "core/types.hpp"
 #include "status.hpp"
 
+// todo : refactor all of this !!!!
+
 static const std::map<core::error, std::string> error_codes = {
 	{core::error::none , "000"},
 

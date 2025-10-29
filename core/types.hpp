@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef COMMON_TYPES_HPP
-#define COMMON_TYPES_HPP
+#ifndef CORE_TYPES_HPP
+#define CORE_TYPES_HPP
 
 #include <stdint.h>
 
@@ -32,5 +32,8 @@ typedef long double f80;
 // keys
 typedef u32 h_key32;
 typedef u64 h_key64;
+
+// events
+typedef u32 event_id;
 
 #endif

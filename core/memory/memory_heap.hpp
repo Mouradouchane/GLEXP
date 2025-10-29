@@ -1,8 +1,8 @@
 /*
-	memory heap :
+	global_memory memory_heap :
 	- linear allocation
 	- support big size allocations
-	- multi memory pages with differnet sizes
+	- multi global_memory pages with differnet sizes
 */
 #pragma once
 
@@ -20,37 +20,37 @@ struct registry_pair {
 
 namespace core {
 
-	class heap {
+	class memory_heap {
 
 	private:
-		// heap static variables
+		// memory_heap static variables
 		static const u32 minimum_heap_size_allowed = KB_TO_BYTE(1 KB);
 		static const u32 maximum_heap_size_allowed = MB_TO_BYTE(512 MB);
 
 		/*
-			just disabled constructor's and operator's
+			copy/move constructor's and operator's disabled
 		*/
-		heap(heap const& other) = delete;
-		heap(heap&& other) = delete;
-		heap& operator = (const heap& other) = delete;
+		memory_heap(memory_heap const& other) = delete;
+		memory_heap(memory_heap&& other) = delete;
+		memory_heap& operator = (const memory_heap& other) = delete;
 
 	public:
-		// heap public static functions
-		static f32 minimum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
-		static u32 maximum_size_allowed(MEMORY_UNIT return_value_unit) noexcept;
+		// memory_heap public static functions
+		static f32 minimum_size_allowed(memory_unit return_value_unit) noexcept;
+		static u32 maximum_size_allowed(memory_unit return_value_unit) noexcept;
 
 	private:
-		// heap type/usage
-		ALLOCATION_SECTION section = ALLOCATION_SECTION::UNKOWN;
+		// memory_heap type/usage
+		memory_usage section = memory_usage::unkown;
 
-		// heap memory variables
+		// memory_heap global_memory variables
 		u32 max_allowed_allocations = 1000;
 		u32 alloc_size = NULL;
 		u32 heap_size = NULL;
 
 		byte* start = nullptr;
 		byte* end = nullptr;
-		byte* seek = nullptr; // last free position
+		byte* seek = nullptr; // last deallocate position
 
 		u32 registered = NULL;
 
@@ -64,25 +64,25 @@ namespace core {
 
 	public:
 		// constructor / destructor
-		heap(
+		memory_heap(
 			u32 heap_size,
 			u32 max_allocation = 1000,
-			ALLOCATION_SECTION heap_usage = ALLOCATION_SECTION::UNKOWN
+			memory_usage heap_usage = memory_usage::unkown
 		);
-		~heap();
+		~memory_heap();
 
-		// heap public functions
+		// memory_heap public functions
 		void* allocate(u32 size);
 		void  deallocate(void* pointer);
 
 		u32 size() noexcept;
-		f32 size(MEMORY_UNIT return_value_unit) noexcept;
+		f32 size(memory_unit return_value_unit) noexcept;
 
-		u32 allocated(MEMORY_UNIT return_value_unit) noexcept;
-		u32 available(MEMORY_UNIT return_value_unit) noexcept;
+		u32 allocated(memory_unit return_value_unit) noexcept;
+		u32 available(memory_unit return_value_unit) noexcept;
 
 	private:
-		// heap private functions
+		// memory_heap private functions
 		inline void merge_free_areas();
 		u32 hash_pointer(void* pointer);
 
@@ -90,7 +90,7 @@ namespace core {
 		inline void allocate_from_free_list(void** pointer, u32 size, u32 index);
 		inline void unregister_allocation(u32 _index);
 		// this function search the free_list looking for empty spot
-		inline void find_free_location(u32& index_output, u32 _size);
+		inline void find_free_location(u32& index_output, u32 size__);
 
 		// sort from bigger to smaller
 		inline void sort_list_by_size(registry_pair* list, u32 size);
@@ -100,9 +100,4 @@ namespace core {
 
 }
 
-#endif
-
-// only in unit-testing
-#ifdef UNIT_TEST
-	#include "memory_heap.cpp"
 #endif

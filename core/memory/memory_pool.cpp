@@ -1,5 +1,5 @@
 /*
-	memory pool code/implementation
+	global_memory memory_pool code/implementation
 */
 #pragma once
 
@@ -8,6 +8,6 @@
 
 #include "memory_pool.hpp"
 
-// todo: implement pool allocator
+// todo: implement memory_pool allocator
 
 #endif

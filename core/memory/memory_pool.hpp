@@ -4,9 +4,9 @@
 #define MEMORY_POOL_HPP
 
 /*
-	memory pool : 
+	global_memory memory_pool : 
 	- fixed size allocation 
-	- fixed size pool memory pages
+	- fixed size memory_pool global_memory pages
 	- first fit allocation
 */
 
@@ -14,12 +14,12 @@
 
 namespace core {
 
-	// todo: implement pool allocator
-	class pool {
+	// todo: implement memory_pool allocator
+	class memory_pool {
 
 
 
-	}; // class pool end
+	}; // class memory_pool end
 
 } // namespace core end
 
