@@ -3,7 +3,7 @@
 #ifndef CORE_ARRAY_HPP
 #define CORE_ARRAY_HPP
 
-#include <initializer_list>
+#include <cstdarg>
 #include "core/types.hpp"
 #include "core/assert.hpp"
 #include "core/memory/memory.hpp"
@@ -11,50 +11,100 @@
 namespace core {
 
 	/*
-		class for fixed size array allocated on the memory_heap
-		with few vars and functions
+		class for fixed size array , array memory allocated on the heap not in stack
 	*/
 	template<typename type> class array {
 	private:
 		// note: disabled constructors/operators
-		array(const array& other_array) = delete;
-		array(array&& other_array) = delete;
+		array(core::array&& other_array)           = delete;
+		array(const core::array& other_array)      = delete;
 		array& operator=(const array& other_array) = delete;
 		// ====================================
 
 	private:
-		u32   len__  = NULL;
+		core::memory_allocator* allocator = nullptr;
+
 		u32   size__ = NULL;
-		type* start  = nullptr; // global_memory start
-		type* end    = nullptr; // global_memory end
+		type* start  = nullptr;
+		type* end    = nullptr;
 
 	public:
-		// constructor's / destructor
-		 array(u32 elements_count);
-		 array(u32 elements_count, std::initializer_list<type> const& elements);
-		~array();
+		/*
+			constructor's
+		*/ 
+		array(u32 elements_count, memory_allocator* memory_allocator = nullptr) 
+			:allocator(memory_allocator) 
+		{
+			if (this->allocator == nullptr) {
+				this->start = (type*)core::global_memory::allocate(sizeof(type)*elements_count , memory_usage::buffers);
+			}else {
+				this->start = (type*)this->allocator->allocate(sizeof(type)*elements_count);
+			}
+			this->end    = this->start + elements_count;
+			this->size__ = this->end - this->start;
+		}
+		
+		array(type const& elements , u32 elements_count , memory_allocator* memory_allocator = nullptr )
+			:allocator(memory_allocator) 
+		{
+			if (this->allocator == nullptr) {
+				this->start = (type*)core::global_memory::allocate(sizeof(type)*elements_count , memory_usage::buffers);
+			}else {
+				this->start = (type*)this->allocator->allocate(sizeof(type)*elements_count);
+			}
+			this->end    = this->start + elements_count;
+			this->size__ = this->end - this->start;
 
-		// function's
+			// copy elements to array
+			for (u32 i = 0; i < this->size__; i++) {
+				*(this->start + i) = *(elements + i);
+			}
+		}
+
+		/*
+			destructor
+		*/
+		~array() {
+
+			// destroy all elements in array
+			if (this->start != nullptr) {
+				for (type* ptr = this.start; ptr != this.end; ptr++) {
+					ptr->~type();
+				}
+			}
+
+			// free memory
+			if (this->allocator != nullptr) {
+				this->allocator->deallocate(this->start);
+			}
+			else {
+				core::global_memory::deallocate(this->allocator);
+			}
+
+			this->start = nullptr;
+			this->end   = nullptr;
+		}
+
+		// array public functions
 		type* begin() noexcept;
 		type* end()   noexcept;
 
 		type* get(u32 index);
 		void  set(u32 index, type const& new_element);
 
-		/*
-			note: to call element destructor before remove use destroy
-		*/
-		void remove(u32 index);
-		void destroy(u32 index);
+		void remove(u32 index , bool call_destructor);
 
 		u32 size() noexcept; // elements count
-		u64 size_of(void) noexcept; // size in bytes
+		u64 size_of() noexcept; // size in bytes
 		f64 size_of(memory_unit unit) noexcept; // size in kb,mb,gb
 
 		// operator's
 		type& operator[](u32 index);
 
-		// few static functions for array
+		// array static public functions
+		static void copy(core::array& source , core::array& destination);
+		static void move(core::array& source , core::array& destination);
+	
 		static void fill(array<type>& _array, type const& fill_value) noexcept;
 		static void sort(
 			array<type>& _array,
@@ -71,36 +121,6 @@ namespace core {
 */
 
 namespace core {
-	/*
-		constructor's
-	*/
-	template<typename type>	 array<type>::array(u32 elements_count) {
-		CRASH_IF(!elements_count, "array: 0 size array not allowed !");
-
-		// todo: implement + "global_memory allocation solution"
-
-	}
-
-	template<typename type>	 array<type>::array(
-		u32 elements_count, std::initializer_list<type> const& elements
-		) {
-		CRASH_IF(!elements_count, "array: 0 size array not allowed !");
-		CRASH_IF(elements_count < elements.size(), "array: elements count larger than the array !");
-
-		// todo: implement + "global_memory allocation solution"
-
-	}
-
-	/*
-		destructor
-	*/
-	template<typename type>	array<type>::~array() {
-
-		// destroy all array elements
-		for (type* ptr = this.start; ptr != this.end; ptr += 1) {
-			ptr->~type();
-		}
-	}
 
 	/*
 		array function's
@@ -120,19 +140,15 @@ namespace core {
 		this->len__ += 1;
 	}
 
-	template<typename type> void array<type>::remove(u32 index) {
+	template<typename type> void array<type>::remove(u32 index , bool call_destructor) {
 		CRASH_IF(index >= this->size__, "array.remove: index out of range !");
 
+		if (call_destructor) {
+			// todo: find a better way to handle "error here"
+			this->start[index].~type();
+		}
+
 		*(this->start + index) = type();
-		this->len__ -= (this->len__ > 0) ? this->len__ - 1 : 0;
-	}
-
-	template<typename type> void array<type>::destroy(u32 index) {
-		CRASH_IF(index >= this->size__, "array.destroy: index out of range !");
-
-		(this->start + index)->~type(); // destroy
-		(this->start + index) = type();
-		this->len__ -= (this->len__ > 0) ? this->len__ - 1 : 0;
 	}
 
 	template<typename type> u32 array<type>::size() noexcept {

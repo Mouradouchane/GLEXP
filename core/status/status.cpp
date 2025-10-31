@@ -97,19 +97,4 @@ static const std::map<core::error, std::string> error_strings = {
 
 }; // error codes map end
 
-namespace core {
-
-	DLL_API error_info error_to_string(core::error error_code) {
-
-		auto str_itr  = error_strings.find(error_code);
-
-		if (str_itr == error_strings.end()) {
-			return error_info{ "undefined","undefined", false };
-		}
-
-		return error_info{ "undefined", str_itr->second , false };
-	}
-
-} // namespace core
-
 #endif

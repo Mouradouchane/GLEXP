@@ -11,6 +11,7 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
+#include "custom_allocator.hpp"
 #include "memory.hpp"
 
 struct registry_pair {
@@ -20,12 +21,12 @@ struct registry_pair {
 
 namespace core {
 
-	class memory_heap {
+	DLL_API_CLASS memory_heap : public core::memory_allocator {
 
 	private:
 		// memory_heap static variables
-		static const u32 minimum_heap_size_allowed = KB_TO_BYTE(1 KB);
-		static const u32 maximum_heap_size_allowed = MB_TO_BYTE(512 MB);
+		static const u32 minimum_heap_size_allowed = 1   KB;
+		static const u32 maximum_heap_size_allowed = 512 MB;
 
 		/*
 			copy/move constructor's and operator's disabled
@@ -37,7 +38,7 @@ namespace core {
 	public:
 		// memory_heap public static functions
 		static f32 minimum_size_allowed(memory_unit return_value_unit) noexcept;
-		static u32 maximum_size_allowed(memory_unit return_value_unit) noexcept;
+		static f32 maximum_size_allowed(memory_unit return_value_unit) noexcept;
 
 	private:
 		// memory_heap type/usage
@@ -49,8 +50,8 @@ namespace core {
 		u32 heap_size = NULL;
 
 		byte* start = nullptr;
-		byte* end = nullptr;
-		byte* seek = nullptr; // last deallocate position
+		byte* end   = nullptr;
+		byte* seek  = nullptr; // last deallocate position
 
 		u32 registered = NULL;
 
@@ -72,11 +73,11 @@ namespace core {
 		~memory_heap();
 
 		// memory_heap public functions
-		void* allocate(u32 size);
-		void  deallocate(void* pointer);
+		void* allocate(u32 size) override;
+		void  deallocate(void* pointer) override;
 
 		u32 size() noexcept;
-		f32 size(memory_unit return_value_unit) noexcept;
+		f32 size_f(memory_unit return_value_unit) noexcept;
 
 		u32 allocated(memory_unit return_value_unit) noexcept;
 		u32 available(memory_unit return_value_unit) noexcept;

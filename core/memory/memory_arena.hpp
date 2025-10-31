@@ -12,10 +12,17 @@
 // todo: implement memory_arena allocator
 namespace core {
 
-	class memory_arena {
+	DLL_API_CLASS memory_arena : public core::memory_allocator {
 
+	public :
+		memory_arena() { }
 
+		void* allocate(u32 size) override {
+			return nullptr;
+		};
+		void  deallocate(void* pointer) override {
 
+		}
 	}; // class memory_arena end
 
 } // namespace core end

@@ -15,10 +15,10 @@ enum class memory_usage : u16 {
 	audios     ,
 	animations ,
 	physics    ,
-	ai         ,
 	strings    ,
 	buffers    ,
 	threads    ,
+	ai         ,
     stdcpp     ,
 };
 
@@ -32,9 +32,9 @@ struct memory_info {
 };
 
 // example: fn(2 KB) --> fn(2 *1024)
-#define KB *1024u
-#define MB *1048576u
-#define GB *1073741824u
+#define KB   *1024u
+#define MB   *1048576u
+#define GB   *1073741824u
 
 // convert "kb,mb,gb" to "BYTES" macros
 #define KB_TO_BYTE(_KB) u64(_KB) * 1024u

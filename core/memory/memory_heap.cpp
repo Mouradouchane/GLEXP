@@ -72,19 +72,19 @@ core::memory_heap::~memory_heap() {
 
 f32 core::memory_heap::minimum_size_allowed(memory_unit return_value_unit) noexcept {
 	switch (return_value_unit) {
-		case memory_unit::kb: return BYTE_TO_KB(core::memory_heap::minimum_heap_size_allowed);
-		case memory_unit::mb: return BYTE_TO_MB(core::memory_heap::minimum_heap_size_allowed);
-		case memory_unit::gb: return BYTE_TO_GB(core::memory_heap::minimum_heap_size_allowed);
-		default : return core::memory_heap::minimum_heap_size_allowed;
+		case memory_unit::kb : return BYTE_TO_KB(core::memory_heap::minimum_heap_size_allowed);
+		case memory_unit::mb : return BYTE_TO_MB(core::memory_heap::minimum_heap_size_allowed);
+		case memory_unit::gb : return BYTE_TO_GB(core::memory_heap::minimum_heap_size_allowed);
+		default : return f32(core::memory_heap::minimum_heap_size_allowed);
 	}
 }
 
-u32 core::memory_heap::maximum_size_allowed(memory_unit return_value_unit) noexcept {
+f32 core::memory_heap::maximum_size_allowed(memory_unit return_value_unit) noexcept {
 	switch (return_value_unit) {
-		case memory_unit::kb: return BYTE_TO_KB(core::memory_heap::maximum_heap_size_allowed);
-		case memory_unit::mb: return BYTE_TO_MB(core::memory_heap::maximum_heap_size_allowed);
-		case memory_unit::gb: return BYTE_TO_GB(core::memory_heap::maximum_heap_size_allowed);
-		default: return core::memory_heap::minimum_heap_size_allowed;
+		case memory_unit::kb : return BYTE_TO_KB(core::memory_heap::maximum_heap_size_allowed);
+		case memory_unit::mb : return BYTE_TO_MB(core::memory_heap::maximum_heap_size_allowed);
+		case memory_unit::gb : return BYTE_TO_GB(core::memory_heap::maximum_heap_size_allowed);
+		default: return f32(core::memory_heap::minimum_heap_size_allowed);
 	}
 }
 
@@ -252,7 +252,7 @@ void* core::memory_heap::allocate(u32 size__) {
 	CRASH_IF(this->registered >= this->max_allowed_allocations, "memory_heap.allocate: max allowed allocations is reached !");
 	
 	void* pointer   = nullptr;
-	u32  _available = (this->end >= this->seek) ? (this->end - this->seek) : 0;
+	u32  _available = (this->end >= this->seek) ? u32(this->end - this->seek) : 0u;
 
 	if ( (this->seek < this->end) && (size__ <= _available) ) {
 		// allocate from seek
@@ -289,7 +289,7 @@ void* core::memory_heap::allocate(u32 size__) {
 		// if no place found : crash -> "no global_memory left"
 		CRASH_IF(
 			index >= this->max_allowed_allocations,
-			"memory_heap.allocate: no global_memory left or found for allocation !"
+			"memory_heap.allocate: no memory left or found for allocation !"
 		);
 
 		allocate_from_free_list(&pointer, size__, index);
@@ -328,7 +328,7 @@ u32 core::memory_heap::size() noexcept {
 	return this->heap_size;
 }
 
-f32 core::memory_heap::size(memory_unit return_value_unit) noexcept {
+f32 core::memory_heap::size_f(memory_unit return_value_unit) noexcept {
 	
 	switch (return_value_unit) {
 		case memory_unit::kb : return BYTE_TO_KB(this->heap_size);

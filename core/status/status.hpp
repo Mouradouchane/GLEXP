@@ -8,40 +8,13 @@
 
 namespace core {
 
-	class status {
-
-		public:
-			enum class status_type : u16 {
-				warn,
-				error
-			};
-
-			typedef u16 status_code;
-
-		public:
-			status::status_type _type;
-			status::status_code _code;
-
-			// constructor's
-			status() = default;
-			status(status_type _status_type , status_code _status_code);
-			// destructor
-			~status() = default;
-	
-	}; // class status
-
-
-	// todo: change from error enum to custom solution for the developer to craft 
-	// todo: change from errors to status
-
-	struct error_info {
-		std::string code;
-		std::string  str;
-		bool is_fatal;
-	};
+	// todo: add maps for errors and warning !
+	//       map<error , string> errors_list ;
+	//       map<warning , string> warnings_list ;
+	// todo: give the ability to add custom errors/warnings 
 
 	/*
-		enum errors contain all the errors used in all the projects/tools
+		contain all the errors used core/engine/tools/...
 	*/
 	enum class error : u16 {
 		none = 0,
@@ -92,11 +65,6 @@ namespace core {
 		nullptr_object,
 
 	}; // enum class errors
-
-	/*
-		public functions
-	*/
-	DLL_API error_info error_to_string(core::error error_code);
 
 } // namespace core
 
