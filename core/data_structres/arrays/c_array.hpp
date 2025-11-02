@@ -22,12 +22,12 @@ namespace core {
 		/*
 			functions for c_array
 		*/
-		template<typename type> static c_array<type>* create(u32 elements_count);
-		template<typename type> static void    fill(c_array<type> const& _array, type const& fill_value);
-		template<typename type> static void    remove(c_array<type> const& _array);
-		template<typename type> static void    destroy(c_array<type> const& _array);
-		template<typename type> static u64     size_of(c_array<type> const& _array) noexcept;
-		template<typename type> static f64     size_of(c_array<type> const& _array, memory_unit unit) noexcept;
+		template<typename type> static core::c_array<type> create(u32 elements_count);
+		template<typename type> static void    fill(core::c_array<type> const& _array, type const& fill_value);
+		template<typename type> static void  remove(core::c_array<type> const& _array);
+		template<typename type> static void destroy(core::c_array<type> const& _array);
+		template<typename type> static u64  size_of(core::c_array<type> const& _array) noexcept;
+		template<typename type> static f64  size_of(core::c_array<type> const& _array, memory_unit unit) noexcept;
 
 	}; // struct c_array end
 
