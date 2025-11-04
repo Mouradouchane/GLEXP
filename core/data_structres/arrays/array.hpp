@@ -25,43 +25,68 @@ namespace core {
 		type* start  = nullptr;
 		type* end    = nullptr;
 
+	private :
+		array(core::array<type>&& other_array) = delete;
+
 	public:
 		/*
 			constructor's
 		*/ 
 		array(u32 elements_count, memory_allocator* memory_allocator = nullptr) 
-			:allocator(memory_allocator) 
+			:allocator(memory_allocator) , :size__(elements_count)
 		{
 			if (this->allocator == nullptr) {
-				this->start = (type*)core::global_memory::allocate(sizeof(type)*elements_count , memory_usage::buffers);
+				this->start = (type*)core::global_memory::allocate(sizeof(type)*elements_count);
 			}else {
 				this->start = (type*)this->allocator->allocate(sizeof(type)*elements_count);
 			}
-			this->end    = this->start + elements_count;
-			this->size__ = this->end - this->start;
+
+			this->end = this->start + elements_count;
 		}
 		
 		array(type const& elements , u32 elements_count , memory_allocator* memory_allocator = nullptr)
-			:allocator(memory_allocator)
+			:allocator(memory_allocator) , :size__(elements_count)
 		{
+
+			// allocate array memory 
 			if(this->allocator == nullptr) {
-				this->start = (type*)core::global_memory::allocate(sizeof(type)*elements_count , memory_usage::buffers);
+				this->start = (type*)core::global_memory::allocate(sizeof(type)*elements_count);
 			}else {
 				this->start = (type*)this->allocator->allocate(sizeof(type)*elements_count);
 			}
-			this->end    = this->start + elements_count;
-			this->size__ = this->end - this->start;
 
+			this->end = this->start + elements_count;
+
+			// todo: make it multi-threaded copying
 			// copy elements to array
 			for (u32 i = 0; i < this->size__; i++) {
 				*(this->start + i) = *(elements + i);
 			}
+
 		}
 
-		// todo: implement copy/move constructors
-		core::array(core::array<type>&& other_array)           = delete;
-		core::array(const core::array<type>& other_array)      = delete;
-		// ====================================
+		// copy constructor
+		array(core::array<type> const& other_array , core::memory_allocator memory_allocator = nullptr) 
+			:allocator(memory_allocator)
+		{
+			CRASH_IF(&other_array == nullptr, "array(core::array<type> const& other_array = {}): other_array memory is null", &other_array);
+			this->size__ = other_array.size__;
+
+			// allocate array memory 
+			if (this->allocator == nullptr) {
+				this->start = (type*)core::global_memory::allocate(sizeof(type) * this->size__);
+			}
+			else {
+				this->start = (type*)this->allocator->allocate(sizeof(type) * this->size__);
+			}
+
+			// todo: make it multi-threaded copying
+			// copy elements to array
+			for (u32 i = 0; i < other_array.size__; i++) {
+				*(this->start + i) = *(other_array.start + i);
+			}
+		}
+
 		/*
 			destructor
 		*/
@@ -86,7 +111,7 @@ namespace core {
 			this->end    = nullptr;
 			this->size__ = NULL;
 		}
-
+		
 		/*
 			array public functions
 		*/
@@ -166,7 +191,7 @@ namespace core {
 		*/ 
 
 		// todo : add option for multi-threaded copying later
-		static void copy(core::array<type>& source, core::array<type>& destination) {
+		static void copy(core::array<type> const& source, core::array<type>& destination) {
 			CORE_WARN(destination.size__ < source.size__ , "core::array::copy(source={}, destination={}) : size of destination is smaller than the source !");
 			CRASH_IF(source.start == nullptr || destination.start == nullptr, "core::array::copy(source={}, destination={}) : source or destination memory is null", &source, &destination);
 		
@@ -204,7 +229,7 @@ namespace core {
 		}
 
 		template<typename type> static inline void array<type>::sort(
-			array<type>& _array,
+			core::array<type>& _array,
 			bool (*compare_function)(type const& a, type const& b)
 		) {
 			std::sort<type>(this->start, this->end, compare_function);
