@@ -22,13 +22,13 @@ core::memory_heap::memory_heap(
 
 	// TODO: change to logger
 	// few checks first
-	CRASH_IF(heap_size < 1, "memory_heap: zero size memory_heap not allowed !");
+	CRASH_IF(heap_size < 1, "memory_heap: zero count memory_heap not allowed !");
 	CRASH_IF(
 		(heap_size < core::memory_heap::minimum_heap_size_allowed) ||
 		(heap_size > core::memory_heap::maximum_heap_size_allowed), 
 		// todo: change it to better message later 
 		// when you have logger
-		"memory_heap: memory_heap size not allowed !"
+		"memory_heap: memory_heap count not allowed !"
 	);
 	CRASH_IF(max_allocation < 1, "memory_heap: max allowed allocations cannot be 0 !");
 	// note: maybe this need to be a logger warning
@@ -92,23 +92,23 @@ f32 core::memory_heap::maximum_size_allowed(memory_unit return_value_unit) noexc
 	memory_heap private function's
 */
 
-inline void core::memory_heap::sort_list_by_address(registry_pair* list, u32 size) {
+inline void core::memory_heap::sort_list_by_address(registry_pair* list, u32 count) {
 
-	std::sort(list, list + size, [&](const registry_pair& a, const registry_pair& b) -> bool {
+	std::sort(list, list + count, [&](const registry_pair& a, const registry_pair& b) -> bool {
 		return a.pointer < b.pointer;
 	});
 }
 
-inline void core::memory_heap::sort_list_by_size(registry_pair* list, u32 size) {
+inline void core::memory_heap::sort_list_by_size(registry_pair* list, u32 count) {
 
-	std::sort(list, list + size, [&](const registry_pair& a, const registry_pair& b) -> bool {
-		return a.size > b.size;
+	std::sort(list, list + count, [&](const registry_pair& a, const registry_pair& b) -> bool {
+		return a.count > b.count;
 	});
 }
 
-inline void core::memory_heap::init_registry_list(registry_pair* list, u32 size) {
+inline void core::memory_heap::init_registry_list(registry_pair* list, u32 count) {
 
-	for (u32 i = 0; i < size; i++) {
+	for (u32 i = 0; i < count; i++) {
 		*(list + i) = registry_pair{nullptr , NULL};
 	}
 
@@ -118,7 +118,7 @@ inline void core::memory_heap::find_free_location(u32& index_output , u32 size__
 
 	for (u32 i = 0; i < this->free_list_range; i++) {
 
-		if (this->free_list[i].size >= size__) {
+		if (this->free_list[i].count >= size__) {
 			index_output = i;
 			return;
 		}
@@ -132,9 +132,9 @@ inline void core::memory_heap::allocate_from_free_list(void** pointer, u32 size_
 
 	*pointer = _allocation.pointer;
 
-	if (_allocation.size > size__) {
+	if (_allocation.count > size__) {
 		this->free_list[index].pointer = (byte*)this->free_list[index].pointer + size__;
-		this->free_list[index].size -= size__;
+		this->free_list[index].count -= size__;
 	}
 	else {
 		this->free_list[index] = registry_pair{ nullptr, NULL};
@@ -147,7 +147,7 @@ u32 core::memory_heap::hash_pointer(void* pointer) {
 	return (u64)pointer % this->alloc_list_size;
 }
 
-inline void core::memory_heap::register_allocation(void* pointer, u32 size) {
+inline void core::memory_heap::register_allocation(void* pointer, u32 count) {
 
 	u32 index = hash_pointer(pointer);
 
@@ -156,8 +156,8 @@ inline void core::memory_heap::register_allocation(void* pointer, u32 size) {
 
 		if (this->alloc_list[index].pointer == nullptr) {
 
-			this->alloc_list[index] = registry_pair{ pointer , size };
-			this->alloc_size += size;
+			this->alloc_list[index] = registry_pair{ pointer , count };
+			this->alloc_size += count;
 			this->registered += 1;
 			return;
 		}
@@ -169,8 +169,8 @@ inline void core::memory_heap::register_allocation(void* pointer, u32 size) {
 
 		if (this->alloc_list[i].pointer == nullptr) {
 
-			this->alloc_list[i] = registry_pair{ pointer , size };
-			this->alloc_size += size;
+			this->alloc_list[i] = registry_pair{ pointer , count };
+			this->alloc_size += count;
 			this->registered += 1;
 			return;
 		}
@@ -191,11 +191,11 @@ inline void core::memory_heap::unregister_allocation(u32 _index) {
 	);
 
 	u32 i = 0;
-	u32 size__ = this->alloc_list[_index].size;
+	u32 size__ = this->alloc_list[_index].count;
 
 	// look for right place to insert
 	for (	; i < this->free_list_range; i++) {
-		if (this->free_list[i].size < size__) break;
+		if (this->free_list[i].count < size__) break;
 	}
 
 	// make a room for new registry by shift few elements
@@ -207,7 +207,7 @@ inline void core::memory_heap::unregister_allocation(u32 _index) {
 	this->free_list[i] = this->alloc_list[_index];
 	
 	// remove/unregister allocation
-	this->alloc_size -= this->alloc_list[_index].size;
+	this->alloc_size -= this->alloc_list[_index].count;
 	this->alloc_list[_index] = registry_pair{ nullptr , NULL };
 	this->registered -= 1;
 }
@@ -225,9 +225,9 @@ void core::memory_heap::merge_free_areas() {
 
 	for (; s_ptr <= e_ptr; s_ptr++) {
 
-		if (((byte*)marker_ptr->pointer + marker_ptr->size) == s_ptr->pointer) {
+		if (((byte*)marker_ptr->pointer + marker_ptr->count) == s_ptr->pointer) {
 
-			marker_ptr->size += s_ptr->size;
+			marker_ptr->count += s_ptr->count;
 			*s_ptr = registry_pair{ nullptr , NULL };
 
 			continue;
@@ -247,8 +247,8 @@ void core::memory_heap::merge_free_areas() {
 */
 
 void* core::memory_heap::allocate(u32 size__) {
-	CRASH_IF(size__ < 1, "memory_heap.allocate: 0 size allocation not allowed !");
-	CRASH_IF(size__ > this->heap_size, "memory_heap.allocate: size of allocation asked for bigger than the memory_heap !");
+	CRASH_IF(size__ < 1, "memory_heap.allocate: 0 count allocation not allowed !");
+	CRASH_IF(size__ > this->heap_size, "memory_heap.allocate: count of allocation asked for bigger than the memory_heap !");
 	CRASH_IF(this->registered >= this->max_allowed_allocations, "memory_heap.allocate: max allowed allocations is reached !");
 	
 	void* pointer   = nullptr;
@@ -324,7 +324,7 @@ void core::memory_heap::deallocate(void* pointer){
 	CRASH_IF(1, "memory_heap.deallocate: pointer " + pointer_to_hex_string((ptr64)pointer) + " not found allocated !");
 }
 
-u32 core::memory_heap::size() noexcept {
+u32 core::memory_heap::count() noexcept {
 	return this->heap_size;
 }
 

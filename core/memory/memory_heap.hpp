@@ -1,7 +1,7 @@
 /*
 	global_memory memory_heap :
 	- linear allocation
-	- support big size allocations
+	- support big count allocations
 	- multi global_memory pages with differnet sizes
 */
 #pragma once
@@ -16,7 +16,7 @@
 
 struct registry_pair {
 	void* pointer = nullptr;
-	u32   size    = NULL;
+	u32   count    = NULL;
 };
 
 namespace core {
@@ -73,10 +73,10 @@ namespace core {
 		~memory_heap();
 
 		// memory_heap public functions
-		void* allocate(u32 size) override;
+		void* allocate(u32 count) override;
 		void  deallocate(void* pointer) override;
 
-		u32 size() noexcept;
+		u32 count() noexcept;
 		f32 size_f(memory_unit return_value_unit) noexcept;
 
 		u32 allocated(memory_unit return_value_unit) noexcept;
@@ -87,16 +87,16 @@ namespace core {
 		inline void merge_free_areas();
 		u32 hash_pointer(void* pointer);
 
-		inline void register_allocation(void* pointer, u32 size);
-		inline void allocate_from_free_list(void** pointer, u32 size, u32 index);
+		inline void register_allocation(void* pointer, u32 count);
+		inline void allocate_from_free_list(void** pointer, u32 count, u32 index);
 		inline void unregister_allocation(u32 _index);
 		// this function search the free_list looking for empty spot
 		inline void find_free_location(u32& index_output, u32 size__);
 
 		// sort from bigger to smaller
-		inline void sort_list_by_size(registry_pair* list, u32 size);
-		inline void sort_list_by_address(registry_pair* list, u32 size);
-		inline void init_registry_list(registry_pair* list, u32 size);
+		inline void sort_list_by_size(registry_pair* list, u32 count);
+		inline void sort_list_by_address(registry_pair* list, u32 count);
+		inline void init_registry_list(registry_pair* list, u32 count);
 	};
 
 }

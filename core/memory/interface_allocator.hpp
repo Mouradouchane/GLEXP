@@ -12,7 +12,7 @@ namespace core {
 		public:
 			 memory_allocator() {}
 			~memory_allocator() {}
-			virtual void* allocate(u32 size) = 0;
+			virtual void* allocate(u32 count) = 0;
 			virtual void  deallocate(void* pointer) = 0;
 	};
 

@@ -23,11 +23,11 @@ namespace core {
 
 		}
 
-		T* allocate(std::size_t size) {
-			return (T*)global_memory::allocate(size * sizeof(T), memory_usage::stdcpp);
+		T* allocate(std::size_t count) {
+			return (T*)global_memory::allocate(count * sizeof(T), memory_usage::stdcpp);
 		}
 
-		void deallocate(T* pointer, std::size_t size) {
+		void deallocate(T* pointer, std::size_t count) {
 			global_memory::deallocate(pointer);
 		}
 

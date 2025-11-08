@@ -28,7 +28,7 @@
 
 #include "global_memory.hpp"
 
-// allocated size for each section , in byte
+// allocated count for each section , in byte
 static std::array<uint64_t , 8> sections_sizes = {
 	NULL,// 0 , unkown
 	NULL,// 1 , GENERAL_PURPOSE
@@ -46,7 +46,7 @@ static std::array<u32, 4> memory_factors = {
 
 
 typedef struct alloc_info {
-	size_t  size;
+	size_t  count;
 	uint8_t section;
 };
 
@@ -96,27 +96,27 @@ double core::global_memory::total_size_f(memory_unit unit) noexcept {
 }
 
 // todo : handle multi-threaded allocations
-void* core::global_memory::allocate(size_t size , memory_usage section) {
+void* core::global_memory::allocate(size_t count , memory_usage section) {
 
-	CRASH_IF(size < 1, "core::global_memory::allocate zero size allocation not allowed !")
+	CRASH_IF(count < 1, "core::global_memory::allocate zero count allocation not allowed !")
 	
-	void* pointer = new byte[size];
+	void* pointer = new byte[count];
 
 	CRASH_IF( (pointer == nullptr) , "core::global_memory::allocate failed to allocate global_memory");
 
-	// update total size
-	core::global_memory::allocated_size += size;
+	// update total count
+	core::global_memory::allocated_size += count;
 
-	// update section size
+	// update section count
 	uint8_t _section = (uint8_t)section;
 	if (_section < sections_sizes.size()) {
-		sections_sizes[_section] += size;
+		sections_sizes[_section] += count;
 	}
-	else sections_sizes[0] += size;
+	else sections_sizes[0] += count;
 
 	// update allocate list
 	core::global_memory::allocations_list.insert({ 
-		(ptr)pointer , alloc_info{size , _section}
+		(ptr)pointer , alloc_info{count , _section}
 	});
 	
 	return pointer;
@@ -135,13 +135,13 @@ void core::global_memory::deallocate(void* pointer) {
 		"core::global_memory::deallocate invalid pointer " + pointer_to_hex_string((ptr64)pointer)
 	);
 
-	// update total size
-	core::global_memory::allocated_size = (core::global_memory::allocated_size - allocation->second.size) < 0 ? 0 : core::global_memory::allocated_size - allocation->second.size;
+	// update total count
+	core::global_memory::allocated_size = (core::global_memory::allocated_size - allocation->second.count) < 0 ? 0 : core::global_memory::allocated_size - allocation->second.count;
 	
-	// update section size
+	// update section count
 	uint8_t _section = allocation->second.section;
 	if (_section < sections_sizes.size()) {
-		sections_sizes[_section] = (sections_sizes[_section] - allocation->second.size) < 0 ? 0 : (sections_sizes[_section] - allocation->second.size);
+		sections_sizes[_section] = (sections_sizes[_section] - allocation->second.count) < 0 ? 0 : (sections_sizes[_section] - allocation->second.count);
 	}
 	else {
 		// out of range _section mean there's a bug in core::global_memory::allocate

@@ -27,7 +27,7 @@ enum class memory_unit : u8 {
 };
 
 struct memory_info {
-	u64 size = NULL;
+	u64 count = NULL;
 	u64 free = NULL;
 };
 
@@ -57,7 +57,7 @@ namespace core {
 	*/
 	namespace global_memory {
 
-		void* allocate(size_t size, memory_usage section = memory_usage::unkown);
+		void* allocate(size_t count, memory_usage section = memory_usage::unkown);
 		void  deallocate(void* pointer);
 
 		// todo: rename all those functions 

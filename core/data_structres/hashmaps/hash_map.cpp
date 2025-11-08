@@ -14,7 +14,7 @@ template<typename key, typename value> hash_map<key,value>::hash_map(
 	u16 map_size,
 	u16 row_size
 ) {
-	CRASH_IF((map_size == 0) || (row_size == 0) , "hash_map: 0 size hash_map not allowed !")
+	CRASH_IF((map_size == 0) || (row_size == 0) , "hash_map: 0 count hash_map not allowed !")
 
 	this->hash_function = hashing_function;
 	this->size__ = map_size;

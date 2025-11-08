@@ -17,7 +17,7 @@ namespace core {
 	public :
 		memory_arena() { }
 
-		void* allocate(u32 size) override {
+		void* allocate(u32 count) override {
 			return nullptr;
 		};
 		void  deallocate(void* pointer) override {

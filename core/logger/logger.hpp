@@ -65,17 +65,26 @@ namespace core {
 
 #define CORE_FATAL(...) spdlog::critical(__VA_ARGS__);
 #define CORE_ERROR(...) spdlog::error(__VA_ARGS__);
+#define CORE_FATAL_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::critical(__VA_ARGS__);
+#define CORE_ERROR_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::error(__VA_ARGS__);
 
 #ifdef DEBUG // logger debug only functions
 	#define CORE_WARN(...)  spdlog::warn(__VA_ARGS__);
 	#define CORE_INFO(...)  spdlog::info(__VA_ARGS__);
 	#define CORE_DEBUG(...) spdlog::debug(__VA_ARGS__);
 	#define CORE_TRACE(...) spdlog::trace(__VA_ARGS__);
+			// log with if-condition
+	#define CORE_WARN_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::warn(__VA_ARGS__);
+	#define CORE_INFO_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::info(__VA_ARGS__);
+
 #else 
 	#define CORE_WARN(...)
 	#define CORE_INFO(...)
 	#define CORE_DEBUG(...)
 	#define CORE_TRACE(...)
+	
+	#define CORE_WARN_IF(TRUE_EXPRESSION , ...) 
+	#define CORE_INFO_IF(TRUE_EXPRESSION , ...)
 #endif
 
 #endif 

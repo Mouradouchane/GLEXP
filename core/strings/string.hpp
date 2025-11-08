@@ -12,7 +12,7 @@ namespace core {
 DLL_API struct c_string {
 	char* start  = nullptr;
 	char* end    = nullptr;
-	u32   size   = NULL;
+	u32   count   = NULL;
 };
 
 DLL_API class string {
@@ -20,13 +20,13 @@ DLL_API class string {
 private	:
 	char* start = nullptr;
 	char* end   = nullptr;
-	u32   size  = NULL;
+	u32   count  = NULL;
 
 public : 
 	// constructor's
 	string() = default;
 	string(const char* _string);
-	string(const char* _string , u32 size);
+	string(const char* _string , u32 count);
 	string(u32 string_size);
 
 	// destructor
@@ -37,7 +37,7 @@ public :
 	string& operator= (const string& copy_string);
 
 	// static function's
-	static u32 size(string& str);
+	static u32 count(string& str);
 	static u32 length(string& str);
 
 	static bool copy(string& destination, const string& source);

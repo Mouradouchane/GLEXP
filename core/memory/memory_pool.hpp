@@ -5,8 +5,8 @@
 
 /*
 	global_memory memory_pool : 
-	- fixed size allocation 
-	- fixed size memory_pool global_memory pages
+	- fixed count allocation 
+	- fixed count memory_pool global_memory pages
 	- first fit allocation
 */
 
@@ -22,7 +22,7 @@ namespace core {
 		memory_pool() {};
 
 
-		void* allocate(u32 size) override {
+		void* allocate(u32 count) override {
 			return nullptr;
 		};
 		void  deallocate(void* pointer) override {
