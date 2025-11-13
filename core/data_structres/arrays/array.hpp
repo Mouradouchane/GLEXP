@@ -86,11 +86,8 @@ namespace core {
 				this->start = (type*)this->allocator->allocate(sizeof(type) * this->size_);
 			}
 
-			// todo: make it multi-threaded copying
-			// copy elements to array
-			for (u32 i = 0; i < other_array.size_; i++) {
-				*(this->start + i) = *(other_array.start + i);
-			}
+			// todo: make it multi-threaded !
+			std::memcpy(this->start , other_array.start , this->size_);
 
 			CORE_INFO("allocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), &this , this ->size_);
 		}
@@ -127,12 +124,13 @@ namespace core {
 			array public functions
 		*/
 		type& get(u32 index) {
-			CRASH_IF(index >= this->size_ , "core::array.get() -> index {} is out of array range , array count {} !" , index , this->size_);
+			CRASH_IF(index >= this->count_ , "error at core::array.get() -> index '{}' out of array range '{}' !" , index , this->count_);
+
 			return (this->start + index);
 		}
 
 		void set(u32 index, type& new_element) {
-			CRASH_IF(index >= this->size_ , "core::array.set() -> index {} is out of array range , array count {} !" , index , this->size_);
+			CRASH_IF(index >= this->count_ , "error at core::array.set() -> index '{}' out of array range '{}' !" , index , this->count_);
 
 			*(this->start + index) = new_element;
 		}
@@ -178,8 +176,8 @@ namespace core {
 		/*
 			operator's
 		*/ 
-		type& operator[](u32 index) { // warning no checks here use get() for safe access
-			CRASH_IF(index >= this->count_ , "array[{}] : index out of array range" , index);
+		type& operator[](u32 index) {
+			CRASH_IF(index >= this->count_ , "error at core::dynamic_array operator[] : index '{}' out of array range '{}' !" , index , this->count_);
 			return *(this->start + index); 
 		}
 
@@ -198,7 +196,6 @@ namespace core {
 
 		}
 
-
 	public:
 		/*
 				array static public functions
@@ -216,6 +213,8 @@ namespace core {
 		}
 
 		static void move(core::array<type>* source, core::array<type>* destination) {
+
+			CRASH_IF(source == nullptr || destination == nullptr, "core::array::move(source={} , destination={}) : source or destination object is null-pointer !", &source, &destination);
 			// copy to destination
 			std::memcpy(destination, source , sizeof(core::array<type>));
 			// clear source
@@ -239,6 +238,7 @@ namespace core {
 		}
 
 	}; // class array end
+
 
 } // namespace core end
 
