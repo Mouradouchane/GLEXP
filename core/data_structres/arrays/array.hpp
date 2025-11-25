@@ -16,10 +16,10 @@ namespace core {
 	/*
 		class for fixed count array , array memory allocated on the heap not in stack
 	*/
-	template<typename type> class array {
+	template<typename type, core::memory_allocator& _allocator> class array {
 
 	private:
-		core::memory_allocator* allocator = nullptr;
+		core::memory_allocator* allocator;
 		u32   size_  = NULL;
 		u32   count_ = NULL;
 		type* start  = nullptr;
@@ -32,8 +32,8 @@ namespace core {
 		/*
 			constructor's
 		*/ 
-		array(u32 elements_count, memory_allocator* memory_allocator = nullptr)
-			:allocator(memory_allocator), :count_(elements_count), :size_(elements_count * sizeof(type))
+		array(u32 elements_count)
+			:allocator(_allocator), :count_(elements_count), :size_(elements_count * sizeof(type))
 		{
 
 			if (this->allocator == nullptr) {
@@ -45,11 +45,11 @@ namespace core {
 
 			this->end = this->start + this->count_;
 
-			CORE_INFO("allocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), &this , this ->size_);
+			CORE_INFO("core::array<{}> allocated with size:{} at address:&{} ", typeid(type).name(), &this , this->size_);
 		}
 		
-		array(type const& elements, u32 elements_count, memory_allocator* memory_allocator = nullptr)
-			:allocator(memory_allocator), :count_(elements_count), :size_(elements_count * sizeof(type))
+		array(type const& elements, u32 elements_count)
+			:allocator(_allocator), :count_(elements_count), :size_(elements_count * sizeof(type))
 		{
 
 			if (this->allocator == nullptr) {
@@ -61,20 +61,17 @@ namespace core {
 
 			this->end = this->start + this->count_;
 
-			// copy elements to array
 			// todo: make it multi-threaded
-			for (u32 i = 0; i < this->size_; i++) {
-				*(this->start + i) = *(elements + i);
-			}
+			// copying elements to array
+			std::memcpy(this->start, &elements, this->size_);
 
 			CORE_INFO("allocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), &this , this ->size_);
 		}
 
 		// copy constructor
-		array(core::array<type> const& other_array , core::memory_allocator memory_allocator = nullptr) 
-			:allocator(memory_allocator)
+		array(core::array<type> const& other_array) 
+			: allocator(_allocator)
 		{
-			CRASH_IF(&other_array == nullptr, "core::array<{}>() : null array is passed to another array in construct time !", typeid(type).name());
 			this->size_ = other_array.size_;
 
 			// allocate array memory 
@@ -104,7 +101,7 @@ namespace core {
 				}
 			}
 
-			// free memory
+			// free array memory
 			if (this->allocator != nullptr) {
 				this->allocator->deallocate(this->start);
 			}
@@ -112,12 +109,7 @@ namespace core {
 				core::global_memory::deallocate(this->start);
 			}
 
-			CORE_INFO("deallocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), &this, this->size_);
-
-			this->start  = nullptr;
-			this->end    = nullptr;
-			this->size_  = NULL;
-
+			CORE_INFO("deallocated core::array<{}> at address:&{} with size:{}", typeid(type).name(), &this, this->size_);
 		}
 		
 		/*
@@ -135,10 +127,6 @@ namespace core {
 			*(this->start + index) = new_element;
 		}
 
-		type const* pointer() noexcept{
-			return this->start;
-		}
-
 		type* begin() noexcept{
 			return this->start;
 		}
@@ -148,7 +136,7 @@ namespace core {
 		}
 
 		void clear() {
-			std::memset((void*)this->start, 0, sizeof(type) * this->size_);
+			std::memset(this->start, 0, this->size_);
 		}
 
 		u32 count() noexcept { 
@@ -182,18 +170,11 @@ namespace core {
 		}
 
 		// note: operator= performe a move operation
-		core::array<type>& operator= (core::array<type>* other_array) {
-
-			CORE_WARN_IF(this->start != nullptr, "core::array::operator= : array elements begin wiped in the assignement process !");
+		core::array<type>& operator= (core::array<type>& other_array) {
+			CORE_WARN_IF(this->start != nullptr, "core::array<{}> &{} : array elements begin wiped in the assignement process !", typeid(type).name(), this);
 			
-			if (other_array != nullptr) {
-				std::memcpy(this, other_array, sizeof(core::array<type>));
-				std::memset(other_array, NULL, sizeof(core::array<type>));
-			}
-			else {
-				std::memset(this, NULL, sizeof(core::array<type>));
-			}
-
+			std::memcpy(this, other_array, sizeof(core::array<type>));
+			std::memset(other_array, NULL, sizeof(core::array<type>));
 		}
 
 	public:
@@ -202,28 +183,22 @@ namespace core {
 		*/ 
 
 		// todo : add multi-threaded copying !
-		static void copy(const core::array<type>* source, core::array<type>* destination) {
-
-			CRASH_IF(source == nullptr || destination == nullptr, "core::array::copy(source={} , destination={}) : source or destination object is null-pointer !", &source, &destination);
-			CRASH_IF(source->start == nullptr || destination->start == nullptr, "core::array::copy(source={}, destination={}) : source or destination memory is null-pointer !", &source, &destination);
-			
+		static void copy(core::array<type> const& source, core::array<type>& destination) {
+			CRASH_IF(source.start == nullptr || destination.start == nullptr, "core::array::copy(source={}, destination={}) : source or destination memory is null-pointer !", &source, &destination);
 			CORE_WARN_IF(source->size_ > destination->size_ , "core::array::copy(source={}, destination={}) : source array is bigger than the destination array !", &source, &destination);
 		
 			std::memcpy(destination->start , source->start , destination->size_);
 		}
 
-		static void move(core::array<type>* source, core::array<type>* destination) {
-
-			CRASH_IF(source == nullptr || destination == nullptr, "core::array::move(source={} , destination={}) : source or destination object is null-pointer !", &source, &destination);
+		static void move(core::array<type>& source, core::array<type>& destination) {
 			// copy to destination
 			std::memcpy(destination, source , sizeof(core::array<type>));
-			// clear source
+			// zero the source
 			std::memset(source, 0, sizeof(core::array<type>));
 		}
 
 		// todo : add option for multi-threaded copying later
-		static void fill(array<type>* _array, type const& fill_value) noexcept {
-			CRASH_IF(_array == nullptr , "core::array::fill() -> array is null-pointer !");
+		static void fill(array<type>& _array, type const& fill_value) noexcept {
 			CRASH_IF(_array->start == nullptr , "core::array::fill() -> array memory is null-pointer !");
 
 			std::fill<type>(_array->start , _array->end, fill_value);
@@ -232,13 +207,21 @@ namespace core {
 		template<typename type> static inline void array<type>::sort(
 			core::array<type>& _array,
 			bool (*compare_function)(type const& a, type const& b)
-		) noexcept {
-
-			std::sort<type>(this->start, this->end, compare_function);
+		) noexcept 
+		{
+			std::sort<type>(_array.start, _array.end, compare_function);
 		}
 
 	}; // class array end
 
+	struct foo {
+		u32 a, b;
+	};
+
+	core::memory_heap heap1(64 MB);
+
+	core::array<int, &heap1> gx(255);
+	//core::array<foo , (core::memory_allocator*)&heap1> gz(255);
 
 } // namespace core end
 

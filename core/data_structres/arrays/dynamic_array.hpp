@@ -11,54 +11,57 @@
 
 namespace core {
 
-	template<typename type> class dynamic_array : public core::array<type> {
-
-	private:
-		dynamic_array(core::dynamic_array<type>&& other_array ) = delete;
+	template<typename type, core::memory_allocator* _allocator> class dynamic_array : public core::array<type, _allocator> {
 
 	private:
 		u32 push_index   = NULL;
 		u32 resize_value = CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
+
+	private:
+		dynamic_array(core::dynamic_array<type>&& other_array ) = delete;
 
 	public:
 
 		/*
 			constructor's
 		*/
-		dynamic_array(u32 elements_count, u32 resize_value_, core::memory_allocator* allocator = nullptr) 
-			: core::array<type>(elements_count, allocator)
+		dynamic_array(u32 elements_count, u32 resize_value_) 
+			:core::array<type,_allocator>(elements_count)
 		{	
 			this->resize_value = resize_value_ || CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 		}
 
-		dynamic_array(type const& elements, u32 elements_count, u32 resize_value_, core::memory_allocator* allocator = nullptr) 
-			: core::array<type>(elements, elements_count, allocator)
+		// note : this copy elements !
+		dynamic_array(type const& elements, u32 elements_count, u32 resize_value_) 
+			:core::array<type,_allocator>(elements, elements_count)
 		{
 			this->resize_value = resize_value_ || CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 		}
 
-		// copy constructor
-		dynamic_array(core::dynamic_array<type> const& other_dynamic_array , core::memory_allocator* allocator = nullptr)
-			: core::array<type>(other_array .count_ , allocator)
+		// note : this copy everything
+		dynamic_array(core::dynamic_array<type> const& other_array)
+			:core::array<type,_allocator>(other_array.count_)
 		{
 			this->push_index   = other_array.push_index;
 			this->resize_value = resize_value_ || CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 
 			// todo: make it multi-threaded !
-			std::memcpy(this->start , other_array .start , this->size_);
+			std::memcpy(this->start , other_array.start , this->size_);
 		}
 
 		/*
 			destructor
 		*/
 		~dynamic_array() {
-
+			core::array<type>::~array();
 		}
 
 		/*
 			dynamic_array operator's
 		*/
-		core::dynamic_array<type>& operator= (core::dynamic_array<type> const& other_array) {
+
+		// todo: implement this
+		core::dynamic_array<type>& operator = (core::dynamic_array<type> const& other_array) {
 
 		}
 
@@ -79,10 +82,12 @@ namespace core {
 		}
 
 		void resize() {
-			this->count_ += this->resize_value;
-			this->size_   = sizeof(type) * this->count_;
+			type* temp;
+			u32   old_size = this->size_;
 
-			type* temp = nullptr;
+			this->count_ += this->resize_value;
+			this->size_  = sizeof(type) * this->count_;
+
 			if (this->allocator == nullptr) {
 				temp = core::global_memory::allocate(this->size_);
 			}
@@ -90,34 +95,37 @@ namespace core {
 				temp = this->allocator->allocate(this->size_);
 			}
 
-			std::memcpy(temp, this->start, this->size_);
+			// copy elements to new memory
+			std::memcpy(temp, this->start, old_size);
 
 			this->start = temp;
 			this->end   = this->start + this->size_;
 		}
 
 		void push(type const& new_element) {
-			
+
 			if(this->push_index >= this->count_) this->resize();
 			
+			  this->push_index += 1;
 			*(this->start + this->push_index) = new_element;
-			this->push_index += 1;
 		}
 
-		void pop(u32 index) {
+		void pop(bool call_destructor) {
 
-			if (index) {
-				std::memset(this->start + index, 0, sizeof(type));
-				this->push_index -= (this->push_index) ? 1 : 0;
+			if (call_destructor && std::is_destructible<type>::value) {
+				(this->start + index)->~type();
 			}
+
+			this->push_index -= (this->push_index) ? 1 : 0;
+			std::memset(this->start + this->push_index, 0, sizeof(type));
 		}
 
 		template<typename type> static void sort(
-			core::dynamic_array<type>& _vector,
+			core::dynamic_array<type>& d_array,
 			bool (*compare_function)(type const& a, type const& b)
 		) noexcept {
 
-			std::sort<type>(_vector.start, _vector.end, compare_function);
+			std::sort<type>(d_array.start, d_array.end, compare_function);
 		}
 
 	}; // class dynamic_array end
