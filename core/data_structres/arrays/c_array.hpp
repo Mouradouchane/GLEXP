@@ -30,7 +30,7 @@ namespace core {
 			return *(this->start + index);
 		}
 		
-		// note: operator= performe a move operation
+		// note: operator = performe a move operation
 		core::c_array<type>& operator = (core::c_array<type>& other_array) {
 			CORE_WARN_IF(this->start != nullptr, "core::c_array::operator= -> array elements begin wiped in the assignement process !");
 
@@ -42,23 +42,23 @@ namespace core {
 			static function's
 		*/ 
 
-		static core::c_array<type> create(u32 elements_count, core::memory_allocator* allocator = nullptr) {
+		static core::c_array<type> create(u32 elements_count, core::memory_allocator* _allocator = nullptr) {
 
 			core::c_array<type> new_array;
 
 			new_array.count = elements_count;
 			new_array.size  = sizeof(type) * elements_count;
 
-			if (allocator == nullptr) {
+			if (_allocator == nullptr) {
 				new_array.start = core::global_memory::allocate(new_array.size);
 				CORE_WARN("core::c_array::create() -> core::c_array<{}> allocated using core::global_memory allocator !", typeid(type).name());
 			}
 			else {
-				new_arary.start = allocator->allocate(new_array.size);
-				new_array.allocator = allocator;
+				new_arary.start = _allocator->allocate(new_array.size);
+				new_array.allocator = _allocator;
 			}
 
-			new_arary.end = new_array.start + new_array.count;
+			new_array.end = new_array.start + new_array.count;
 
 			CORE_INFO("allocated core::c_array -> type:{} , address:&{} , size:{}", typeid(type).name(), &_array, _array.size);
 			return new_array;

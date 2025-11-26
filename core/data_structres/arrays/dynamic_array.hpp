@@ -11,7 +11,7 @@
 
 namespace core {
 
-	template<typename type, core::memory_allocator* _allocator> class dynamic_array : public core::array<type, _allocator> {
+	template<typename type> class dynamic_array : public core::array<type> {
 
 	private:
 		u32 push_index   = NULL;
@@ -25,22 +25,22 @@ namespace core {
 		/*
 			constructor's
 		*/
-		dynamic_array(u32 elements_count, u32 resize_value_) 
-			:core::array<type,_allocator>(elements_count)
+		dynamic_array(u32 elements_count, u32 resize_value_, core::memory_allocator* _allocator = nullptr) 
+			:core::array<type>(elements_count , _allocator)
 		{	
 			this->resize_value = resize_value_ || CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 		}
 
 		// note : this copy elements !
-		dynamic_array(type const& elements, u32 elements_count, u32 resize_value_) 
-			:core::array<type,_allocator>(elements, elements_count)
+		dynamic_array(type const& elements, u32 elements_count, u32 resize_value_, core::memory_allocator* _allocator = nullptr) 
+			:core::array<type>(elements, elements_count , _allocator)
 		{
 			this->resize_value = resize_value_ || CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 		}
 
 		// note : this copy everything
-		dynamic_array(core::dynamic_array<type> const& other_array)
-			:core::array<type,_allocator>(other_array.count_)
+		dynamic_array(core::dynamic_array<type> const& other_array, core::memory_allocator* _allocator = nullptr)
+			:core::array<type>(other_array.count_ , _allocator)
 		{
 			this->push_index   = other_array.push_index;
 			this->resize_value = resize_value_ || CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
@@ -60,12 +60,20 @@ namespace core {
 			dynamic_array operator's
 		*/
 
-		// todo: implement this
+		// note: = operator performe move operation
 		core::dynamic_array<type>& operator = (core::dynamic_array<type> const& other_array) {
+			u32 array_size = sizeof(core::dynamic_array<type>);
 
+			std::memcpy(this, other_array, array_size );
+			std::memset(other_array,    0, array_size );
+
+			return this;
 		}
 
-		// note: direct access using [] operator can cause overlap of values -> conflict with push/pop function's
+		/*
+			note: using operator [] and push/pop function's -> could cause conflict and run-time bugs !
+				  so use of them to avoid conflict's and bugs
+		*/
 		type& operator[] (u32 index) {
 			CRASH_IF(index >= this->count_ , "fatal error at core::dynamic_array operator[] -> index '{}' out of array range '{}' !" , index , this->count_);
 			return *(this->start + index); 
@@ -102,6 +110,10 @@ namespace core {
 			this->end   = this->start + this->size_;
 		}
 
+		/*
+			note: using operator [] and push/pop function's -> could cause conflict and run-time bugs !
+				  so use of them to avoid conflict's and bugs
+		*/
 		void push(type const& new_element) {
 
 			if(this->push_index >= this->count_) this->resize();
@@ -109,7 +121,11 @@ namespace core {
 			  this->push_index += 1;
 			*(this->start + this->push_index) = new_element;
 		}
-
+		
+		/*
+			note: using operator [] and push/pop function's -> could cause conflict and run-time bugs !
+				  so use of them to avoid conflict's and bugs
+		*/
 		void pop(bool call_destructor) {
 
 			if (call_destructor && std::is_destructible<type>::value) {
@@ -130,6 +146,15 @@ namespace core {
 
 	}; // class dynamic_array end
 
+	typedef struct obj {
+		u32 a;
+		u32 b;
+	};
+
+	core::memory_heap heap1(32 MB);
+
+	core::dynamic_array<obj>  vobj(255, 64, &heap1);
+	core::dynamic_array<obj> vobj2(255, 64 , nullptr);
 
 } // namespace core end
 

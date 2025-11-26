@@ -47,11 +47,11 @@
 */
 #ifdef DLL_EXPORT
 	#if defined(WINDOWS)
-		#define DLL_API extern "C" __declspec(dllexport)
+		#define DLL_API       extern "C"       __declspec(dllexport)
 		#define DLL_API_CLASS extern "C" class __declspec(dllexport)
 
 	#elif defined(LINUX)
-		#define DLL_API extern "C" __attribute__((visibility("default")))
+		#define DLL_API       extern "C"       __attribute__((visibility("default")))
 		#define DLL_API_CLASS extern "C" class __attribute__((visibility("default")))
 
 	#else
@@ -60,11 +60,11 @@
 
 #else
 	#ifdef DLL_IMPORT
-		#define DLL_API extern "C" __declspec(dllimport)
+		#define DLL_API       extern "C"       __declspec(dllimport)
 		#define DLL_API_CLASS extern "C" class __declspec(dllimport)
 	#else 
 		#define DLL_API
-		#define DLL_API_CLASS
+		#define DLL_API_CLASS class
 	#endif
 #endif
 

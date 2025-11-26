@@ -32,7 +32,7 @@ namespace core {
 
 }
 
-#if defined(DEBUG) or defined(ALLOW_CRASH_REPORT)
+#if defined(DEBUG) || defined(ALLOW_CRASH_REPORT)
 
 	#define CORE_ASSERT_ERR(ERROR_ENUM , ASSERT_MESSAGE , ...) \
 			if(ERROR_ENUM != core::error::none) {\

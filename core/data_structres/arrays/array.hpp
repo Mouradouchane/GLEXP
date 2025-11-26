@@ -16,7 +16,7 @@ namespace core {
 	/*
 		class for fixed count array , array memory allocated on the heap not in stack
 	*/
-	template<typename type, core::memory_allocator& _allocator> class array {
+	template<typename type> class array {
 
 	private:
 		core::memory_allocator* allocator;
@@ -32,7 +32,7 @@ namespace core {
 		/*
 			constructor's
 		*/ 
-		array(u32 elements_count)
+		array(u32 elements_count , core::memory_allocator* _allocator = nullptr)
 			:allocator(_allocator), :count_(elements_count), :size_(elements_count * sizeof(type))
 		{
 
@@ -48,7 +48,7 @@ namespace core {
 			CORE_INFO("core::array<{}> allocated with size:{} at address:&{} ", typeid(type).name(), &this , this->size_);
 		}
 		
-		array(type const& elements, u32 elements_count)
+		array(type const& elements, u32 elements_count, core::memory_allocator* _allocator = nullptr)
 			:allocator(_allocator), :count_(elements_count), :size_(elements_count * sizeof(type))
 		{
 
@@ -69,7 +69,7 @@ namespace core {
 		}
 
 		// copy constructor
-		array(core::array<type> const& other_array) 
+		array(core::array<type> const& other_array, core::memory_allocator* _allocator = nullptr) 
 			: allocator(_allocator)
 		{
 			this->size_ = other_array.size_;
@@ -169,7 +169,7 @@ namespace core {
 			return *(this->start + index); 
 		}
 
-		// note: operator= performe a move operation
+		// note: operator = performe a move operation
 		core::array<type>& operator= (core::array<type>& other_array) {
 			CORE_WARN_IF(this->start != nullptr, "core::array<{}> &{} : array elements begin wiped in the assignement process !", typeid(type).name(), this);
 			
@@ -214,14 +214,6 @@ namespace core {
 
 	}; // class array end
 
-	struct foo {
-		u32 a, b;
-	};
-
-	core::memory_heap heap1(64 MB);
-
-	core::array<int, &heap1> gx(255);
-	//core::array<foo , (core::memory_allocator*)&heap1> gz(255);
 
 } // namespace core end
 

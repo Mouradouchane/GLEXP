@@ -32,7 +32,13 @@ local link_with = {
 	architecture(core.arch)
 	language(core.lang)
 	cppdialect(core.lang_version)
-	configurations({ "debug", "dll_debug", "release", "dll_release" })
+	configurations({ 
+			"debug", 
+			"dll_debug", 
+			"release", 
+			"dll_release" 
+	})
+
 	
 	files { 
 			"../../core/**" 

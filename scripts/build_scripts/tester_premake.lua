@@ -13,8 +13,10 @@ local tester = {
 }
 
 local link_with = {
-    core_debug  = utility.s_paths.debug .. "/core/core.lib" ,
-    core_release = utility.s_paths.release .. "/core/core.lib" 
+    core_debug       = utility.s_paths.debug .. "/core/core.lib" ,
+    core_dll_debug  = utility.s_paths.debug .. "/core/core_d.lib" ,
+    core_release      = utility.s_paths.release .. "/core/core.lib" ,
+    core_dll_release = utility.s_paths.release .. "/core/core_d.lib" 
 }
 
 -- function run( )
@@ -33,6 +35,13 @@ local link_with = {
 	language(tester.lang)
 	cppdialect(tester.lang_version)
 
+	configurations({ 
+		"debug + link with .LIB's", 
+		"release + link with .LIB's",
+		"debug + link with .DLL's",
+		"release + link with .DLL's",
+	})
+	
 	-- project files and directories 
 	files(
 		{
@@ -48,29 +57,49 @@ local link_with = {
 	)
 
 	--------------------------------------------
-	-- tester project --> release config
+	-- tester project --> release with .lib's config
 	--------------------------------------------
-	filter("configurations:release")
+	filter("configurations:release + link with .LIB's")
 
-	-- build output path
-	targetdir(utility.s_paths.build .. "/testers/")
-	objdir(utility.s_paths.release .. "/tester/")
+		-- build output path
+		targetdir(utility.s_paths.build .. "/testers/")
+		objdir(utility.s_paths.release .. "/tester/")
 
-	targetname(tester.name)
-	links( link_with.core_release )
+		targetname(tester.name)
+		links( link_with.core_release )
 
-	-- few macros for release
-	defines({"NDEBUG", "NO_DEBUG"})
+		-- few macros for release
+		defines({"NDEBUG", "NO_DEBUG"})
 
-	symbols("Off")
-	optimize("Off")
+		symbols("Off")
+		optimize("Off")
 	--------------------------------------------
 	--------------------------------------------
 
 	--------------------------------------------
-	-- tester project --> debug config
+	-- tester project --> release with .DLL's config
 	--------------------------------------------
-	filter("configurations:debug")
+	filter("configurations:release + link with .DLL's")
+
+		-- build output path
+		targetdir(utility.s_paths.build .. "/testers/")
+		objdir(utility.s_paths.release .. "/tester/")
+
+		targetname(tester.name)
+		links( link_with.core_dll_release )
+
+		-- few macros for release
+		defines({"NDEBUG", "NO_DEBUG" , "DLL_IMPORT"})
+
+		symbols("Off")
+		optimize("Off")
+	--------------------------------------------
+	--------------------------------------------
+	
+	--------------------------------------------
+	-- tester project --> debug + link with .LIB's config
+	--------------------------------------------
+	filter("configurations:debug + link with .LIB's")
 
 	-- build output path
 	targetdir(utility.s_paths.build .. "/testers/")
@@ -79,14 +108,34 @@ local link_with = {
 	targetname(tester.name)
 	links( link_with.core_debug )
 
-	defines("DEBUG")
-	debugdir(utility.s_paths.debug)
-
+	defines({"DEBUG"})
+	debugdir(utility.s_paths.build .. "/testers/")
+	
 	symbols("On")
 	optimize("Off")
 	--------------------------------------------
 	--------------------------------------------
 
+	--------------------------------------------
+	-- tester project --> debug + link with .DLL's config
+	--------------------------------------------
+	filter("configurations:debug + link with .DLL's")
+
+	-- build output path
+	targetdir(utility.s_paths.build .. "/testers/")
+	objdir(utility.s_paths.debug .. "/tester/")
+
+	targetname(tester.name)
+	links( link_with.core_dll_debug )
+
+	defines({"DEBUG" , "DLL_IMPORT"})
+	debugdir(utility.s_paths.build .. "/testers/")
+
+	symbols("On")
+	optimize("Off")
+	--------------------------------------------
+	--------------------------------------------
+	
 	print("project : " .. tester.project_name)
 	print("architecture : " .. tester.arch)
 	print("kind  : " .. tester.kind)

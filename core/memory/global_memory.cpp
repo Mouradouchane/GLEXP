@@ -40,8 +40,11 @@ static std::array<uint64_t , 8> sections_sizes = {
 	NULL // 7 , stdcpp
 };
 
-static std::array<u32, 4> memory_factors = {
-	1.0f , 1024.0f , 1048576.0f ,  1073741824.0f
+static const std::array<u32, 4> memory_factors = {
+	1u ,			// BYTE
+	1024u ,			// KB
+	1048576u ,		// MB
+	1073741824u		// GB
 };
 
 
@@ -72,14 +75,14 @@ u64 core::global_memory::sizeof_section(memory_usage section) noexcept {
 }
 
 
-double core::global_memory::sizeof_section_f(memory_usage section, memory_unit unit) noexcept {
+f64 core::global_memory::sizeof_section_f(memory_usage section, memory_unit unit) noexcept {
 	uint8_t _section = (uint8_t)section;
 
 	if (_section < sections_sizes.size()) {
 		if ((uint8_t)unit < 4) {
-			return sections_sizes[_section] / memory_factors[(uint8_t)unit];
+			 return f64(sections_sizes[_section] / memory_factors[(uint8_t)unit]);
 		}
-		else return double(sections_sizes[_section]);
+		else return f64(sections_sizes[_section]);
 	}
 	else return NULL;
 }
