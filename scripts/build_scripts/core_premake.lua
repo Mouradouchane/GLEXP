@@ -7,12 +7,33 @@ utility = require("utility_functions")
 local core = {
     project_name = "core",
     name = "core",
-	dll_name = "core_d",
     kind = "StaticLib",
     arch = "x64",
     lang = "C++",
-    lang_version = "C++17"
+    lang_version = "C++17",
+	
+	lib = {
+		filename = "core.lib",
+		release_path = utility.s_paths.release .. "/core/",
+		debug_path  = utility.s_paths.debug .. "/core/",
+	},
+	
+	dll = {
+		filename      = "core_d.dll",
+		lib_filename = "core_d.lib",
+		release_path = utility.s_paths.release .. "/core/",
+		debug_path  = utility.s_paths.debug .. "/core/",
+	},
+	
 }
+
+if _OS == "windows" then
+	core.dll.release_post_script = "copy " .. path.translate(core.dll.release_path  .. core.dll.filename .. " " .. utility.s_paths.build) 
+	core.dll.debug_post_script  = "copy " .. path.translate(core.dll.debug_path  .. core.dll.filename .. " " .. utility.s_paths.build)
+else 
+	core.dll.release_post_script = "copy " .. (core.dll.release_path  .. core.dll.filename .. " " .. utility.s_paths.build) 
+	core.dll.debug_post_script  = "copy " .. (core.dll.debug_path  .. core.dll.filename .. " " .. utility.s_paths.build)
+end
 
 local link_with = {
     spdlog_debug  = utility.s_paths.libs .. "/spdlog/spdlogd.lib" ,
@@ -23,7 +44,7 @@ local link_with = {
 
 	-- start generate engine project solution
 	print('\27[34m' .. "==================================" .. '\27[0m')
-	print('\27[34m' .. "GENERATE CORE LIB PROJECT" .. '\27[0m')
+	print('\27[34m' .. "GENERATE --> CORE LIBRARY PROJECT" .. '\27[0m')
 
 	project(core.project_name)
 	location(paths.ide_projects_dir)
@@ -32,11 +53,12 @@ local link_with = {
 	architecture(core.arch)
 	language(core.lang)
 	cppdialect(core.lang_version)
+	
 	configurations({ 
-			"debug", 
-			"dll_debug", 
-			"release", 
-			"dll_release" 
+			"debug" , 
+			"release" , 
+			"dll debug" , 
+			"dll release" ,
 	})
 
 	
@@ -61,8 +83,8 @@ filter("configurations:release")
 	buildoptions({"/utf-8"}) -- for fmt library
 
 	-- build output path
-	targetdir(utility.s_paths.release .. "/core/")
-	objdir(utility.s_paths.release .. "/core/")
+	targetdir(core.lib.release_path)
+	objdir(core.lib.release_path)
 
 	-- libraries core need to link with
 	links( link_with.spdlog_release )
@@ -74,34 +96,40 @@ filter("configurations:release")
 
 	symbols("Off")
 	optimize("Off")
-	--------------------------------------------
-	--------------------------------------------
+--------------------------------------------
+--------------------------------------------
 	
 ----------------------------------------------
 -- core project --> DLL release config
 ----------------------------------------------
-filter("configurations:dll_release")
+filter("configurations:dll release")
 	kind("SharedLib")
 	
 	characterset("Unicode")
 	buildoptions({"/utf-8"}) -- for fmt library
 
 	-- build output path
-	targetdir(utility.s_paths.build)
-	objdir(utility.s_paths.release .. "/core/")
+	targetdir(core.dll.release_path)
+	objdir(core.dll.release_path)
 
 	-- libraries core need to link with
 	links( link_with.spdlog_release )
 
-	targetname(core.dll_name)
-
+	targetname(core.name .. "_d")
+	
+	-- post script to copy dll to build folder 
+	postbuildcommands({
+		core.dll.release_post_script,
+		"echo 'copying core dll release to build folder' "
+	})
+	
 	-- few macros for release
 	defines({"NDEBUG", "NO_DEBUG" , "DLL_EXPORT"})
 
 	symbols("Off")
 	optimize("Off")
-	--------------------------------------------
-	--------------------------------------------
+--------------------------------------------
+--------------------------------------------
 
 -----------------------------------------------
 -- core project --> static debug config
@@ -113,15 +141,15 @@ filter("configurations:debug")
 	buildoptions({"/utf-8"}) -- for fmt library
 
 	-- build output path
-	targetdir(utility.s_paths.debug .. "/core/")
-	objdir(utility.s_paths.debug .. "/core/")
+	targetdir(core.lib.debug_path)
+	objdir(core.lib.debug_path)
 
 	targetname(core.name)
 
 	-- libraries core need to link with
 	links( link_with.spdlog_debug )
 
-	debugdir(utility.s_paths.build)
+	debugdir(core.lib.debug_path)
 	defines("DEBUG")
 
 	symbols("On")
@@ -132,21 +160,27 @@ filter("configurations:debug")
 -----------------------------------------------
 -- core project --> DLL debug config
 -----------------------------------------------
-filter("configurations:dll_debug")
+filter("configurations:dll debug")
 	kind("SharedLib")
 
 	characterset("Unicode")
 	buildoptions({"/utf-8"}) -- for fmt library
 
 	-- build output path
-	targetdir(utility.s_paths.build)
-	objdir(utility.s_paths.debug .. "/core/")
+	targetdir(core.dll.debug_path)
+	objdir(core.dll.debug_path)
 
-	targetname(core.dll_name)
+	targetname(core.name .. "_d")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_debug )
 
+	-- post script to copy dll to build folder 
+	postbuildcommands({
+		core.dll.debug_post_script,
+		"echo 'copying core dll debug to build folder' "
+	})
+	
 	debugdir(utility.s_paths.build)
 	defines({"DEBUG", "DLL_EXPORT"})
 
@@ -164,6 +198,5 @@ filter("configurations:dll_debug")
 -- end -- function run
 
 return {
-	-- run = run,
 	core_project = core
 }

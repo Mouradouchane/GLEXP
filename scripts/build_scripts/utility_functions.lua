@@ -22,7 +22,7 @@ s_paths = {
 }
 
 paths = {
-    ide_projects_dir = "../../vs_projects",
+    ide_projects_dir = "../../ide_projects",
     root = "../../",
     build = "../../build",
     release = "../../build",

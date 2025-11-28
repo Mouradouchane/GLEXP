@@ -12,7 +12,7 @@
 	logger private variables
 */
 static u32 back_trace_level = 32;
-static core::logger::verbosity_level  logger_level = core::logger::verbosity_level::none;
+static core::logger::verbosity_level logger_level = core::logger::verbosity_level::none;
 
 // logger
 static std::shared_ptr<spdlog::logger> spd_logger;
@@ -62,21 +62,12 @@ namespace core {
 				spdlog::set_level(spdlog::level::level_enum(level));
 			#else 
 				back_trace_level = 0;
-				logger_level = logger_verbosity_level::error;
+				logger_level = core::logger::verbosity_level::error;
 				spdlog::set_level(spdlog::level::level_enum::err);
 			#endif
 
 			initilized = true;
 
-			// testing logger
-			#if 0
-				spd_logger->info("testing info  -> {}", 1);
-				spd_logger->warn("testing warn  -> {}", 1);
-				spd_logger->debug("testing debug -> {}", 1);
-				spd_logger->trace("testing trace -> {}", 1);
-				spd_logger->error("testing error -> {}", 1);
-				spd_logger->critical("testing fatal -> {}", 1);
-			#endif
 		}
 
 		/*

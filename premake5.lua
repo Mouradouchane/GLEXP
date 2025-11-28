@@ -7,21 +7,21 @@
 utility = require("./scripts/build_scripts/utility_functions")
 utility.active_debug = false
 
--- workspace setup
+-- workspace 
 workspace = require("./scripts/build_scripts/workspace_premake")
 
--- static lib : core porject setup
+-- core library project
 core = require("./scripts/build_scripts/core_premake")
 
--- engine project setup
+-- engine project 
 engine = require("./scripts/build_scripts/engine_premake")
 
--- sandbox project setup
+-- sandbox project
 
--- tools : tester projet setup
+-- tools : tester projet 
 tester = require("./scripts/build_scripts/tester_premake")
 
--- tools : models_converter projet setup
+-- tools : models_converter projet
 
 -- startup project
 startproject(engine_project.project_name)

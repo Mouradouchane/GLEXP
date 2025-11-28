@@ -16,10 +16,9 @@
 #include "tools/tester/log/log.hpp"
 #include "tools/tester/string/string_utility.hpp"
 
-#include "tools/tester/unit_tests/memory_heap_tests/heap_tests.hpp"
+// include tests
+#include "tools/tester/unit_tests/memory/heap_tests/heap_tests.hpp"
 
-// note: include unit-test headers
-#include "tools/tester/unit_tests/memory_heap_tests/heap_tests.hpp"
 
 #include "application.hpp"
 
@@ -57,7 +56,6 @@ namespace tester {
 			})
 		);
 
-
 		logger::load_old_tests_from_files(old_tests);
 		logger::print_help();
 	}
@@ -81,7 +79,7 @@ namespace tester {
 		}
 
 		if (command == "clear_console") {
-		#ifdef _WIN32 || _WIN64
+		#if defined(_WIN32) || defined(_WIN64)
 			system("cls");
 		#else 
 			system("clear");

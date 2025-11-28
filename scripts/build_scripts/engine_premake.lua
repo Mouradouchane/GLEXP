@@ -4,7 +4,7 @@
 ------------------------------------------------------------
 
 utility = require("utility_functions")
-core  = require("core_premake")
+
 
 local engine = {
     project_name = "engine",

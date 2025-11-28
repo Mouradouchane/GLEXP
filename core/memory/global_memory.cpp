@@ -49,8 +49,8 @@ static const std::array<u32, 4> memory_factors = {
 
 
 typedef struct alloc_info {
-	size_t  count;
-	uint8_t section;
+	size_t count;
+	u8     section;
 };
 
 namespace core::global_memory {
