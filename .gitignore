@@ -24,3 +24,4 @@ project/*.filters
 *.vcxproj
 *.vcxproj.*
 
+ide_projects/*
