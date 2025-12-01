@@ -17,8 +17,7 @@
 #include "tools/tester/string/string_utility.hpp"
 
 // include tests
-#include "tools/tester/unit_tests/memory/heap_tests/heap_tests.hpp"
-
+#include "tools/tester/unit_tests/arrays/array_tests.hpp"
 
 #include "application.hpp"
 
@@ -50,9 +49,19 @@ namespace tester {
 	void init() { 
 
 		add_group(
-			group("memory_heap", {
-				test("create_and_destroy_heap_test_1" , create_and_destroy_heap_test_1),
-				test("create_and_destroy_heap_test_2" , create_and_destroy_heap_test_2)
+			group("core::array tests", {
+				test("construct_count_size_and_begin_end", t_construct_count_size_and_begin_end),
+				test("get_set_and_operator_index", t_get_set_and_operator_index),
+				test("clear_and_fill", t_clear_and_fill),
+				test("copy_ctor_and_static_copy", t_copy_ctor_and_static_copy),
+				test("static_move_move_assign_move_ctor", t_static_move_move_assign_move_ctor),
+				/*
+				test("non_trivial_destruction", t_non_trivial_destruction),
+				test("sort_function", t_sort_function),
+				test("allocate_reallocate", t_allocate_reallocate),
+				test("fill_edge_cases", t_fill_edge_cases),
+				test("copy_into_existing_destination", t_copy_into_existing_destination)
+				*/
 			})
 		);
 
