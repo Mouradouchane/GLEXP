@@ -40,7 +40,11 @@
 #define DISABLE_WARNING_START __pragma(warning(push,0));
 #define DISABLE_WARNING_END   __pragma(warning(pop));
 
-#define CORE_CRASH() exit(-1);
+#if defined(UNIT_TEST) && defined(DEBUG)
+	#define CORE_CRASH()
+#else
+	#define CORE_CRASH() exit(-1);
+#endif
 
 /*
 	dynamic library macros

@@ -20,19 +20,7 @@
 	run-time assert
 */
 
-namespace core {
-
-	inline void assert_(bool expression, std::string const& message) {
-		CORE_FATAL(message);
-		
-		DEBUG_BREAK;
-		
-		assert(expression);
-	}
-
-}
-
-#if defined(DEBUG) || defined(ALLOW_CRASH_REPORT)
+#if defined(DEBUG)
 
 	#define CORE_ASSERT_ERR(ERROR_ENUM , ASSERT_MESSAGE , ...) \
 			if(ERROR_ENUM != core::error::none) {\
@@ -97,7 +85,7 @@ namespace core {
 #else
 
 	#define  CRASH_IF(TRUE_CONDITION    , CRASH_MESSAGE  , ...) if(TRUE_CONDITION) CORE_CRASH();
-	#define VCRASH_IF(TRUE_CONDITION    , CRASH_MESSAGE)         if(TRUE_CONDITION) CORE_CRASH();
+	#define VCRASH_IF(TRUE_CONDITION    , CRASH_MESSAGE)        if(TRUE_CONDITION) CORE_CRASH();
 	#define  CRASH_IF_ERROR(ERROR_ENUM  , CRASH_MESSAGE  , ...) if(ERROR_ENUM != core::error::none) CORE_CRASH();
 	#define  CORE_ASSERT(TRUE_CONDITION , ASSERT_MESSAGE)       if(TRUE_CONDITION) CORE_CRASH();
 	#define VCORE_ASSERT(TRUE_CONDITION , ASSERT_MESSAGE , ...) if(TRUE_CONDITION) CORE_CRASH();

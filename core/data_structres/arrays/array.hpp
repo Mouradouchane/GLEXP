@@ -30,8 +30,10 @@ namespace core {
 			constructor's
 		*/
 		array(u32 elements_count , core::memory_allocator* _allocator = nullptr)
-			:allocator(_allocator) , count_(elements_count) , size_(elements_count * sizeof(type))
+			:allocator(_allocator) 
 		{
+			this->count_ = (elements_count) ? elements_count : 1;
+			this->size_  = (this->count_ * sizeof(type));
 
 			if (this->allocator == nullptr) {
 				this->begin_ = (type*)(core::global_memory::allocate(this->size_));
@@ -46,8 +48,11 @@ namespace core {
 		}
 		
 		array(const type* elements, u32 elements_count, core::memory_allocator* _allocator = nullptr)
-			:allocator(_allocator) , count_(elements_count) , size_(elements_count * sizeof(type))
+			:allocator(_allocator)
 		{
+
+			this->count_ = (elements_count) ? elements_count : 1;
+			this->size_  = (this->count_ * sizeof(type));
 
 			if (this->allocator == nullptr) {
 				this->begin_ = (type*)core::global_memory::allocate(this->size_);
@@ -120,11 +125,15 @@ namespace core {
 			}
 
 			// free array memory
-			if (this->allocator != nullptr) {
-				this->allocator->deallocate(this->begin_);
-			}
-			else {
-				core::global_memory::deallocate(this->begin_);
+			if (this->begin_) {
+
+				if (this->allocator != nullptr) {
+					this->allocator->deallocate(this->begin_);
+				}
+				else {
+					core::global_memory::deallocate(this->begin_);
+				}
+
 			}
 
 			CORE_INFO("deallocated core::array<{}> at address:&{} with size:{}", typeid(type).name(), (void*)this, this->size_);
@@ -227,15 +236,15 @@ namespace core {
 
 			// move ownership
 			this->allocator = other.allocator;
-			this->begin_     = other.begin_;
-			this->end_       = other.end_;
+			this->begin_    = other.begin_;
+			this->end_      = other.end_;
 			this->size_     = other.size_;
 			this->count_    = other.count_;
 
 			// clear source
 			other.allocator = nullptr;
-			other.begin_     = nullptr;
-			other.end_       = nullptr;
+			other.begin_    = nullptr;
+			other.end_      = nullptr;
 			other.size_     = 0;
 			other.count_    = 0;
 

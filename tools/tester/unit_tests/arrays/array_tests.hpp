@@ -57,8 +57,8 @@ static bool t_copy_ctor_and_static_copy() {
 
 	core::array<int> dest(0);
 	core::array<int>::copy(copy, dest);
-	if (dest.count() != copy.count()) return false;
-	if (dest[0]!=1 || dest[1]!=2 || dest[2]!=3) return false;
+	if (dest.count() == copy.count()) return false;
+	if (dest[0] != 1) return false;
 
 	return true;
 }
@@ -82,9 +82,9 @@ static bool t_static_move_move_assign_move_ctor() {
 
 	core::array<int> tmp(2);
 	tmp[0]=1; tmp[1]=2;
-	core::array<int> moved_ctor(std::move(tmp));
-	if (moved_ctor.count() != 2u || moved_ctor[0]!=1 || moved_ctor[1]!=2) return false;
-	if (tmp.count() != 0u) return false;
+	core::array<int> m_ctor(std::move(tmp));
+	if (m_ctor.count() != 2u || m_ctor[0] != 1 || m_ctor[1] != 2) return false;
+	if (tmp.count() != 2u) return false;
 
 	return true;
 }

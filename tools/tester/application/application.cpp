@@ -55,13 +55,11 @@ namespace tester {
 				test("clear_and_fill", t_clear_and_fill),
 				test("copy_ctor_and_static_copy", t_copy_ctor_and_static_copy),
 				test("static_move_move_assign_move_ctor", t_static_move_move_assign_move_ctor),
-				/*
 				test("non_trivial_destruction", t_non_trivial_destruction),
 				test("sort_function", t_sort_function),
 				test("allocate_reallocate", t_allocate_reallocate),
 				test("fill_edge_cases", t_fill_edge_cases),
 				test("copy_into_existing_destination", t_copy_into_existing_destination)
-				*/
 			})
 		);
 

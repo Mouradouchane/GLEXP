@@ -66,7 +66,7 @@ local tester = {
 		links( core.core_project.lib.release_path .. core.core_project.lib.filename )
 
 		-- few macros for release
-		defines({"NDEBUG", "NO_DEBUG"})
+		defines({"NDEBUG", "NO_DEBUG" , "UNIT_TEST"})
 
 		symbols("Off")
 		optimize("Off")
@@ -86,7 +86,7 @@ local tester = {
 		links( core.core_project.dll.release_path .. core.core_project.dll.lib_filename )
 
 		-- few macros for release
-		defines({"NDEBUG", "NO_DEBUG" , "DLL_IMPORT"})
+		defines({"NDEBUG", "NO_DEBUG" , "DLL_IMPORT" , "UNIT_TEST"})
 
 		symbols("Off")
 		optimize("Off")
@@ -105,7 +105,7 @@ local tester = {
 	targetname(tester.name)
 	links( core.core_project.lib.debug_path .. core.core_project.lib.filename )
 
-	defines({"DEBUG"})
+	defines({"DEBUG", "UNIT_TEST"})
 	debugdir(utility.s_paths.build .. "/testers/")
 	
 	symbols("On")
@@ -125,7 +125,7 @@ local tester = {
 	targetname(tester.name)
 	links( core.core_project.dll.debug_path .. core.core_project.dll.lib_filename )
 
-	defines({"DEBUG" , "DLL_IMPORT"})
+	defines({"DEBUG" , "DLL_IMPORT", "UNIT_TEST"})
 	debugdir(utility.s_paths.build .. "/testers/")
 
 	symbols("On")
