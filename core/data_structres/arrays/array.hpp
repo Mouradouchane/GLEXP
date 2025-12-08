@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <typeinfo>
 #include <type_traits>
 
 #include "core/types.hpp"
@@ -20,8 +21,8 @@ namespace core {
 
 	private:
 		core::memory_allocator* allocator;
-		u32   size_  = NULL;
-		u32   count_ = NULL;
+		u32   size_  = 0;
+		u32   count_ = 0;
 		type* begin_ = nullptr;
 		type* end_   = nullptr;
 
@@ -71,7 +72,7 @@ namespace core {
 
 				// todo: multi-threaded copying
 				for (u32 i = 0; i < this->count_; ++i) {
-					(this->begin_ + i) = type(elements[i]);
+					*(this->begin_ + i) = type(elements[i]);
 				}
 			}
 
@@ -157,19 +158,25 @@ namespace core {
 		type* begin() noexcept {
 			return this->begin_;
 		}
+		const type* begin() const noexcept {
+			return this->begin_;
+		}
 
 		type* end() noexcept {
 			return this->end_;
 		}
+		const type* end() const noexcept {
+			return this->end_;
+		}
 
-		void clear() {
+		void clear() noexcept {
 			if (this->begin_) {
 
 				if constexpr (std::is_trivially_copyable<type>::value) {
 					std::memset(this->begin_, 0, this->size_);
 				} 
 				else {
-					for (u32 i = 0; i < count_; i++) {
+					for (u32 i = 0; i < this->count_; i++) {
 						this->begin_[i] = type();
 					}
 				}
@@ -177,12 +184,11 @@ namespace core {
 			}
 		}
 
-		u32 count() noexcept { 
+		u32 count() noexcept {
 			return this->count_;
 		}
 
-		// count in bytes
-		u32 size() noexcept {  
+		u32 size() noexcept {
 			return this->size_;
 		}
 
@@ -206,11 +212,11 @@ namespace core {
 			return *(this->begin_ + index); 
 		}
 
-		// note: operator = performe a copy operation
-		core::array<type>& operator = (core::array<type>& array_to_copy) {
+		// note: equal operator --> 'copying' not moving !
+		core::array<type>& operator = (core::array<type> const& array_to_copy) {
 			if (this == &array_to_copy) return *this;
 
-			core::array<type>::copy(&array_to_copy, this);
+			core::array<type>::copy(array_to_copy, *this);
 			return *this;
 		}
 
@@ -257,17 +263,22 @@ namespace core {
 				array static public functions
 		*/ 
 
+		// note: there's no checks or safety against overlapped arrays .
+		// why because core::array designed to not have overlapped/shared memory between array .
+		// so any overlapped arrays is ---> bug !
 		static void copy(core::array<type> const& source, core::array<type>& destination) {
 			VCRASH_IF((&source) == (&destination), "core::array::copy(source={}, destination={}) : copying source to it self is a bug !" , (void*)&source, (void*)&destination);
-			CORE_WARN_IF(source.size_ > destination.size_ , "core::array::copy(source={}, destination={}) : source array is bigger than the destination array !", (void*)&source, (void*)&destination);
 			
 			if (source.begin_) {
 				
 				// allocate memory in destination if not allocated yet
 				if (destination.begin_ == nullptr) core::array<type>::allocate(destination, source.count_);
+		
+				// this counted as a bug
+				VCRASH_IF(source.size_ > destination.size_ , "core::array::copy(source={}, destination={}) : source array is bigger than the destination array !", (void*)&source, (void*)&destination);
 				
 				if constexpr (std::is_trivially_copyable<type>::value) {
-					u32 copy_size = (source.size_ > destination.size_) ? destination.size_ : source.size_;
+					u64 copy_size = (source.size_ > destination.size_) ? destination.size_ : source.size_;
 					std::memcpy(destination.begin_, source.begin_, copy_size);
 				}
 				else {
@@ -290,32 +301,34 @@ namespace core {
 
 			// move ownership to destination
 			destination.allocator = source.allocator;
-			destination.begin_     = source.begin_;
-			destination.end_       = source.end_;
+			destination.begin_    = source.begin_;
+			destination.end_      = source.end_;
 			destination.size_     = source.size_;
 			destination.count_    = source.count_;
 
 			// clean source
 			source.allocator = nullptr;
-			source.begin_     = nullptr;
-			source.end_       = nullptr;
+			source.begin_    = nullptr;
+			source.end_      = nullptr;
 			source.size_     = 0;
 			source.count_    = 0;
 		}
 
 		// todo : add option for multi-threaded copying later
-		static void fill(array<type>& _array, type const& fill_value) noexcept {
+		static void fill(core::array<type>& _array, type const& fill_value) noexcept {
 			VCRASH_IF(_array.begin_ == nullptr , "core::array::fill(_array={}) : array memory is null-pointer !" , (void*)&_array);
 
 			std::fill(_array.begin_ , _array.end_ , fill_value);
 		}
 
-		static inline void array<type>::sort(
+		static inline void sort(
 			core::array<type>& _array,
 			bool (*compare_function)(type const& a, type const& b)
 		) noexcept 
 		{
-			std::sort(_array.begin_ , _array.end_ , compare_function);
+			if (_array.begin_ && _array.count_ > 1) {
+				std::sort(_array.begin_ , (_array.begin_ + _array.count_) , compare_function);
+			}
 		}
 
 		/*
@@ -327,16 +340,16 @@ namespace core {
 			if (!_array.begin_) {
 				_array.begin_  = nullptr;
 				_array.end_    = nullptr;
-				_array.count_ = 0;
-				_array.size_  = 0;
+				_array.count_  = 0;
+				_array.size_   = 0;
 
 				return;
 			}
 
 			// destruct elements if destructable 
 			if (destruct_elements) {
-				if constexpr (!std::is_trivially_destructible<type>::value) {
 
+				if constexpr (!std::is_trivially_destructible<type>::value) {
 					// todo: maybe multi-threaded destruction if possible !!!
 					for (type* obj = _array.begin_; obj != (_array.begin_ + _array.count_); obj++) {
 						obj->~type();
@@ -346,10 +359,13 @@ namespace core {
 
 			// deallocate array memory
 			if(_array.begin_){
+
 				if (_array.allocator) {
 					_array.allocator->deallocate(_array.begin_);
 				}
-				else core::global_memory::deallocate(_array.begin_);
+				else {
+					core::global_memory::deallocate(_array.begin_);
+				}
 			}
 
 			_array.begin_  = nullptr;
@@ -360,7 +376,7 @@ namespace core {
 
 		static inline void allocate(core::array<type>& _array , u32 new_elements_count) {
 
-			CRASH_IF(new_elements_count == 0 , "core::array::allocate : 0 size allocation is not allowed !");
+			new_elements_count = (new_elements_count) ? new_elements_count : 1;
 
 			_array.count_ = new_elements_count;
 			_array.size_  = sizeof(type) * _array.count_;
@@ -376,6 +392,8 @@ namespace core {
 				_array.begin_ = (type*)core::global_memory::allocate(_array.size_);
 			}
 
+			// construct objects 
+			
 			// update array variables
 			_array.end_ = _array.begin_ + _array.count_;
 		}
