@@ -83,16 +83,16 @@ namespace core {
 		array(core::array<type> const& other_array, core::memory_allocator* _allocator = nullptr) 
 			: allocator(_allocator)
 		{
-			this->count_ = other_array.count_;
-			this->size_  = other_array.size_;
+			this->count_ = other_array.count_ ? other_array.count_ : 1;
+			this->size_  = sizeof(type) * this->count_;
 
 			// allocate array memory 
-			if (this->allocator == nullptr) {
-				this->begin_ = (type*)core::global_memory::allocate(this->size_);
-				CORE_WARN("core::array<{}> allocated using core::global_memory allocator .", typeid(type).name());
+			if (this->allocator) {
+				this->begin_ = (type*)this->allocator->allocate(this->size_);
 			}
 			else {
-				this->begin_ = (type*)this->allocator->allocate(this->size_);
+				this->begin_ = (type*)core::global_memory::allocate(this->size_);
+				CORE_WARN("core::array<{}> allocated using core::global_memory allocator .", typeid(type).name());
 			}
 
 			this->end_ = this->begin_ + this->count_;
@@ -212,7 +212,8 @@ namespace core {
 			return *(this->begin_ + index); 
 		}
 
-		// note: equal operator --> 'copying' not moving !
+		// note: performe copy operation
+		// note: copying discard old elements
 		core::array<type>& operator = (core::array<type> const& array_to_copy) {
 			if (this == &array_to_copy) return *this;
 
@@ -220,39 +221,41 @@ namespace core {
 			return *this;
 		}
 
-		// move operator
-		core::array<type>& operator = (core::array<type>&& other) {
-			if (this == &other) return *this;
+		// note: performe move ownership operation
+		core::array<type>& operator = (core::array<type>&& array_to_move) {
+			if (this == &array_to_move) return *this;
 
 			if (this->begin_ != nullptr) {
-				// deallocate current elements
+
+				// destruct current elements
 				if constexpr (!std::is_trivially_destructible<type>::value) {
 					for (type* p = this->begin_; p != this->end_; ++p) {
 						p->~type();
 					}
 				}
 
-				// deallocate current array
+				// deallocate current memory
 				if (this->allocator) {
 					this->allocator->deallocate(this->begin_);
-				} else {
+				} 
+				else {
 					core::global_memory::deallocate(this->begin_);
 				}
 			}
 
 			// move ownership
-			this->allocator = other.allocator;
-			this->begin_    = other.begin_;
-			this->end_      = other.end_;
-			this->size_     = other.size_;
-			this->count_    = other.count_;
+			this->allocator = array_to_move.allocator;
+			this->begin_    = array_to_move.begin_;
+			this->end_      = array_to_move.end_;
+			this->size_     = array_to_move.size_;
+			this->count_    = array_to_move.count_;
 
-			// clear source
-			other.allocator = nullptr;
-			other.begin_    = nullptr;
-			other.end_      = nullptr;
-			other.size_     = 0;
-			other.count_    = 0;
+			// clear other array 
+			array_to_move.allocator = nullptr;
+			array_to_move.begin_    = nullptr;
+			array_to_move.end_      = nullptr;
+			array_to_move.size_     = 0;
+			array_to_move.count_    = 0;
 
 			return *this;
 		}
@@ -263,13 +266,14 @@ namespace core {
 				array static public functions
 		*/ 
 
+		// note: copying will discard old elements
 		// note: there's no checks or safety against overlapped arrays .
-		// why because core::array designed to not have overlapped/shared memory between array .
-		// so any overlapped arrays is ---> bug !
+		//       why because core::array designed to not have overlapped/shared memory between array .
+		//       so any overlapped arrays is probablly a ---> bug in code !
 		static void copy(core::array<type> const& source, core::array<type>& destination) {
 			VCRASH_IF((&source) == (&destination), "core::array::copy(source={}, destination={}) : copying source to it self is a bug !" , (void*)&source, (void*)&destination);
 			
-			if (source.begin_) {
+			if(source.begin_){
 				
 				// allocate memory in destination if not allocated yet
 				if (destination.begin_ == nullptr) core::array<type>::allocate(destination, source.count_);
@@ -331,8 +335,9 @@ namespace core {
 			}
 		}
 
+	private:
 		/*
-			few helper functions
+			few private helper functions
 		*/ 
 
 		static inline void deallocate(core::array<type>& _array , bool destruct_elements) {
