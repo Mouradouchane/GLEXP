@@ -24,7 +24,7 @@ namespace core {
 		*/
 		dynamic_array(u32 elements_count, u32 resize_value_, core::memory_allocator* _allocator = nullptr) 
 			:core::array<type>(elements_count , _allocator)
-		{	
+		{
 			this->resize_value = resize_value_ ? resize_value_ : CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 		}
 
@@ -60,32 +60,34 @@ namespace core {
 			
 			if(array_to_copy.begin_){
 
+				// deallocate old memory
+				if (this->begin_) {
+					core::dynamic_array<type>::deallocate(*this, true);
+				}
+
+				// pass allocator if it's there
+				if (!this->allocator) {
+					this->allocator = array_to_copy.allocator;	 
+				}
+
+				// allocate new memory
+				core::dynamic_array<type>::allocate(*this, array_to_copy.count_);
+				
 				// update variables
 				this->push_index   = array_to_copy.push_index;
 				this->resize_value = array_to_copy.resize_value;
-
-				// allocate memory if not allocated yet
-				if (this->begin_ == nullptr) {
-
-					if (!this->allocator) {
-						this->allocator = array_to_copy.allocator;	 
-					}
-
-					core::dynamic_array<type>::allocate(*this, array_to_copy.count_);
-					
-					this->count_ = array_to_copy.count_;
-					this->size_  = array_to_copy.size_;
-					this->end_   = this->begin_ + this->count_;
-				}
-
+				this->count_ = array_to_copy.count_;
+				this->size_  = sizeof(type) * this->count_;
+				this->end_   = this->begin_ + this->count_;
+				
 				// copying elements
 				if constexpr(std::is_trivially_copyable<type>::value) {
 					u32 copy_size = (array_to_copy.size_ > this->size_) ? this->size_ : array_to_copy.size_;
 					std::memcpy(this->begin_, array_to_copy.begin_, copy_size);
 				}
 				else {
-					u32 copy_count = (array_to_copy.count_ > this->count_) ? this->count_ : array_to_copy.count_;
 					// todo: multi-threaded copying
+					u32 copy_count = (array_to_copy.count_ > this->count_) ? this->count_ : array_to_copy.count_;
 					for (u32 i = 0; i < copy_count; i++) {
 						this->begin_[i] = array_to_copy.begin_[i];
 					}
@@ -100,10 +102,10 @@ namespace core {
 		core::dynamic_array<type>& operator = (core::dynamic_array<type>&& array_to_move) {
 			if (this == &array_to_move) return *this;
 
-			if (this->begin_ != nullptr) {
+			if (this->begin_) {
 
 				// destruct current elements
-				if constexpr (!std::is_trivially_destructible<type>::value) {
+				if constexpr(!std::is_trivially_destructible<type>::value) {
 					for (type* p = this->begin_; p != this->end_; ++p) {
 						p->~type();
 					}
@@ -119,19 +121,23 @@ namespace core {
 			}
 
 			// move ownership
-			this->allocator = array_to_move.allocator;
-			this->begin_    = array_to_move.begin_;
-			this->end_      = array_to_move.end_;
-			this->size_     = array_to_move.size_;
-			this->count_    = array_to_move.count_;
+			this->allocator    = array_to_move.allocator;
+			this->begin_       = array_to_move.begin_;
+			this->end_         = array_to_move.end_;
+			this->size_        = array_to_move.size_;
+			this->count_       = array_to_move.count_;
+			this->push_index   = array_to_move.push_index;
+			this->resize_value = array_to_move.resize_value;
 
 			// clear other array 
-			array_to_move.allocator = nullptr;
-			array_to_move.begin_    = nullptr;
-			array_to_move.end_      = nullptr;
-			array_to_move.size_     = 0;
-			array_to_move.count_    = 0;
-
+			array_to_move.allocator    = nullptr;
+			array_to_move.begin_       = nullptr;
+			array_to_move.end_         = nullptr;
+			array_to_move.size_        = 0;
+			array_to_move.count_       = 0;
+			array_to_move.push_index   = 0;
+			array_to_move.resize_value = 0;
+			
 			return *this;
 		}
 
@@ -153,7 +159,7 @@ namespace core {
 			this->resize_value = new_resize_value ? new_resize_value : CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 		}
 
-		void resize() {
+		void resize(bool destruct_elements) {
 			type* new_buffer;
 			u32   old_count = this->count_;
 			u32   old_size  = this->size_;
@@ -175,15 +181,20 @@ namespace core {
 				std::memmove(new_buffer, this->begin_, old_size);
 			}
 			else {
-				// move elements to new memory
 				for (u32 i = 0; i < old_count; i++) {
-					new_buffer[i] = this->begin_[i];
+					new_buffer[i] = std::move(this->begin_[i]);
+				}
+			}
+
+			// destruct elements in old memory if needed
+			if( destruct_elements ) {
+
+				if constexpr(!std::is_trivially_destructible<type>::value) {
+					for (u32 i = 0; i < old_count; i++) {
+						this->begin_[i].~type();
+					}
 				}
 
-				// destroy old elements
-				for (u32 i = 0; i < old_count; i++) {
-					this->begin_[i].~T();
-				}
 			}
 
 			// deallocate old memory
@@ -206,7 +217,7 @@ namespace core {
 		void push(type const& new_element) {
 
 			// if resize is needed
-			if((this->begin_ + this->push_index) >= this->end_) this->resize();
+			if(this->push_index >= this->count_) this->resize();
 			
 			// push then update counter
 			this->begin_[this->push_index] = new_element;
@@ -217,17 +228,21 @@ namespace core {
 			note: using operator [] and push/pop function's in the same time could cause conflict's and overlap's !
 			avoid using both of them at once to avoid conflict's and run-time bugs !
 		*/
-		void pop(bool call_destructor) {
+		type pop(bool call_destructor) {
+			VCRASH_IF(!this->begin_ , "core::dynamic_array::pop() -> array memory is null !");
+			
+			this->push_index -= (this->push_index) ? 1 : 0;	
+			type copy = this->begin_[push_index];
 
-			if (call_destructor) {
-				if (constexpr(std::is_trivially_destructible<type>::value)) {
+			// call element destructor if needed
+			if constexpr(!std::is_trivially_destructible<type>::value) {
+				if (call_destructor) {
 					this->begin_[push_index].~type();
 				}
 			}
+			else std::memset((this->begin_ + this->push_index), 0, sizeof(type));
 				
-			std::memset(&this->begin_[this->push_index], 0, sizeof(type));
-
-			this->push_index -= (this->push_index) ? 1 : 0;	
+			return copy;
 		}
 	
 	private:
@@ -248,25 +263,23 @@ namespace core {
 			}
 
 			// destruct elements if destructable 
-			if (destruct_elements && constexpr(!std::is_trivially_destructible<type>::value) ) {
-				
-				// todo: maybe multi-threaded destruction if possible !!!
-				for (type* obj = array_.begin_; obj != (array_.begin_ + array_.count_); obj++) {
-					obj->~type();
+			if (destruct_elements) {
+				if constexpr (!std::is_trivially_destructible<type>::value) ) {
+					// todo: maybe multi-threaded destruction if possible !!!
+					for (type* obj = array_.begin_; obj != (array_.begin_ + array_.count_); obj++) {
+						obj->~type();
+					}
 				}
 			}
 
 			// deallocate array memory
-			if(array_.begin_){
-
-				if (array_.allocator) {
-					array_.allocator->deallocate(array_.begin_);
-				}
-				else {
-					core::global_memory::deallocate(array_.begin_);
-				}
+			if (array_.allocator) {
+				array_.allocator->deallocate(array_.begin_);
 			}
-
+			else {
+				core::global_memory::deallocate(array_.begin_);
+			}
+			
 			array_.begin_  = nullptr;
 			array_.end_    = nullptr;
 			array_.count_  = 0;
@@ -306,6 +319,8 @@ namespace core {
 
 
 	}; // class dynamic_array end
+
+	core::dynamic_array<float> fx(512,512);
 
 } // namespace core end
 
