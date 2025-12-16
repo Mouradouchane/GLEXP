@@ -1,0 +1,24 @@
+construct_count_size_and_begin_end7022673ns       successed
+get_set_and_operator_index      3389111ns       successed
+clear_and_fill                  3524329ns       successed
+copy_ctor_and_static_copy       13985182323ns   successed
+static_move_move_assign_move_ctor10636025ns      failed
+non_trivial_destruction         3957893ns       successed
+sort_function                   9759273ns       successed
+allocate_reallocate             3701412ns       successed
+fill_edge_cases                 13142610ns      successed
+copy_into_existing_destination  8216056ns       successed
+array_basic_construction        3668690ns       successed
+array_ctor_from_ptr_trivial     8923424ns       successed
+array_ctor_from_ptr_nontrivial_string4277412ns       successed
+array_copy_ctor_trivial         9948386ns       successed
+array_copy_ctor_nontrivial_string6193423306ns    successed
+array_static_copy_nontrivial_string9497499ns       successed
+array_clear_function            8892627ns       successed
+construction_basics             3980509ns       successed
+push_and_resize_trivial         4998734ns       successed
+push_and_resize_nontrivial_string4221110ns       successed
+pop_basics_trivial              4449201ns       successed
+pop_basics_nontrivial_string    4102735ns       successed
+copy_assignment_nontrivial      11434822ns      successed
+empty_pop_handling              4845231ns       successed

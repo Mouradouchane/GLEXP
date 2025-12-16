@@ -46,8 +46,12 @@ namespace core {
 			
 			// setup sinks 
 			file_sink->set_level(spdlog::level::level_enum(core::logger::verbosity_level::warning));
-			file_sink->set_pattern("[%T] [%l] %v \n");
-			console_sink->set_pattern("%^[%l] %v %$");
+			file_sink->set_pattern("^[%l] %v \n");
+
+			console_sink->set_color_mode(spdlog::color_mode::always);
+			console_sink->set_pattern("%^[%l] %v%$");
+
+			spdlog::set_pattern("%^[%l] %v%$");
 
 			// create logger
 			spd_logger = std::make_shared<spdlog::logger>(logger_name, sinks.begin() , sinks.end());

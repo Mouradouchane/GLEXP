@@ -11,7 +11,7 @@
 
 namespace core {
 
-	template<typename type> class dynamic_array : protected core::array<type> {
+	template<typename type> class dynamic_array : public core::array<type> {
 
 	private:
 		u32 push_index   = 0;
@@ -89,7 +89,7 @@ namespace core {
 					// todo: multi-threaded copying
 					u32 copy_count = (array_to_copy.count_ > this->count_) ? this->count_ : array_to_copy.count_;
 					for (u32 i = 0; i < copy_count; i++) {
-						this->begin_[i] = array_to_copy.begin_[i];
+						new (this->begin_ + i) type(array_to_copy.begin_[i]);
 					}
 				}
 
@@ -159,6 +159,10 @@ namespace core {
 			this->resize_value = new_resize_value ? new_resize_value : CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 		}
 
+		u32 get_push_index() {
+			return this->push_index;
+		}
+
 		void resize(bool destruct_elements) {
 			type* new_buffer;
 			u32   old_count = this->count_;
@@ -181,8 +185,9 @@ namespace core {
 				std::memmove(new_buffer, this->begin_, old_size);
 			}
 			else {
+				// copying none trivial elements using 'placement new'
 				for (u32 i = 0; i < old_count; i++) {
-					new_buffer[i] = std::move(this->begin_[i]);
+					new (new_buffer + i) type(this->begin_[i]);
 				}
 			}
 
@@ -217,10 +222,10 @@ namespace core {
 		void push(type const& new_element) {
 
 			// if resize is needed
-			if(this->push_index >= this->count_) this->resize();
+			if(this->push_index >= this->count_) this->resize(false);
 			
 			// push then update counter
-			this->begin_[this->push_index] = new_element;
+			new (this->begin_ + this->push_index) type(new_element);
 			this->push_index += 1;
 		}
 		
@@ -229,20 +234,31 @@ namespace core {
 			avoid using both of them at once to avoid conflict's and run-time bugs !
 		*/
 		type pop(bool call_destructor) {
-			VCRASH_IF(!this->begin_ , "core::dynamic_array::pop() -> array memory is null !");
+			CRASH_IF(!this->begin_ , "core::dynamic_array::pop() -> array memory is null !");
 			
-			this->push_index -= (this->push_index) ? 1 : 0;	
-			type copy = this->begin_[push_index];
+			if (this->push_index) {
 
-			// call element destructor if needed
-			if constexpr(!std::is_trivially_destructible<type>::value) {
-				if (call_destructor) {
-					this->begin_[push_index].~type();
+				this->push_index -= 1;
+				type copy = this->begin_[push_index];
+
+				// call element destructor if needed
+				if constexpr (!std::is_trivially_destructible<type>::value) {
+					if (call_destructor) {
+						this->begin_[push_index].~type();
+					}
+				}
+
+				return copy;
+			}
+			else {
+				if constexpr(std::is_default_constructible<type>::value) {
+					return type();
+				}
+				else {
+					CRASH_IF(true, "core::dynamic_array::pop() -> unable to pop element from empty array !");
 				}
 			}
-			else std::memset((this->begin_ + this->push_index), 0, sizeof(type));
-				
-			return copy;
+	
 		}
 	
 	private:
@@ -253,10 +269,10 @@ namespace core {
 		static inline void deallocate(core::dynamic_array<type>& array_, bool destruct_elements) {
 
 			if (!array_.begin_) {
-				array_.begin_  = nullptr;
-				array_.end_    = nullptr;
-				array_.count_  = 0;
-				array_.size_   = 0;
+				array_.begin_     = nullptr;
+				array_.end_       = nullptr;
+				array_.count_     = 0;
+				array_.size_      = 0;
 				array_.push_index = 0;
 				
 				return;
@@ -264,7 +280,7 @@ namespace core {
 
 			// destruct elements if destructable 
 			if (destruct_elements) {
-				if constexpr (!std::is_trivially_destructible<type>::value) ) {
+				if constexpr(!std::is_trivially_destructible<type>::value) {
 					// todo: maybe multi-threaded destruction if possible !!!
 					for (type* obj = array_.begin_; obj != (array_.begin_ + array_.count_); obj++) {
 						obj->~type();
@@ -319,8 +335,6 @@ namespace core {
 
 
 	}; // class dynamic_array end
-
-	core::dynamic_array<float> fx(512,512);
 
 } // namespace core end
 

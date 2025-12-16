@@ -18,6 +18,7 @@
 
 // include tests
 #include "tools/tester/unit_tests/arrays/array_tests.hpp"
+#include "tools/tester/unit_tests/arrays/dynamic_array_tests.hpp"
 
 #include "application.hpp"
 
@@ -59,7 +60,26 @@ namespace tester {
 				test("sort_function", t_sort_function),
 				test("allocate_reallocate", t_allocate_reallocate),
 				test("fill_edge_cases", t_fill_edge_cases),
-				test("copy_into_existing_destination", t_copy_into_existing_destination)
+				test("copy_into_existing_destination", t_copy_into_existing_destination),
+				test("array_basic_construction", t_array_basic_construction),
+				test("array_ctor_from_ptr_trivial", t_array_constructor_from_pointer_trivial),
+				test("array_ctor_from_ptr_nontrivial_string", t_array_constructor_from_pointer_nontrivial),
+				test("array_copy_ctor_trivial", t_array_copy_constructor_trivial),
+				test("array_copy_ctor_nontrivial_string", t_array_copy_constructor_nontrivial),
+				test("array_static_copy_nontrivial_string", t_array_static_copy_nontrivial),
+				test("array_clear_function", t_array_clear_function)
+			})
+		);
+
+		add_group(
+			group("core::dynamic_array tests", {
+				test("construction_basics", t_construction_basics),
+				test("push_and_resize_trivial", t_push_and_resize_trivial),
+				test("push_and_resize_nontrivial_string", t_push_and_resize_nontrivial),
+				test("pop_basics_trivial", t_pop_basics_trivial),
+				test("pop_basics_nontrivial_string", t_pop_basics_nontrivial),
+				test("copy_assignment_nontrivial", t_copy_assignment_nontrivial),
+				test("empty_pop_handling", t_empty_pop_handling)
 			})
 		);
 

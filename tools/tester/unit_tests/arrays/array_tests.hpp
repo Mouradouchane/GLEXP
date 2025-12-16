@@ -6,7 +6,22 @@
 #include "core/data_structres/arrays/array.hpp"
 #include "tools/tester/test/test.hpp"
 
-static bool t_construct_count_size_and_begin_end() {
+struct DtorCounter {
+	public:
+		static int count;
+
+		DtorCounter() {};
+		DtorCounter(DtorCounter const&) = default;
+		DtorCounter& operator= (DtorCounter const&) = default;
+
+		~DtorCounter() { 
+			DtorCounter::count++ ; 
+		}
+};
+
+int DtorCounter::count = 0;
+
+bool t_construct_count_size_and_begin_end() {
 	core::array<int> a(5);
 	if (a.count() != 5u) return false;
 	if (a.size() != 5u * sizeof(int)) return false;
@@ -14,7 +29,7 @@ static bool t_construct_count_size_and_begin_end() {
 	return true;
 }
 
-static bool t_get_set_and_operator_index() {
+bool t_get_set_and_operator_index() {
 	core::array<int> a(4);
 	a.set(0, 10);
 	a.set(1, 20);
@@ -33,7 +48,7 @@ static bool t_get_set_and_operator_index() {
 	return true;
 }
 
-static bool t_clear_and_fill() {
+bool t_clear_and_fill() {
 	core::array<int> a(3);
 	core::array<int>::fill(a, 7);
 	if (a[0] != 7 || a[1] != 7 || a[2] != 7) return false;
@@ -44,7 +59,7 @@ static bool t_clear_and_fill() {
 	return true;
 }
 
-static bool t_copy_ctor_and_static_copy() {
+bool t_copy_ctor_and_static_copy() {
 	core::array<int> src(3);
 	src[0]=1; src[1]=2; src[2]=3;
 
@@ -63,7 +78,7 @@ static bool t_copy_ctor_and_static_copy() {
 	return true;
 }
 
-static bool t_static_move_move_assign_move_ctor() {
+bool t_static_move_move_assign_move_ctor() {
 	core::array<int> src(3);
 	src[0]=5; src[1]=6; src[2]=7;
 
@@ -89,29 +104,24 @@ static bool t_static_move_move_assign_move_ctor() {
 	return true;
 }
 
-struct DtorCounter {
-	static int dtor_count;
-	DtorCounter() = default;
-	DtorCounter(const DtorCounter&) = default;
-	DtorCounter& operator=(const DtorCounter&) = default;
-	~DtorCounter() { ++dtor_count; }
-};
-int DtorCounter::dtor_count = 0;
+bool t_non_trivial_destruction() {
 
-static bool t_non_trivial_destruction() {
-	DtorCounter::dtor_count = 0;
+	DtorCounter::count = 0;
+
 	{
 		core::array<DtorCounter> arr(4);
 	}
-	if (DtorCounter::dtor_count != 4) return false;
+	
+	if ( DtorCounter::count != 4) return false;
+
 	return true;
 }
 
-static bool cmp_int(int const& a, int const& b) { 
+bool cmp_int(int const& a, int const& b) { 
 	return a < b; 
 }
 
-static bool t_sort_function() {
+bool t_sort_function() {
 	core::array<int> a(5);
 	a[0]=4; a[1]=1; a[2]=5; a[3]=2; a[4]=3;
 	core::array<int>::sort(a, &cmp_int);
@@ -123,7 +133,7 @@ static bool t_sort_function() {
 	return true;
 }
 
-static bool t_allocate_reallocate() {
+bool t_allocate_reallocate() {
 	core::array<int> a(2);
 	a[0]=9; a[1]=8;
 	core::array<int>::reallocate(a, true);
@@ -132,7 +142,7 @@ static bool t_allocate_reallocate() {
 	return true;
 }
 
-static bool t_fill_edge_cases() {
+bool t_fill_edge_cases() {
 	core::array<int> a(0);
 	core::array<int> b(3);
 	core::array<int>::fill(b, -1);
@@ -140,7 +150,7 @@ static bool t_fill_edge_cases() {
 	return true;
 }
 
-static bool t_copy_into_existing_destination() {
+bool t_copy_into_existing_destination() {
 	core::array<int> src(5);
 	for (u32 i = 0; i < src.count(); ++i) src[i] = static_cast<int>(i+1);
 	core::array<int> dest(5);
@@ -149,5 +159,117 @@ static bool t_copy_into_existing_destination() {
 	return true;
 }
 
- 
+
+// Test basic construction with count (allocates raw memory)
+bool t_array_basic_construction() {
+	core::array<int> arr(5);
+
+	if (arr.count() != 5) return false;
+	if (arr.size() != sizeof(int) * 5) return false;
+	if (arr.begin() == nullptr) return false;
+	if (arr.end() != arr.begin() + 5) return false;
+
+	return true;
+}
+
+// Test constructor using raw pointer input (trivial types)
+bool t_array_constructor_from_pointer_trivial() {
+	int data[] = {1, 2, 3, 4};
+	core::array<int> arr(data, 4);
+
+	if (arr.count() != 4) return false;
+	if (arr[0] != 1 || arr[3] != 4) return false;
+
+	return true;
+}
+
+// Test constructor using raw pointer input (non-trivial types, tests placement new)
+bool t_array_constructor_from_pointer_nontrivial() {
+	std::string data[] = {"A", "B", "C"};
+	core::array<std::string> arr(data, 3);
+
+	if (arr.count() != 3) return false;
+	if (arr[0] != "A" || arr[2] != "C") return false;
+	// Check deep copy (ensure original data is distinct)
+	data[0] = "Z";
+	if (arr[0] == "Z") return false; 
+
+	return true;
+}
+
+// Test copy constructor (trivial types)
+bool t_array_copy_constructor_trivial() {
+	core::array<int> original(3);
+	original[0] = 99;
+
+	core::array<int> copy = original; // Invokes copy constructor
+
+	if (copy.count() != 3) return false;
+	if (copy[0] != 99) return false;
+	// Ensure deep copy
+	original[0] = 0;
+	if (copy[0] == 0) return false;
+
+	return true;
+}
+
+// Test copy constructor (non-trivial types, tests placement new)
+bool t_array_copy_constructor_nontrivial() {
+	core::array<std::string> original(2);
+
+	original[0] = "Hello";
+	original[1] = "World";
+	/*
+	original[0] = std::string("Hello");
+	original[1] = std::string("world");
+	*/
+
+	core::array<std::string> copy = original; // Invokes copy constructor
+
+	if (copy.count() != 2) return false;
+	if (copy[0] != "Hello" || copy[1] != "World") return false;
+	// Ensure deep copy (original still valid)
+	original[0] = "Hi";
+	if (copy[0] == "Hi") return false;
+
+	return true;
+}
+
+// Test the static copy function for non-trivial types
+bool t_array_static_copy_nontrivial() {
+	core::array<std::string> source(2);
+	source[0] = "Source1";
+	source[1] = "Source2";
+
+	core::array<std::string> dest(2);
+	dest[0] = "Dest1"; // Overwritten by copy
+
+	core::array<std::string>::copy(source, dest); // Test static copy function
+
+	if (dest.count() != 2) return false;
+	if (dest[0] != "Source1" || dest[1] != "Source2") return false;
+
+	// Ensure source is untouched
+	if (source[0] != "Source1") return false;
+
+	return true;
+}
+
+bool t_array_clear_function() {
+	core::array<int> arr(2);
+	arr[0] = 10;
+	arr.clear();
+
+	// The clear function uses memset(0) for trivial types
+	if (arr[0] != 0 || arr[1] != 0) return false;
+
+	core::array<std::string> arr_str(2);
+	arr_str[0] = "Test";
+	arr_str.clear(); // Clears using type() default constructor
+
+	if (arr_str[0] != "") return false;
+
+	return true;
+}
+
 #endif 

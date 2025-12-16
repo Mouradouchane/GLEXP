@@ -19,7 +19,7 @@ namespace core {
 	*/
 	template<typename type> class array {
 
-	private:
+	protected:
 		core::memory_allocator* allocator;
 		u32   size_  = 0;
 		u32   count_ = 0;
@@ -45,6 +45,11 @@ namespace core {
 
 			this->end_ = this->begin_ + this->count_;
 
+			// construct elements
+			for (type* ptr = this->begin_; ptr != this->end_; ptr++) {
+				new (ptr) type();
+			}
+
 			CORE_INFO("core::array<{}> allocated with size:{} at address:&{} ", typeid(type).name(), this->size_ , (void*)this);
 		}
 		
@@ -65,18 +70,17 @@ namespace core {
 			this->end_ = this->begin_ + this->count_;
 
 			// memcpy elements if copyable 
-			if constexpr (std::is_trivially_copyable<type>::value) {
+			if constexpr(std::is_trivially_copyable<type>::value) {
 				std::memcpy(this->begin_, elements, this->size_);
 			}
-			else { // manual copying
-
+			else {
 				// todo: multi-threaded copying
 				for (u32 i = 0; i < this->count_; ++i) {
-					*(this->begin_ + i) = type(elements[i]);
+					new (this->begin_ + i) type(elements[i]);
 				}
 			}
 
-			CORE_INFO("allocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), (void*)&this , this->size_);
+			CORE_INFO("allocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), (void*)this , this->size_);
 		}
 
 		// copy constructor
@@ -97,17 +101,38 @@ namespace core {
 
 			this->end_ = this->begin_ + this->count_;
 
-			if constexpr (std::is_trivially_copyable<type>::value) {
+			if constexpr(std::is_trivially_copyable<type>::value) {
 				std::memcpy(this->begin_ , other_array.begin_ , this->size_);
 			}
 			else { 
 				// todo: multi-threaded copying
 				for (u32 i = 0; i < this->count_; i++) {
-					this->begin_[i] = other_array.begin_[i];
+					new (this->begin_ + i) type(other_array.begin_[i]);
 				}
 			}
 
-			CORE_INFO("allocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), (void*)this , this->size_);
+			CORE_INFO("allocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), (void*)this , (void*)this->size_);
+		}
+		
+		// move constructor 
+		array(core::array<type>&& array_to_move) noexcept {
+			if (this == &array_to_move) return;
+
+			// move ownership
+			this->allocator = array_to_move.allocator;
+			this->begin_    = array_to_move.begin_;
+			this->end_      = array_to_move.end_;
+			this->size_     = array_to_move.size_;
+			this->count_    = array_to_move.count_;
+			
+			// clear other array
+			array_to_move.allocator = nullptr;
+			array_to_move.begin_    = nullptr;
+			array_to_move.end_      = nullptr;
+			array_to_move.size_     = 0;
+			array_to_move.count_    = 0;
+
+			CORE_INFO("core::array<{}> -> moved array ownership from &{} to &{}", typeid(type).name(), (void*)&array_to_move , (void*)this);
 		}
 
 		/*
@@ -117,12 +142,14 @@ namespace core {
 
 			// destroy all elements in array is destructable
 			if (this->begin_ != nullptr) {
+
 				if constexpr(!std::is_trivially_destructible<type>::value) {
 
 					for (type* ptr = this->begin_; ptr != this->end_; ptr++) {
 						ptr->~type();
 					}
 				}
+
 			}
 
 			// free array memory
@@ -139,7 +166,64 @@ namespace core {
 
 			CORE_INFO("deallocated core::array<{}> at address:&{} with size:{}", typeid(type).name(), (void*)this, this->size_);
 		}
-		
+
+		/*
+			operator's
+		*/ 
+		type& operator[](u32 index) {
+			VCRASH_IF(index >= this->count_ , "error at core::dynamic_array operator[] : index '{}' out of array range '{}' !" , index , this->count_);
+			return *(this->begin_ + index); 
+		}
+
+		// note: performe copy operation
+		// note: discard old elements
+		core::array<type>& operator = (core::array<type> const& array_to_copy) {
+			if (this == &array_to_copy) return *this;
+
+			core::array<type>::copy(array_to_copy, *this);
+			return *this;
+		}
+
+		// note: performe move ownership operation
+		// note: discard old elements
+		core::array<type>& operator = (core::array<type>&& array_to_move) {
+			if (this == &array_to_move) return *this;
+
+			if (this->begin_ != nullptr) {
+
+				// destruct current elements
+				if constexpr (!std::is_trivially_destructible<type>::value) {
+					for (type* p = this->begin_; p != this->end_; ++p) {
+						p->~type();
+					}
+				}
+
+				// deallocate current memory
+				if (this->allocator) {
+					this->allocator->deallocate(this->begin_);
+				} 
+				else {
+					core::global_memory::deallocate(this->begin_);
+				}
+			}
+
+			// move ownership
+			this->allocator = array_to_move.allocator;
+			this->begin_    = array_to_move.begin_;
+			this->end_      = array_to_move.end_;
+			this->size_     = array_to_move.size_;
+			this->count_    = array_to_move.count_;
+
+			// clear other array 
+			array_to_move.allocator = nullptr;
+			array_to_move.begin_    = nullptr;
+			array_to_move.end_      = nullptr;
+			array_to_move.size_     = 0;
+			array_to_move.count_    = 0;
+
+			return *this;
+		}
+
 		/*
 			array public functions
 		*/
@@ -204,62 +288,6 @@ namespace core {
 
 		}
 
-		/*
-			operator's
-		*/ 
-		type& operator[](u32 index) {
-			VCRASH_IF(index >= this->count_ , "error at core::dynamic_array operator[] : index '{}' out of array range '{}' !" , index , this->count_);
-			return *(this->begin_ + index); 
-		}
-
-		// note: performe copy operation
-		// note: copying discard old elements
-		core::array<type>& operator = (core::array<type> const& array_to_copy) {
-			if (this == &array_to_copy) return *this;
-
-			core::array<type>::copy(array_to_copy, *this);
-			return *this;
-		}
-
-		// note: performe move ownership operation
-		core::array<type>& operator = (core::array<type>&& array_to_move) {
-			if (this == &array_to_move) return *this;
-
-			if (this->begin_ != nullptr) {
-
-				// destruct current elements
-				if constexpr (!std::is_trivially_destructible<type>::value) {
-					for (type* p = this->begin_; p != this->end_; ++p) {
-						p->~type();
-					}
-				}
-
-				// deallocate current memory
-				if (this->allocator) {
-					this->allocator->deallocate(this->begin_);
-				} 
-				else {
-					core::global_memory::deallocate(this->begin_);
-				}
-			}
-
-			// move ownership
-			this->allocator = array_to_move.allocator;
-			this->begin_    = array_to_move.begin_;
-			this->end_      = array_to_move.end_;
-			this->size_     = array_to_move.size_;
-			this->count_    = array_to_move.count_;
-
-			// clear other array 
-			array_to_move.allocator = nullptr;
-			array_to_move.begin_    = nullptr;
-			array_to_move.end_      = nullptr;
-			array_to_move.size_     = 0;
-			array_to_move.count_    = 0;
-
-			return *this;
-		}
-
 	public:
 
 		/*
@@ -289,7 +317,7 @@ namespace core {
 					u32 copy_count = (source.count_ > destination.count_) ? destination.count_ : source.count_;
 					// todo: multi-threaded copying
 					for (u32 i = 0; i < copy_count; i++) {
-						destination.begin_[i] = source.begin_[i];
+						new (destination.begin_ + i) type(source.begin_[i]);
 					}
 				}
 			}
@@ -333,6 +361,13 @@ namespace core {
 			if (_array.begin_ && _array.count_ > 1) {
 				std::sort(_array.begin_ , (_array.begin_ + _array.count_) , compare_function);
 			}
+		}
+
+		static void reallocate(core::array<type>& _array , bool destruct_elements) {
+			u32 old_count = _array.count_;
+
+			core::array<type>::deallocate(_array, destruct_elements);
+			core::array<type>::allocate(_array, old_count);
 		}
 
 	private:
@@ -401,13 +436,6 @@ namespace core {
 			
 			// update array variables
 			_array.end_ = _array.begin_ + _array.count_;
-		}
-
-		static inline void reallocate(core::array<type>& _array , bool destruct_elements) {
-			u32 old_count = _array.count_;
-
-			core::array<type>::deallocate(_array, destruct_elements);
-			core::array<type>::allocate(_array, old_count);
 		}
 
 	}; // class array end
