@@ -3,6 +3,8 @@
 #ifndef TEST_CPP
 #define TEST_CPP
 
+#include "core/logger/logger.hpp"
+
 #include "tools/tester/time/time.hpp"
 #include "tools/tester/log/log.hpp"
 #include "test.hpp"
@@ -60,8 +62,8 @@ test_result test::run_test( ) {
 	this->last_exec_time   = u64(duration.count());
 
 	if (this->last_exec_time == 0) {
-		logger::warn("0ns time-execution detected in test: " + this->name + " ID: " + std::to_string(this->id));
-		logger::warn("reasons :\ntest function could be optimitzed by the compiler !\ntest function could be way faster than steady_clock !");
+		core::logger::warn("0ns time-execution detected in test: " + this->name + " ID: " + std::to_string(this->id));
+		core::logger::warn("reasons :\ntest function could be optimitzed by the compiler !\ntest function could be way faster than steady_clock !");
 	}
 
 	return test_result{

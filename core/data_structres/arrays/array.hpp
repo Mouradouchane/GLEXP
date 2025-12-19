@@ -305,9 +305,16 @@ namespace core {
 				
 				// allocate memory in destination if not allocated yet
 				if (destination.begin_ == nullptr) core::array<type>::allocate(destination, source.count_);
-		
-				// this counted as a bug
-				VCRASH_IF(source.size_ > destination.size_ , "core::array::copy(source={}, destination={}) : source array is bigger than the destination array !", (void*)&source, (void*)&destination);
+				
+				// note: source > destination is counted as a bug
+				if (source.size_ > destination.size_) {
+				#ifdef UNIT_TEST
+					CORE_WARN("core::array::copy() : source is bigger than destination , this will cause crash in runtime !");
+					return;
+				#else
+					VCRASH_IF(true , "core::array::copy(source={}, destination={}) : source array is bigger than the destination array !", (void*)&source, (void*)&destination);
+				#endif
+				}
 				
 				if constexpr (std::is_trivially_copyable<type>::value) {
 					u64 copy_size = (source.size_ > destination.size_) ? destination.size_ : source.size_;

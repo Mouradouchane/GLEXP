@@ -7,16 +7,19 @@
 #include "string_utility.hpp"
 
 std::string test_to_string(test const& _test) {
+	static const u16 spaces = 42u;
+
 	test_result trslt = _test.get_test_result();
 	std::string str_line = "";
 
 	str_line += _test.get_test_name();
-	for (size_t i = str_line.size(); i < 32; i++) {
+	for (size_t i = str_line.size(); i < spaces; i++) {
 		str_line += " ";
 	}
-	std::string time_str = std::to_string(trslt.last_exec_time) + "ns ";
+
+	std::string time_str = " " + std::to_string(trslt.last_exec_time) + "ns ";
 	str_line += time_str;
-	for (size_t i = time_str.size(); i < 16; i++) {
+	for (size_t i = time_str.size(); i < spaces; i++) {
 		str_line += " ";
 	}
 

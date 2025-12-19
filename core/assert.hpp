@@ -14,7 +14,7 @@
 	compile-time assert
 */
 
-#define COMPILE_TIME_ASSERT(CONST_EXPRESSION, MESSAGE) static_assert(CONST_EXPRESSION, MESSAGE);
+#define COMPILE_TIME_ASSERT(TRUE_CONST_EXPRESSION, MESSAGE) static_assert(!TRUE_CONST_EXPRESSION, MESSAGE);
 
 /*
 	run-time assert

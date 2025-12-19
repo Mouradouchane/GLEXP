@@ -32,8 +32,8 @@ namespace core {
 
 		// used to control logger verbosity level
 		enum class verbosity_level : u8 {
-			trace = 0, 
-			debug,	
+			trace = 0, 	
+			debug,
 			info,
 			warning,
 			error,

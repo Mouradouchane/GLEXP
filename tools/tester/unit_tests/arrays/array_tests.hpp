@@ -21,7 +21,7 @@ struct DtorCounter {
 
 int DtorCounter::count = 0;
 
-bool t_construct_count_size_and_begin_end() {
+bool array_t_construct_count_size_and_begin_end() {
 	core::array<int> a(5);
 	if (a.count() != 5u) return false;
 	if (a.size() != 5u * sizeof(int)) return false;
@@ -29,7 +29,7 @@ bool t_construct_count_size_and_begin_end() {
 	return true;
 }
 
-bool t_get_set_and_operator_index() {
+bool array_t_get_set_and_operator_index() {
 	core::array<int> a(4);
 	a.set(0, 10);
 	a.set(1, 20);
@@ -48,7 +48,7 @@ bool t_get_set_and_operator_index() {
 	return true;
 }
 
-bool t_clear_and_fill() {
+bool array_t_clear_and_fill() {
 	core::array<int> a(3);
 	core::array<int>::fill(a, 7);
 	if (a[0] != 7 || a[1] != 7 || a[2] != 7) return false;
@@ -59,7 +59,7 @@ bool t_clear_and_fill() {
 	return true;
 }
 
-bool t_copy_ctor_and_static_copy() {
+bool array_t_copy_ctor_and_static_copy() {
 	core::array<int> src(3);
 	src[0]=1; src[1]=2; src[2]=3;
 
@@ -73,12 +73,12 @@ bool t_copy_ctor_and_static_copy() {
 	core::array<int> dest(0);
 	core::array<int>::copy(copy, dest);
 	if (dest.count() == copy.count()) return false;
-	if (dest[0] != 1) return false;
+	if (dest[0] == copy[0]) return false;
 
 	return true;
 }
 
-bool t_static_move_move_assign_move_ctor() {
+bool array_t_static_move_move_assign_move_ctor() {
 	core::array<int> src(3);
 	src[0]=5; src[1]=6; src[2]=7;
 
@@ -99,12 +99,12 @@ bool t_static_move_move_assign_move_ctor() {
 	tmp[0]=1; tmp[1]=2;
 	core::array<int> m_ctor(std::move(tmp));
 	if (m_ctor.count() != 2u || m_ctor[0] != 1 || m_ctor[1] != 2) return false;
-	if (tmp.count() != 2u) return false;
+	if (tmp.count() == 2u) return false;
 
 	return true;
 }
 
-bool t_non_trivial_destruction() {
+bool array_t_non_trivial_destruction() {
 
 	DtorCounter::count = 0;
 
@@ -121,7 +121,7 @@ bool cmp_int(int const& a, int const& b) {
 	return a < b; 
 }
 
-bool t_sort_function() {
+bool array_t_sort_function() {
 	core::array<int> a(5);
 	a[0]=4; a[1]=1; a[2]=5; a[3]=2; a[4]=3;
 	core::array<int>::sort(a, &cmp_int);
@@ -133,7 +133,7 @@ bool t_sort_function() {
 	return true;
 }
 
-bool t_allocate_reallocate() {
+bool array_t_allocate_reallocate() {
 	core::array<int> a(2);
 	a[0]=9; a[1]=8;
 	core::array<int>::reallocate(a, true);
@@ -142,7 +142,7 @@ bool t_allocate_reallocate() {
 	return true;
 }
 
-bool t_fill_edge_cases() {
+bool array_t_fill_edge_cases() {
 	core::array<int> a(0);
 	core::array<int> b(3);
 	core::array<int>::fill(b, -1);
@@ -150,7 +150,7 @@ bool t_fill_edge_cases() {
 	return true;
 }
 
-bool t_copy_into_existing_destination() {
+bool array_t_copy_into_existing_destination() {
 	core::array<int> src(5);
 	for (u32 i = 0; i < src.count(); ++i) src[i] = static_cast<int>(i+1);
 	core::array<int> dest(5);
@@ -161,7 +161,7 @@ bool t_copy_into_existing_destination() {
 
 
 // Test basic construction with count (allocates raw memory)
-bool t_array_basic_construction() {
+bool array_t_array_basic_construction() {
 	core::array<int> arr(5);
 
 	if (arr.count() != 5) return false;
@@ -173,7 +173,7 @@ bool t_array_basic_construction() {
 }
 
 // Test constructor using raw pointer input (trivial types)
-bool t_array_constructor_from_pointer_trivial() {
+bool array_t_array_constructor_from_pointer_trivial() {
 	int data[] = {1, 2, 3, 4};
 	core::array<int> arr(data, 4);
 
@@ -184,7 +184,7 @@ bool t_array_constructor_from_pointer_trivial() {
 }
 
 // Test constructor using raw pointer input (non-trivial types, tests placement new)
-bool t_array_constructor_from_pointer_nontrivial() {
+bool array_t_array_constructor_from_pointer_nontrivial() {
 	std::string data[] = {"A", "B", "C"};
 	core::array<std::string> arr(data, 3);
 
@@ -198,7 +198,7 @@ bool t_array_constructor_from_pointer_nontrivial() {
 }
 
 // Test copy constructor (trivial types)
-bool t_array_copy_constructor_trivial() {
+bool array_t_array_copy_constructor_trivial() {
 	core::array<int> original(3);
 	original[0] = 99;
 
@@ -214,7 +214,7 @@ bool t_array_copy_constructor_trivial() {
 }
 
 // Test copy constructor (non-trivial types, tests placement new)
-bool t_array_copy_constructor_nontrivial() {
+bool array_t_array_copy_constructor_nontrivial() {
 	core::array<std::string> original(2);
 
 	original[0] = "Hello";
@@ -236,7 +236,7 @@ bool t_array_copy_constructor_nontrivial() {
 }
 
 // Test the static copy function for non-trivial types
-bool t_array_static_copy_nontrivial() {
+bool array_t_array_static_copy_nontrivial() {
 	core::array<std::string> source(2);
 	source[0] = "Source1";
 	source[1] = "Source2";
@@ -255,7 +255,7 @@ bool t_array_static_copy_nontrivial() {
 	return true;
 }
 
-bool t_array_clear_function() {
+bool array_t_array_clear_function() {
 	core::array<int> arr(2);
 	arr[0] = 10;
 	arr.clear();

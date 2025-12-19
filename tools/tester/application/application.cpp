@@ -26,7 +26,7 @@
 static inline void exec_all_function();
 static inline void exec_tests_function(std::string& command, std::vector<std::string>* command_toknes);
 static inline void exec_groups_function(std::string& command, std::vector<std::string>* command_toknes);
-	
+
 namespace tester {
 
 	bool running = true;
@@ -46,45 +46,55 @@ namespace tester {
 		tester::tests.insert({ _test.get_id() , _test });
 	}
 
-	// note: add your tests here
 	void init() { 
+		core::logger::init("tester_logger" , core::logger::verbosity_level::trace);
 
-		add_group(
-			group("core::array tests", {
-				test("construct_count_size_and_begin_end", t_construct_count_size_and_begin_end),
-				test("get_set_and_operator_index", t_get_set_and_operator_index),
-				test("clear_and_fill", t_clear_and_fill),
-				test("copy_ctor_and_static_copy", t_copy_ctor_and_static_copy),
-				test("static_move_move_assign_move_ctor", t_static_move_move_assign_move_ctor),
-				test("non_trivial_destruction", t_non_trivial_destruction),
-				test("sort_function", t_sort_function),
-				test("allocate_reallocate", t_allocate_reallocate),
-				test("fill_edge_cases", t_fill_edge_cases),
-				test("copy_into_existing_destination", t_copy_into_existing_destination),
-				test("array_basic_construction", t_array_basic_construction),
-				test("array_ctor_from_ptr_trivial", t_array_constructor_from_pointer_trivial),
-				test("array_ctor_from_ptr_nontrivial_string", t_array_constructor_from_pointer_nontrivial),
-				test("array_copy_ctor_trivial", t_array_copy_constructor_trivial),
-				test("array_copy_ctor_nontrivial_string", t_array_copy_constructor_nontrivial),
-				test("array_static_copy_nontrivial_string", t_array_static_copy_nontrivial),
-				test("array_clear_function", t_array_clear_function)
-			})
-		);
+		/*
+			note: add your unit-tests here
+		*/ 
 
-		add_group(
-			group("core::dynamic_array tests", {
-				test("construction_basics", t_construction_basics),
-				test("push_and_resize_trivial", t_push_and_resize_trivial),
-				test("push_and_resize_nontrivial_string", t_push_and_resize_nontrivial),
-				test("pop_basics_trivial", t_pop_basics_trivial),
-				test("pop_basics_nontrivial_string", t_pop_basics_nontrivial),
-				test("copy_assignment_nontrivial", t_copy_assignment_nontrivial),
-				test("empty_pop_handling", t_empty_pop_handling)
-			})
-		);
+	add_group(
+		group("core::array tests", {
+			test("array_construct_count_size_and_begin_end",	array_t_construct_count_size_and_begin_end),
+			test("array_get_set_and_operator_index",			array_t_get_set_and_operator_index),
+			test("array_clear_and_fill",						array_t_clear_and_fill),
+			test("array_copy_ctor_and_static_copy",				array_t_copy_ctor_and_static_copy),
+			test("array_static_move_move_assign_move_ctor",		array_t_static_move_move_assign_move_ctor),
+			test("array_non_trivial_destruction",				array_t_non_trivial_destruction),
+			test("array_sort_function",							array_t_sort_function),
+			test("array_allocate_reallocate",					array_t_allocate_reallocate),
+			test("array_fill_edge_cases",						array_t_fill_edge_cases),
+			test("array_copy_into_existing_destination",		array_t_copy_into_existing_destination),
+			test("array_basic_construction",					array_t_array_basic_construction),
+			test("array_ctor_from_ptr_trivial",					array_t_array_constructor_from_pointer_trivial),
+			test("array_ctor_from_ptr_nontrivial_string",		array_t_array_constructor_from_pointer_nontrivial),
+			test("array_copy_ctor_trivial",						array_t_array_copy_constructor_trivial),
+			test("array_copy_ctor_nontrivial_string",			array_t_array_copy_constructor_nontrivial),
+			test("array_static_copy_nontrivial_string",			array_t_array_static_copy_nontrivial),
+			test("array_clear_function",						array_t_array_clear_function)
+		})
+	);
+
+	add_group(
+		group("core::dynamic_array tests", {
+			test("dynamic_array_construction_basics",				 dynamic_arr_t_construction_basics),
+			test("dynamic_array_push_and_resize_trivial",			 dynamic_arr_t_push_and_resize_trivial),
+			test("dynamic_array_push_and_resize_nontrivial_string",  dynamic_arr_t_push_and_resize_nontrivial),
+			test("dynamic_array_pop_basics_trivial",				 dynamic_arr_t_pop_basics_trivial),
+			test("dynamic_array_pop_basics_nontrivial_string",		 dynamic_arr_t_pop_basics_nontrivial),
+			test("dynamic_array_copy_assignment_nontrivial",		 dynamic_arr_t_copy_assignment_nontrivial),
+			test("dynamic_array_empty_pop_handling",				 dynamic_arr_t_empty_pop_handling),
+			test("dynamic_array_construct_count_size_and_begin_end", dynamic_arr_t_construct_count_size_and_begin_end),
+			test("dynamic_array_get_set_and_operator_index",		 dynamic_arr_t_get_set_and_operator_index),
+			test("dynamic_array_push_and_auto_resize",				 dynamic_arr_t_push_and_auto_resize),
+			test("dynamic_array_nontrivial_push_pop",				 dynamic_arr_t_nontrivial_push_pop),
+			test("dynamic_array_copy_assignment",					 dynamic_arr_t_copy_assignment),
+			test("dynamic_array_move_assignment",					 dynamic_arr_t_move_assignment)
+		})
+	);
 
 		logger::load_old_tests_from_files(old_tests);
-		logger::print_help();
+		tester::logger::print_help();
 	}
 
 	void execute(std::string const& user_command) {
@@ -101,7 +111,7 @@ namespace tester {
 		*/ 
 
 		if (command == "help") {
-			logger::print_help();
+			tester::logger::print_help();
 			return;
 		}
 
@@ -116,22 +126,22 @@ namespace tester {
 
 		if (command == "clear_results") {
 			results_history = "";
-			logger::warn("all current tests results removed from history !");
+			core::logger::warn("all current tests results removed from history !");
 			return;
 		}
 
 		if (command == "list_all") {
-			logger::print_groups(groups);
-			logger::print_tests(tests);
+			tester::logger::print_groups(groups);
+			tester::logger::print_tests(tests);
 			return;
 		}
 
 		if (command == "list_groups") {
-			logger::print_groups(groups);
+			tester::logger::print_groups(groups);
 			return;
 		}
 		if (command == "list_tests") {
-			logger::print_tests(tests);
+			tester::logger::print_tests(tests);
 			return;
 		}
 
@@ -197,17 +207,17 @@ static inline void exec_all_function() {
 	for (auto& pair : tester::tests) {
 		pair.second.run_test();
 	}
-	logger::hint("Ungrouped Tests Finished !");
+	core::logger::info("Ungrouped Tests Finished !");
 
-	logger::print_tests_results(tester::tests , tester::results_history, tester::old_tests);
+	tester::logger::print_tests_results(tester::tests , tester::results_history, tester::old_tests);
 
 	// execute all groups
 	for (auto& pair : tester::groups) {
-		logger::hint("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
+		core::logger::info("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
 		pair.second.run_all_tests();
-		logger::hint("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
+		core::logger::info("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
 
-		logger::print_group_results(pair.second, tester::results_history, tester::old_tests);
+		tester::logger::print_group_results(pair.second, tester::results_history, tester::old_tests);
 	}
 
 }
@@ -215,9 +225,9 @@ static inline void exec_all_function() {
 static inline void exec_tests_function(std::string& command , std::vector<std::string>* command_toknes) {
 
 	if (command_toknes->size() <= 1) {
-		logger::error("no argument found with command exec_test");
-		logger::hint("exec_test id1 id2 ....");
-		logger::hint("exec_test *");
+		core::logger::error("no argument found with command exec_test");
+		core::logger::info("exec_test id1 id2 ....");
+		core::logger::info("exec_test *");
 
 		return;
 	}
@@ -225,13 +235,13 @@ static inline void exec_tests_function(std::string& command , std::vector<std::s
 	// execute all ungrouped tests
 	if ((*command_toknes)[1] == "*") {
 
-		logger::hint("Start All The Ungrouped Tests ...");
+		core::logger::info("Start All The Ungrouped Tests ...");
 		for (auto& pair : tester::tests) {
 			pair.second.run_test();
 		}
-		logger::hint("Ungrouped Tests Finished !");
+		core::logger::info("Ungrouped Tests Finished !");
 
-		logger::print_tests_results(tester::tests , tester::results_history , tester::old_tests);
+		tester::logger::print_tests_results(tester::tests , tester::results_history , tester::old_tests);
 
 		return;
 	}
@@ -247,15 +257,15 @@ static inline void exec_tests_function(std::string& command , std::vector<std::s
 		auto pair = tester::tests.find(id);
 
 		if (pair == tester::tests.end()) {
-			logger::error("Test with ID " + std::to_string(id) + " Not Found !");
+			core::logger::error("Test with ID " + std::to_string(id) + " Not Found !");
 		}
 		else {
 			test& _test = pair->second;
 
-			logger::hint("Test " + _test.get_test_name() + " with ID:" + std::to_string(_test.get_id()) + " Found !");
+			core::logger::info("Test " + _test.get_test_name() + " with ID:" + std::to_string(_test.get_id()) + " Found !");
 			_test.run_test();
 
-			logger::print_test_result(_test , tester::results_history, tester::old_tests);
+			tester::logger::print_test_result(_test , tester::results_history, tester::old_tests);
 		}
 
 	}
@@ -266,9 +276,9 @@ static inline void exec_tests_function(std::string& command , std::vector<std::s
 static inline void exec_groups_function(std::string& command, std::vector<std::string>* command_toknes) {
 
 	if (command_toknes->size() <= 1) {
-		logger::error("no argument found with command exec_group");
-		logger::hint("exec_group id1 id2 ....");
-		logger::hint("exec_group *");
+		core::logger::error("no argument found with command exec_group");
+		core::logger::info("exec_group id1 id2 ....");
+		core::logger::info("exec_group *");
 
 		return;
 	}
@@ -277,11 +287,11 @@ static inline void exec_groups_function(std::string& command, std::vector<std::s
 	if ((*command_toknes)[1] == "*") {
 
 		for (auto& pair : tester::groups) {
-			logger::hint("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
+			core::logger::info("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
 			pair.second.run_all_tests();
-			logger::hint("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
+			core::logger::info("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
 
-			logger::print_group_results(pair.second , tester::results_history, tester::old_tests);
+			tester::logger::print_group_results(pair.second , tester::results_history, tester::old_tests);
 		}
 
 		return;
@@ -297,14 +307,14 @@ static inline void exec_groups_function(std::string& command, std::vector<std::s
 		auto pair = tester::groups.find(id);
 
 		if (pair == tester::groups.end()) {
-			logger::error("Group with ID " + std::to_string(id) + " Not Found !");
+			core::logger::error("Group with ID " + std::to_string(id) + " Not Found !");
 		}
 		else {
-			logger::hint("Group " + pair->second.get_name() + " with ID:" + std::to_string(id) + " Found !");
+			core::logger::info("Group " + pair->second.get_name() + " with ID:" + std::to_string(id) + " Found !");
 			pair->second.run_all_tests();
-			logger::hint("Group " + pair->second.get_name() + " Finished in " + std::to_string(pair->second.get_exec_time()) + "ns !");
+			core::logger::info("Group " + pair->second.get_name() + " Finished in " + std::to_string(pair->second.get_exec_time()) + "ns !");
 
-			logger::print_group_results(pair->second , tester::results_history, tester::old_tests);
+			tester::logger::print_group_results(pair->second , tester::results_history, tester::old_tests);
 		}
 	}
 

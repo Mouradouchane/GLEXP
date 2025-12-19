@@ -1,0 +1,12 @@
+[12/19/25] [tester_logger] [warning] : tester_logs folder not found !
+
+[12/19/25] [tester_logger] [warning] : tester_logs folder not found !
+
+[12/19/25] [tester_logger] [warning] : no log file found !
+
+[12/19/25] [tester_logger] [warning] : init-logger test warn 1 !
+
+[12/19/25] [tester_logger] [error] : init-logger test error 1 !
+
+[12/19/25] [tester_logger] [critical] : init-logger test critical 1 !
+

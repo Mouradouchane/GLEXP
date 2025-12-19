@@ -1,0 +1,7 @@
+construction_basics                        2419007ns                                successed
+push_and_resize_trivial                    981654ns                                 successed
+push_and_resize_nontrivial_string          4255757ns                                successed
+pop_basics_trivial                         1052871ns                                successed
+pop_basics_nontrivial_string               1288180ns                                successed
+copy_assignment_nontrivial                 3372269ns                                successed
+empty_pop_handling                         1366616ns                                successed
