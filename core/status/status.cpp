@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ERRORS_CPP
-#define ERRORS_CPP
+#ifndef STATUS_CPP
+#define STATUS_CPP
 
 #include <string>
 #include <map>
@@ -10,51 +10,7 @@
 #include "core/types.hpp"
 #include "status.hpp"
 
-// todo : refactor all of this !!!!
-
-static const std::map<core::error, std::string> error_codes = {
-	{core::error::none , "000"},
-
-	// "init" ========================
-	{core::error::init_function_failed , "ERR100"},
-	
-	// "shader" ========================
-	{core::error::failed_to_save_shader, "ERR101"},
-	{core::error::failed_to_load_shader, "ERR102"},
-	{core::error::failed_to_compile_shader,"ERR103"},
-	{core::error::failed_to_run_shader, "ERR104"},
-	{core::error::shader_crash, "ERR105"},
-	{core::error::failed_to_create_program, "ERR106"},
-	{core::error::failed_to_create_vertex_shader,"ERR107"},
-	{core::error::failed_to_create_fragment_shader,"ERR108"},
-
-	// "files" =========================
-	{core::error::file_not_found,			 "ERR109"} ,
-	{core::error::failed_to_open_file,		 "ERR110"} ,
-	{core::error::failed_to_create_file,	 "ERR111"} ,
-	{core::error::failed_to_delete_file,	 "ERR112"} ,
-	{core::error::failed_to_write_to_file,	 "ERR113"} ,
-	{core::error::failed_to_read_from_file, "ERR114"} ,
-
-	// "folders" ========================
-	{core::error::folder_not_found,	     "ERR115"} ,
-	{core::error::failed_to_open_folder,    "ERR116"} ,
-	{core::error::failed_to_create_folder,  "ERR117"} ,
-	{core::error::failed_to_delete_folder,  "ERR118"} ,
-
-	// "configs" ========================
-	{core::error::failed_to_load_ini_file, "ERR119"} ,
-	{core::error::failed_to_save_ini_file, "ERR120"} ,
-
-	// "models" ==========================
-	{core::error::failed_to_process_model, "ERR121"} ,
-
-	// "common" errors ====================
-	{core::error::failed_to_load_resource , "ERR122"} ,
-	{core::error::nullptr_object ,          "ERR123"} ,
-};
-
-static const std::map<core::error, std::string> error_strings = {
+static const std::map<core::error, std::string> errors = {
 	{core::error::none , "no error"} ,
 
 	// "init" ========================
@@ -76,25 +32,50 @@ static const std::map<core::error, std::string> error_strings = {
 	{core::error::failed_to_create_file,	"failed to create file"},
 	{core::error::failed_to_delete_file,	"failed to delete file"},
 	{core::error::failed_to_write_to_file,	"failed to write to file"},
-	{core::error::failed_to_read_from_file,"failed to read from file"},
+	{core::error::failed_to_read_from_file, "failed to read from file"},
 
 	// "folders" ========================
-	{core::error::folder_not_found,	   "folder not found"},
-	{core::error::failed_to_open_folder,  "failed to open folder"},
-	{core::error::failed_to_create_folder,"failed to create folder"},
-	{core::error::failed_to_delete_folder,"failed to delete folder"},
+	{core::error::folder_not_found,	       "folder not found"},
+	{core::error::failed_to_open_folder,   "failed to open folder"},
+	{core::error::failed_to_create_folder, "failed to create folder"},
+	{core::error::failed_to_delete_folder, "failed to delete folder"},
 
 	// "configs" ========================
-	{core::error::failed_to_load_ini_file,"failed to load ini file"},
-	{core::error::failed_to_save_ini_file,"failed to save ini file"},
+	{core::error::failed_to_load_ini_file, "failed to load ini file"},
+	{core::error::failed_to_save_ini_file, "failed to save ini file"},
 
 	// models ========================
 	{core::error::failed_to_process_model,"failed to process model"},
 
 	// common errors
+	{core::error::index_out_range , "index {} out of range {}"},
 	{core::error::failed_to_load_resource , "failed to load resource"},
 	{core::error::nullptr_object , "object is null-pointer"},
 
-}; // error codes map end
+}; // errors map end
+
+
+static const std::map<core::warning, std::string> warnings = {
+	{core::warning::none , "no warning"},
+	{core::warning::allocated_with_global_memory , "{}byte allocated using 'core::global_memory' allocator ! please consider moving this allocation to the rigth place where it's belone too !"},
+	{core::warning::self_assignment , "assign object to it self is probably a bug !"}
+
+}; // warnings map end
+
+namespace status {
+
+	DLL_API std::string get_error(core::error error_code) noexcept {
+
+		auto error_itr = errors.find(error_code);
+		return ((error_itr == errors.end()) ? "error not found !" : error_itr->second);
+	}
+
+	DLL_API std::string get_warning(core::warning warning_code) noexcept {
+
+		auto warning_itr = warnings.find(warning_code);
+		return ((warning_itr == warnings.end()) ? "warning not found !" : warning_itr->second);
+	}
+
+} // namespace status end 
 
 #endif

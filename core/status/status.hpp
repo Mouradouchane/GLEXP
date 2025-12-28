@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef ERRORS_HPP
-#define ERRORS_HPP
+#ifndef STATUS_HPP
+#define STATUS_HPP
 
 #include <string>
 #include "core/types.hpp"
@@ -18,6 +18,11 @@ namespace core {
 	*/
 	enum class error : u16 {
 		none = 0,
+
+		// common errors
+		index_out_range,
+		failed_to_load_resource,
+		nullptr_object,
 
 		// "init" ========================
 		init_function_failed,
@@ -59,13 +64,23 @@ namespace core {
 		// models ========================
 		failed_to_load_model,
 		failed_to_process_model,
-		
-		// common errors
-		failed_to_load_resource,
-		nullptr_object,
 
 	}; // enum class errors
 
-} // namespace core
+
+	enum class warning : u16 {
+		none = 0,
+		allocated_with_global_memory,
+		self_assignment,
+	};
+	
+	namespace status {
+
+		DLL_API std::string get_error(core::error error_code) noexcept;
+		DLL_API std::string get_warning(core::warning warning_code) noexcept;
+	
+	} // namespace status end 
+
+} // namespace core end 
 
 #endif

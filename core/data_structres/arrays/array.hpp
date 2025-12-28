@@ -10,7 +10,25 @@
 
 #include "core/types.hpp"
 #include "core/assert.hpp"
+#include "core/status/status.hpp"
 #include "core/memory/memory.hpp"
+
+namespace status = core::status;
+
+#ifdef DEBUG
+
+	#define INFO_ARRAY_CONSTUCTED() CORE_DEBUG( \
+		"0x{} -> core::array<{}>[{}] -> allocated using allocator \"{}\" for {} system", \
+		(void*)this , typeid(type).name(), this->size_ , \
+		(this->allocator ? this->allocator.name() : "global allocator"), \
+		(this->allocator ? this->allocator.type() : "unkown !"), \
+	);
+
+#else 
+
+	#define INFO_ARRAY_CONSTUCTED()
+
+#endif
 
 namespace core {
 
@@ -36,6 +54,7 @@ namespace core {
 			this->count_ = (elements_count) ? elements_count : 1;
 			this->size_  = (this->count_ * sizeof(type));
 
+			// allocate memory
 			if (this->allocator == nullptr) {
 				this->begin_ = (type*)(core::global_memory::allocate(this->size_));
 			}
@@ -50,7 +69,7 @@ namespace core {
 				new (ptr) type();
 			}
 
-			CORE_INFO("core::array<{}> allocated with size:{} at address:&{} ", typeid(type).name(), this->size_ , (void*)this);
+			INFO_ARRAY_CONSTUCTED();
 		}
 		
 		array(const type* elements, u32 elements_count, core::memory_allocator* _allocator = nullptr)
@@ -80,7 +99,7 @@ namespace core {
 				}
 			}
 
-			CORE_INFO("allocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), (void*)this , this->size_);
+			INFO_ARRAY_CONSTUCTED();
 		}
 
 		// copy constructor
@@ -96,22 +115,21 @@ namespace core {
 			}
 			else {
 				this->begin_ = (type*)core::global_memory::allocate(this->size_);
-				CORE_WARN("core::array<{}> allocated using core::global_memory allocator .", typeid(type).name());
 			}
 
 			this->end_ = this->begin_ + this->count_;
 
+			// todo: multi-threaded copying
 			if constexpr(std::is_trivially_copyable<type>::value) {
 				std::memcpy(this->begin_ , other_array.begin_ , this->size_);
 			}
 			else { 
-				// todo: multi-threaded copying
 				for (u32 i = 0; i < this->count_; i++) {
 					new (this->begin_ + i) type(other_array.begin_[i]);
 				}
 			}
 
-			CORE_INFO("allocated core::array<{}> -> address:&{} , size:{}", typeid(type).name(), (void*)this , (void*)this->size_);
+			INFO_ARRAY_CONSTUCTED();
 		}
 		
 		// move constructor 
@@ -132,7 +150,7 @@ namespace core {
 			array_to_move.size_     = 0;
 			array_to_move.count_    = 0;
 
-			CORE_INFO("core::array<{}> -> moved array ownership from &{} to &{}", typeid(type).name(), (void*)&array_to_move , (void*)this);
+			CORE_INFO("core::array<{}> -> moved array ownership from 0x{} to 0x{}", typeid(type).name(), (void*)&array_to_move , (void*)this);
 		}
 
 		/*
@@ -164,30 +182,36 @@ namespace core {
 
 			}
 
-			CORE_INFO("deallocated core::array<{}> at address:&{} with size:{}", typeid(type).name(), (void*)this, this->size_);
+			CORE_DEBUG("core::array<{}>[{}] -> destructed + memory deallocated", typeid(type).name(), this->size_);
 		}
 
 		/*
 			operator's
 		*/ 
 		type& operator[](u32 index) {
-			VCRASH_IF(index >= this->count_ , "error at core::dynamic_array operator[] : index '{}' out of array range '{}' !" , index , this->count_);
+			VCRASH_IF(index >= this->count_ , core::status::get_error(core::error::index_out_range) , index, this->count_);
 			return *(this->begin_ + index); 
 		}
 
-		// note: performe copy operation
-		// note: discard old elements
+		// note: operator=  performe copy operation
+		// note: operator=  discard old elements
 		core::array<type>& operator = (core::array<type> const& array_to_copy) {
-			if (this == &array_to_copy) return *this;
+			if (this == &array_to_copy) {
+				CORE_WARN( core::status::get_warning(core::warning::self_assignment) );
+				return *this;
+			}
 
 			core::array<type>::copy(array_to_copy, *this);
 			return *this;
 		}
 
-		// note: performe move ownership operation
-		// note: discard old elements
+		// note: operator=  performe move ownership operation
+		// note: operator=  discard old elements
 		core::array<type>& operator = (core::array<type>&& array_to_move) {
-			if (this == &array_to_move) return *this;
+			if (this == &array_to_move) {
+				CORE_WARN(core::status::get_warning(core::warning::self_assignment));
+				return *this;
+			}
 
 			if (this->begin_ != nullptr) {
 
@@ -221,6 +245,7 @@ namespace core {
 			array_to_move.size_     = 0;
 			array_to_move.count_    = 0;
 
+			CORE_INFO("core::array<{}> -> moved array ownership from 0x{} to 0x{}", typeid(type).name(), (void*)&array_to_move , (void*)this);
 			return *this;
 		}
 

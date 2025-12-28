@@ -122,6 +122,8 @@ void* core::global_memory::allocate(size_t count , memory_usage section) {
 		(ptr)pointer , alloc_info{count , _section}
 	});
 	
+	CORE_WARN(status::get_warning(core::warning::allocated_with_global_memory) , count);
+
 	return pointer;
 }
 
