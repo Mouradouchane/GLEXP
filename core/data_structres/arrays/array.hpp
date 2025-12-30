@@ -88,12 +88,12 @@ namespace core {
 
 			this->end_ = this->begin_ + this->count_;
 
-			// memcpy elements if copyable 
+			// todo: multi-threaded copying !
 			if constexpr(std::is_trivially_copyable<type>::value) {
+				// memcpy elements if copyable 
 				std::memcpy(this->begin_, elements, this->size_);
 			}
 			else {
-				// todo: multi-threaded copying
 				for (u32 i = 0; i < this->count_; ++i) {
 					new (this->begin_ + i) type(elements[i]);
 				}
@@ -106,6 +106,11 @@ namespace core {
 		array(core::array<type> const& other_array, core::memory_allocator* _allocator = nullptr) 
 			: allocator(_allocator)
 		{
+			if (this == &other_array) {
+				CORE_WARN(core::status::get_warning(core::warning::self_assignment));
+				return;
+			}
+
 			this->count_ = other_array.count_ ? other_array.count_ : 1;
 			this->size_  = sizeof(type) * this->count_;
 
@@ -119,8 +124,9 @@ namespace core {
 
 			this->end_ = this->begin_ + this->count_;
 
-			// todo: multi-threaded copying
+			// todo: multi-threaded copying !
 			if constexpr(std::is_trivially_copyable<type>::value) {
+				// copy elements if copyable 
 				std::memcpy(this->begin_ , other_array.begin_ , this->size_);
 			}
 			else { 
@@ -134,7 +140,10 @@ namespace core {
 		
 		// move constructor 
 		array(core::array<type>&& array_to_move) noexcept {
-			if (this == &array_to_move) return;
+			if (this == &array_to_move) {
+				CORE_WARN(core::status::get_warning(core::warning::self_assignment));
+				return;
+			}
 
 			// move ownership
 			this->allocator = array_to_move.allocator;
@@ -182,14 +191,26 @@ namespace core {
 
 			}
 
-			CORE_DEBUG("core::array<{}>[{}] -> destructed + memory deallocated", typeid(type).name(), this->size_);
+			CORE_DEBUG("0x{} -> core::array<{}>[{}] destructed + memory deallocated", (void*)this ,typeid(type).name(), this->size_);
 		}
 
 		/*
 			operator's
 		*/ 
 		type& operator[](u32 index) {
-			VCRASH_IF(index >= this->count_ , core::status::get_error(core::error::index_out_range) , index, this->count_);
+
+			if (index >= this->count_) {
+				#ifdef UNIT_TEST
+					CORE_FATAL(
+						"core::array<>[ ] -> index {} is out of array range {} , this will cause crash in runtime !",
+						index , this->count_
+					);
+					return *(this->begin_ + this->count_);
+				#else 
+					VCRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
+				#endif
+			}
+
 			return *(this->begin_ + index); 
 		}
 
@@ -209,7 +230,7 @@ namespace core {
 		// note: operator=  discard old elements
 		core::array<type>& operator = (core::array<type>&& array_to_move) {
 			if (this == &array_to_move) {
-				CORE_WARN(core::status::get_warning(core::warning::self_assignment));
+				CORE_WARN( core::status::get_warning(core::warning::self_assignment) );
 				return *this;
 			}
 
@@ -253,15 +274,37 @@ namespace core {
 			array public functions
 		*/
 		type& get(u32 index) {
-			VCRASH_IF(index >= this->count_ , "error at core::array.get() -> index '{}' out of array range '{}' !" , index , this->count_);
+
+			if (index >= this->count_) {
+				#ifdef UNIT_TEST
+					CORE_FATAL(
+						"core::array<>::get() -> index {} is out of array range {} , this will cause crash in runtime !",
+						index , this->count_
+					);
+					return *(this->begin_ + this->count_);
+				#else 
+					VCRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
+				#endif
+			}
 
 			return *(this->begin_ + index);
 		}
 
 		void set(u32 index, type const& new_element) {
-			VCRASH_IF(index >= this->count_ , "error at core::array.set() -> index '{}' out of array range '{}' !" , index , this->count_);
+			
+			if (index >= this->count_) {
+				#ifdef UNIT_TEST
+					CORE_FATAL(
+						"core::array::set() -> index {} is out of array range {} , this will cause crash in runtime !",
+						index , this->count_
+					);
+					return ;
+				#else 
+					VCRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
+				#endif
+			}
+			else *(this->begin_ + index) = new_element;
 
-			*(this->begin_ + index) = new_element;
 		}
 
 		type* begin() noexcept {
@@ -324,7 +367,20 @@ namespace core {
 		//       why because core::array designed to not have overlapped/shared memory between array .
 		//       so any overlapped arrays is probablly a ---> bug in code !
 		static void copy(core::array<type> const& source, core::array<type>& destination) {
-			VCRASH_IF((&source) == (&destination), "core::array::copy(source={}, destination={}) : copying source to it self is a bug !" , (void*)&source, (void*)&destination);
+
+			if ( (&source) == (&destination) ) {
+
+				#ifdef UNIT_TEST
+					CORE_FATAL(
+						"core::array<>::copy(0x{} , 0x{}) -> copying element to it self , will cause crash in runtime !", 
+						(void*)&source, (void*)&destination
+					);
+					return;
+				#else 
+					VCRASH_IF(true, core::status::get_error(core::error::source_equal_destination) , (void*)&source, (void*)&destination);
+				#endif
+
+			}
 			
 			if(source.begin_){
 				
@@ -333,12 +389,15 @@ namespace core {
 				
 				// note: source > destination is counted as a bug
 				if (source.size_ > destination.size_) {
-				#ifdef UNIT_TEST
-					CORE_WARN("core::array::copy() : source is bigger than destination , this will cause crash in runtime !");
-					return;
-				#else
-					VCRASH_IF(true , "core::array::copy(source={}, destination={}) : source array is bigger than the destination array !", (void*)&source, (void*)&destination);
-				#endif
+					#ifdef UNIT_TEST
+						CORE_FATAL(
+							"core::array<>::copy(0x{} , 0x{}) -> source is bigger than destination , this will cause crash in runtime !" , 
+							(void*)&source, (void*)&destination
+						);
+						return;
+					#else
+						VCRASH_IF(true, core::status::get_error(core::error::source_bigger_than_destination), (void*)&source, (void*)&destination);
+					#endif
 				}
 				
 				if constexpr (std::is_trivially_copyable<type>::value) {
@@ -353,11 +412,33 @@ namespace core {
 					}
 				}
 			}
+			else {
+				#ifdef UNIT_TEST 
+					CORE_FATAL(
+						"core::array<>::copy() -> 'source array' pointer is nullptr this will cause crash in runtime !" 
+					);
+				#else 
+					CRASH_IF(true, core::status::get_error(core::error::nullptr_memory));
+				#endif
+			}
 
 		}
 
 		static void move(core::array<type>& source, core::array<type>& destination) {
-			VCRASH_IF((&source) == (&destination), "core::array::move(source={}, destination={}) : moving source to it self is a bug !" , (void*)&source, (void*)&destination);
+			
+			if ( (&source) == (&destination) ) {
+
+				#ifdef UNIT_TEST
+					CORE_FATAL(
+						"core::array<>::move(0x{} , 0x{}) -> moving element to it self this will cause crash in runtime !", 
+						(void*)&source, (void*)&destination
+					);
+					return;
+				#else 
+					VCRASH_IF(true, core::status::get_error(core::error::source_equal_destination) , (void*)&source, (void*)&destination);
+				#endif
+
+			}
 
 			if (destination.begin_) {
 				core::array<type>::deallocate(destination, true);
@@ -380,16 +461,25 @@ namespace core {
 
 		// todo : add option for multi-threaded copying later
 		static void fill(core::array<type>& _array, type const& fill_value) noexcept {
-			VCRASH_IF(_array.begin_ == nullptr , "core::array::fill(_array={}) : array memory is null-pointer !" , (void*)&_array);
+
+			if (_array.begin_ == nullptr) {
+				#ifdef UNIT_TEST 
+					CORE_FATAL(
+						"core::array<>::fill() -> 'source array' memory is nullptr , will cause crash in runtime !" 
+					);
+					return;
+				#else 
+					CRASH_IF(true, core::status::get_error(core::error::nullptr_memory));
+				#endif
+			}
 
 			std::fill(_array.begin_ , _array.end_ , fill_value);
 		}
 
 		static inline void sort(
-			core::array<type>& _array,
-			bool (*compare_function)(type const& a, type const& b)
-		) noexcept 
-		{
+			core::array<type>& _array , bool (*compare_function)(type const& a, type const& b)
+		) noexcept {
+
 			if (_array.begin_ && _array.count_ > 1) {
 				std::sort(_array.begin_ , (_array.begin_ + _array.count_) , compare_function);
 			}
@@ -446,7 +536,7 @@ namespace core {
 			_array.size_  = 0;
 		}
 
-		static inline void allocate(core::array<type>& _array , u32 new_elements_count) {
+		static inline void allocate(core::array<type>& _array , u32 new_elements_count , bool construct_objects = false) {
 
 			new_elements_count = (new_elements_count) ? new_elements_count : 1;
 
@@ -464,8 +554,13 @@ namespace core {
 				_array.begin_ = (type*)core::global_memory::allocate(_array.size_);
 			}
 
-			// construct objects 
-			
+			// construct objects "optional"
+			if (construct_objects) {
+				for (type* ptr = _array.begin_ ; ptr != _array.end_ ; ptr++) {
+					new (ptr) type();
+				}
+			}
+
 			// update array variables
 			_array.end_ = _array.begin_ + _array.count_;
 		}

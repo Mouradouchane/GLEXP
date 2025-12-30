@@ -15,26 +15,42 @@
 
 namespace core {
 
-	namespace event {
+	namespace event_system {
 
-		// events list
-		enum class list : u16 {
+		// event's 
+		enum class event_type : u16 {
 			none = 0,
-			mouse_left_click,
-			mouse_right_click,
+			custom,
 
+			mouse,
+			keyboard,
+			controller,
+
+			gui,
+			gpu,
+			screen,
+
+			graphics,
+			physics,
+			animation,
+			network,
+
+			file,
+			memory,
 		};
 
-		// add/remove events
-		DLL_API bool create_event();
-		DLL_API bool remove_event();
+		struct event {
+			event_type type;
 
-		// add/remove event listeners
-		DLL_API event_id start_listen();
+			bool       is_immdiate;
+		};
+
+		// event listening
+		DLL_API event_id start_listen(event_type);
 		DLL_API bool     stop_listen();
 
 		// trigger events
-		DLL_API void trigger_event();
+		DLL_API void trigger_event(event_type);
 		DLL_API void queue_event();
 
 

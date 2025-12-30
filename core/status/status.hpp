@@ -3,7 +3,7 @@
 #ifndef STATUS_HPP
 #define STATUS_HPP
 
-#include <string>
+#include "core/strings/string.hpp"
 #include "core/types.hpp"
 
 namespace core {
@@ -21,8 +21,12 @@ namespace core {
 
 		// common errors
 		index_out_range,
-		failed_to_load_resource,
+		source_equal_destination,
+		source_bigger_than_destination,
 		nullptr_object,
+		nullptr_memory,
+		nullptr_buffer,
+		failed_to_load_resource,
 
 		// "init" ========================
 		init_function_failed,
@@ -73,11 +77,11 @@ namespace core {
 		allocated_with_global_memory,
 		self_assignment,
 	};
-	
+
 	namespace status {
 
-		DLL_API std::string get_error(core::error error_code) noexcept;
-		DLL_API std::string get_warning(core::warning warning_code) noexcept;
+		DLL_API string get_error(core::error error_code) noexcept;
+		DLL_API string get_warning(core::warning warning_code) noexcept;
 	
 	} // namespace status end 
 

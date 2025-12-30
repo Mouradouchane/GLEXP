@@ -1,62 +1,74 @@
 #pragma once 
 
-#ifndef STRINGS_HPP
-#define STRINGS_HPP
+#ifndef o_stringS_HPP
+#define o_stringS_HPP
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
 #include "core/memory/memory_heap.hpp"
 
+/*
+	note: currently we using std::string under wrapper !
+		  but latter we could move to core::string or core::c_string .
+*/
+#include <string>
+using string = std::string;
+
 namespace core {
 
-DLL_API struct c_string {
-	char* start  = nullptr;
-	char* end    = nullptr;
+struct c_string {
+	core::memory_allocator* allocator_ = nullptr;
+
+	char* start   = nullptr;
+	char* end     = nullptr;
 	u32   count   = NULL;
 };
 
-DLL_API class string {
+DLL_API_CLASS o_string {
 
 private	:
-	char* start = nullptr;
-	char* end   = nullptr;
-	u32   count  = NULL;
+	core::memory_allocator* allocator_ = nullptr;
+
+	char* start_  = nullptr;
+	u32   size_   = 0;
+	u32   count_  = 0;
 
 public : 
 	// constructor's
-	string() = default;
-	string(const char* _string);
-	string(const char* _string , u32 count);
-	string(u32 string_size);
+	o_string() = default;
+	o_string(const char* _string , core::memory_allocator* memory_allocator = nullptr);
+	o_string(const char* _string , u32 count , core::memory_allocator* memory_allocator = nullptr);
+	o_string(u32 o_string_size , core::memory_allocator* memory_allocator = nullptr);
+
+	// copy 
+	o_string(o_string const& copy_string , core::memory_allocator* memory_allocator = nullptr);
+	// move 
+	o_string(o_string&& move_string);
 
 	// destructor
-	~string();
-
+	~o_string();
+	
 	// operator's
-	char*   operator[] (u32 index);
-	string& operator= (const string& copy_string);
+	char*     operator[] (u32 index);
+	o_string& operator=  (core::o_string const& copy_string);
+	o_string& operator=  (const char* copy_string);
+	bool      operator== (core::o_string const& other_string);
+	bool      operator+= (const char* other_string);
+
+	// public function's
+	u32 length(o_string& _string);
+	u32 size(o_string& _string);
+
+	const char* c_str(o_string const& _string);
+	const char* begin(o_string const& _string);
+	const char*   end(o_string const& _string);
 
 	// static function's
-	static u32 count(string& str);
-	static u32 length(string& str);
+	static bool copy(o_string const& source, o_string& destination);
+	static bool move(o_string& source, o_string& destination);
 
-	static bool copy(string& destination, const string& source);
-	static bool move(string& destination, string& source);
+}; // class core::string end
 
-	static const char* c_str(string const& _string);
-	static const char* begin(string const& _string);
-	static const char*   end(string const& _string);
-
-	static bool clear(string const& _string);
-	static bool fill(string const& _string, char _value);
-
-	// note: this mean global_memory reallocation which is means old "start/end" pointers gonna be invalid !!!
-	static bool resize(u32 new_size);
-
-	static bool compare(string const& a, string const& b);
-
-}; // class string
-
-} // namespace core
+} // namespace core end
 
 #endif

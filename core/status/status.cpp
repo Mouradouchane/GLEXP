@@ -3,19 +3,30 @@
 #ifndef STATUS_CPP
 #define STATUS_CPP
 
-#include <string>
 #include <map>
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
 #include "status.hpp"
 
-static const std::map<core::error, std::string> errors = {
+static const std::map<core::error, string> errors = {
 	{core::error::none , "no error"} ,
 
 	// "init" ========================
 	{core::error::init_function_failed , "init function failed"},
 
+	// "common" ======================
+	{core::error::index_out_range , "index {} out of range {}"},
+
+	{core::error::source_equal_destination , "source '{}' is equal to destination '{}' ?"},
+	{core::error::source_bigger_than_destination , "source '{}' is bigger than destination '{}' ?"},
+
+	{core::error::nullptr_object , "pointer to object is null-pointer !"},
+	{core::error::nullptr_memory , "pointer to memory is null-pointer !"},
+	{core::error::nullptr_buffer , "pointer to buffer is null-pointer !"},
+
+	{core::error::failed_to_load_resource , "failed to load resource"},
+	
 	// "shader" ========================
 	{core::error::failed_to_save_shader, "failed to save shader"},
 	{core::error::failed_to_load_shader, "failed to load shader"},
@@ -47,15 +58,12 @@ static const std::map<core::error, std::string> errors = {
 	// models ========================
 	{core::error::failed_to_process_model,"failed to process model"},
 
-	// common errors
-	{core::error::index_out_range , "index {} out of range {}"},
-	{core::error::failed_to_load_resource , "failed to load resource"},
-	{core::error::nullptr_object , "object is null-pointer"},
-
 }; // errors map end
 
 
-static const std::map<core::warning, std::string> warnings = {
+static const std::map<core::warning, string> warnings = {
+
+	// "common" ======================
 	{core::warning::none , "no warning"},
 	{core::warning::allocated_with_global_memory , "{}byte allocated using 'core::global_memory' allocator ! please consider moving this allocation to the rigth place where it's belone too !"},
 	{core::warning::self_assignment , "assign object to it self is probably a bug !"}
@@ -64,13 +72,13 @@ static const std::map<core::warning, std::string> warnings = {
 
 namespace status {
 
-	DLL_API std::string get_error(core::error error_code) noexcept {
+	DLL_API string get_error(core::error error_code) noexcept {
 
 		auto error_itr = errors.find(error_code);
 		return ((error_itr == errors.end()) ? "error not found !" : error_itr->second);
 	}
 
-	DLL_API std::string get_warning(core::warning warning_code) noexcept {
+	DLL_API string get_warning(core::warning warning_code) noexcept {
 
 		auto warning_itr = warnings.find(warning_code);
 		return ((warning_itr == warnings.end()) ? "warning not found !" : warning_itr->second);
