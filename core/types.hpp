@@ -19,21 +19,34 @@ typedef uint32_t u32;
 typedef uint64_t u64;
 
 // int's
-typedef int8_t	int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
+typedef int8_t	int8  , i8;
+typedef int16_t int16 , i16;
+typedef int32_t int32 , i32;
+typedef int64_t int64 , i64;
 
 // float's
 typedef float  f32;
 typedef double f64;
 typedef long double f80;
 
+// vector's for none math use
+template<typename type> struct t_vec2 {
+	type x, y;
+};
+
+template<typename type> struct t_vec3 {
+	type x, y, z;
+};
+
+template<typename type> struct t_vec4 {
+	type x, y, z, w;
+};
+// ==========================
+
 // keys
 typedef u32 h_key32;
 typedef u64 h_key64;
 
 // events
-typedef u32 event_id;
 
 #endif

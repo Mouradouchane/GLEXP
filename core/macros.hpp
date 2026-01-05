@@ -14,6 +14,9 @@
 	#define DEBUG_BREAK
 #endif
 
+// for class/interface
+#define NEED_IMPL 0
+
 // current arch x64 or x32 maybe other arch later 
 #if defined(_WIN64) || defined(WIN64) || defined(__x86_64__) || defined(_____LP64_____)
 	#define X64
@@ -40,7 +43,7 @@
 #define DISABLE_WARNING_START __pragma(warning(push,0));
 #define DISABLE_WARNING_END   __pragma(warning(pop));
 
-#if defined(UNIT_TEST) && defined(DEBUG)
+#if defined(UNIT_TEST)
 	#define CORE_CRASH()
 #else
 	#define CORE_CRASH() exit(-1);
