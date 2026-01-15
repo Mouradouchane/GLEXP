@@ -19,10 +19,9 @@
 #include <functional>
 
 #include "core/macros.hpp"
+#include "core/assert.hpp"
 #include "core/types.hpp"
 #include "core/strings/string.hpp"
-
-#define EVENT_DEFAULT_PARAMETERS_WITH_VALUES bool is_repeated = false
 
 namespace core {
 
@@ -41,12 +40,12 @@ namespace core {
 		animation,
 		network,
 
-		// for "debug only" !!!
-#ifdef DEBUG
+	// for "debug only" !!!
+	#ifdef DEBUG
 		file,
 		folder,
 		memory,
-#endif
+	#endif
 	};
 
 	enum class event_type : u16 {
@@ -87,122 +86,123 @@ namespace core {
 		memory_deallocated,
 	#endif
 
+	}; // event_type end
+
+	// =========== events data objects ===========
+	struct mouse_data {
+		f32 x;
+		f32 y;
+		i32 scroll;
 	};
 
-	/*
-		parent event object !
-		note: if you want to make your own custom events , inherite from this class
-	*/
-	DLL_API_CLASS event{
-		protected:
-			bool handled_;
-			bool repeated_;
+	struct keyboard_data {
+		char key;
+		bool is_special;
+	};
 
-		public:
-			const core::event_type type_;
-			const core::event_category category_;
+	// ========================================================================================
+	// note: "event_data_type" just used to do type mapping in "class event" !
+	//       basically the type of the data in event gonna be determineted at compile-time 
+	//       based on "event_type"
+	// ========================================================================================
+	template<core::event_type event__type> struct event_data_type {
+		using data_type = void*;
+	};
 
-			// constructor
-			event(
-				core::event_category category__ = core::event_category::none,
-				core::event_type type__ = core::event_type::none,
-				EVENT_DEFAULT_PARAMETERS_WITH_VALUES
-			);
+	// mouse-events mapping
+	template<> struct event_data_type<event_type::mouse_click_left>   { using data_type = mouse_data; };
+	template<> struct event_data_type<event_type::mouse_click_right>  { using data_type = mouse_data; };
+	template<> struct event_data_type<event_type::mouse_scroll>       { using data_type = mouse_data; };
 
-			// destructor
-			virtual ~event() = default;
+	// keyboard-events mapping
+	template<> struct event_data_type<event_type::keypress_up>       { using data_type = keyboard_data; };
+	template<> struct event_data_type<event_type::keypress_down>     { using data_type = keyboard_data; };
 
-			// event public functions
-			inline void set_handled()        noexcept;
-			inline bool is_handled()         noexcept;
-			inline bool is_repeated_event()  noexcept;
+	// ========================================================================================
+	 
 
-	}; // event class end
+	template<core::event_type event__type> class event {
 
+	private:
+		bool handled_  = false;
+		bool repeated_ = false;
+
+	public:
+		COMPILE_TIME_ASSERT(std::is_void_v<typename event_data_type<event__type>::data_type>, "CORE -> COMPILE-TIME-ERROR -> 'unsupported/unmapped' event_type -> this need implemenation !!!");
+		using data_type = typename event_data_type<event__type>::data_type;
+
+
+		const core::event_type type = event__type;
+		data_type data;
+
+		event(data_type const& event_data, bool is_repeated = false) noexcept 
+			: data(event_data) , repeated_(is_repeated)
+		{
+
+		}
+
+		~event() = default;
+
+		// event functions
+		inline void set_handled()       noexcept { this->handled_ = true; }
+
+		inline bool is_handled()        noexcept { return this->handled_; }
+		inline bool is_repeated_event() noexcept { return this->repeated_; }
+
+	}; 
+	// class event end
+
+	
 	/*
 		=============== mouse events ===============
 	*/
 	namespace mouse_event {
 
-		DLL_API_CLASS mouse_click_left : public core::event{
-			public:
-				i32 x_;
-				i32 y_;
+		typedef core::event<core::event_type::mouse_click_left>  left_click;
+		typedef core::event<core::event_type::mouse_click_right> right_click;
+		typedef core::event<core::event_type::mouse_scroll>      scroll;
 
-				 mouse_click_left(i32 x, i32 y, EVENT_DEFAULT_PARAMETERS_WITH_VALUES);
-				~mouse_click_left() = default;
-		};
-
-		DLL_API_CLASS mouse_click_right : public core::event{
-			public:
-				i32 x_;
-				i32 y_;
-
-				 mouse_click_right(i32 x, i32 y, EVENT_DEFAULT_PARAMETERS_WITH_VALUES);
-				~mouse_click_right() = default;
-		};
-
-		DLL_API_CLASS mouse_scroll : public core::event{
-			public:
-				i32 x_;
-				i32 y_;
-				i32 scroll_factor_;
-
-				 mouse_scroll(i32 x, i32 y, i32 scroll_factor, EVENT_DEFAULT_PARAMETERS_WITH_VALUES);
-				~mouse_scroll() = default;
-		};
-
-	} // ================== namespace mouse_event end ===================
-
+	}
 
 	/*
 		=============== keyboard events ===============
 	*/
-	namespace keyboard_event {
-
-		DLL_API_CLASS keypress_up : public core::event{
-			public:
-				char key_;
-				bool special_key_;
-
-				 keypress_up(char keycode_, bool is_special_key, EVENT_DEFAULT_PARAMETERS_WITH_VALUES);
-				~keypress_up() = default;
-		};
-
-		DLL_API_CLASS keypress_down : public core::event{
-			public:
-				char key_;
-				bool special_key_;
-
-				 keypress_down(char keycode_, bool is_special_key, EVENT_DEFAULT_PARAMETERS_WITH_VALUES);
-				~keypress_down() = default;
-		};
-
-	} // ================ namespace keyboard_event end ==================
+	namespace keyboard_event{
+		
+		typedef core::event<core::event_type::keypress_up>   key_up;
+		typedef core::event<core::event_type::keypress_down> key_down;
+		
+	}
 
 } // namespace core
 
 namespace core  {
 
-	typedef u64 listener_id;
+	typedef u64 event_listener_id;
 
-	// void function( core::event const& event );   use it to listen to events
-	typedef std::function<void(const core::event&)> event_listner_function;
+	// template callback function used for event listening 
+	template<core::event_type event__type>     // void function( core::event<event_type> const& event );  
+	using event_listener_function = std::function<void(core::event<event__type> const& event_object)>;
 
 	/*
 		dispatcher: event-manager who manage event queues/triggers/listeners/...
 	*/
 	namespace dispatcher {
 
-		// event listening
-		DLL_API listener_id listen(core::event_type event_type, core::event_listner_function listner_function);
-		DLL_API void stop_listen(listener_id listener_id_);
+		template<core::event_type event__type> 
+		event_listener_id start_listening(core::event_listener_function<event__type> listener_function) noexcept;
 
-		// note: this will block "main-thread" from exection
-		DLL_API void trigger_event(core::event const& event_object);
+		template<core::event_type event__type> void stop_listening(event_listener_id id) noexcept;
 
-		// note: this will not block "main-thread" from exection
-		DLL_API void queue_event(std::unique_ptr<core::event> event_object);
+		/*
+			note: "trigger_event" will block "main-thread" from exection !
+		          for none-blocking use "queue_event" !
+		*/
+		template<core::event_type event__type> 
+		void trigger_event(core::event<event__type> const& event_object) noexcept;
+
+		template<core::event_type event__type> 
+		void queue_event(std::unique_ptr<core::event<event__type>> event_object) noexcept;
 
 	} // dispatcher end
 
