@@ -45,6 +45,9 @@ namespace core {
 		type* end_   = nullptr;
 
 	public:
+		// extra variables for personal use <3
+		u32 a, b, c, d;
+
 		/*
 			constructor's
 		*/

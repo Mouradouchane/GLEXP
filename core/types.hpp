@@ -43,10 +43,11 @@ template<typename type> struct t_vec4 {
 };
 // ==========================
 
+// events 
+typedef u32 event_listener_id;
+
 // keys
 typedef u32 h_key32;
 typedef u64 h_key64;
-
-// events
 
 #endif
