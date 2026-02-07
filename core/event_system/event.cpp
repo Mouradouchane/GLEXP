@@ -3,6 +3,7 @@
 #ifndef EVENTS_CPP
 #define EVENTS_CPP
 
+#include "core/data_structres/arrays/dynamic_array.hpp"
 #include "event.hpp"
 
 #define DEFAULT_QUEUE_SIZE   16
@@ -10,10 +11,10 @@
 
 // macro for explicit template instantiate
 #define INSTANTIATE_TEMPLATE_FOR_EVENT(TYPE) \
-		template DLL_API listener_id start_listening<TYPE>(event_listener_function<TYPE>); \
-		template DLL_API void stop_listening<TYPE>(listener_id); \
-		template DLL_API void trigger_event<TYPE>(core::event<TYPE> const& _event_); \
-		template DLL_API void queue_event<TYPE>(std::unique_ptr<core::event<TYPE>> _event_);
+		template DLL_API listener_id start_listening<TYPE>(listener_function<TYPE>) noexcept; \
+		template DLL_API void stop_listening<TYPE>(listener_id) noexcept; \
+		template DLL_API void trigger_event<TYPE>(core::event<TYPE> const& _event_) noexcept; \
+		template DLL_API void queue_event<TYPE>(std::unique_ptr<core::event<TYPE>> _event_) noexcept;
 
 namespace core {
 namespace event_system {
@@ -22,18 +23,18 @@ namespace event_system {
 
 	// queues of listeners
 	namespace listeners {	
-		core::dynamic_array<unkown_listener>        unkown(DEFAULT_QUEUE_SIZE , DEFAULT_QUEUE_RESIZE);
+		core::dynamic_array<listener::unkown_event> unkown(DEFAULT_QUEUE_SIZE, DEFAULT_QUEUE_RESIZE);
 
-		core::dynamic_array<left_click_listener>    left_click(DEFAULT_QUEUE_SIZE , DEFAULT_QUEUE_RESIZE);
-		core::dynamic_array<right_click_listener>   right_click(DEFAULT_QUEUE_SIZE , DEFAULT_QUEUE_RESIZE);
-		core::dynamic_array<mouse_scroll_listener>  mouse_scroll(DEFAULT_QUEUE_SIZE , DEFAULT_QUEUE_RESIZE);
+		core::dynamic_array<listener::mouse_left_click>   mouse_left_click(DEFAULT_QUEUE_SIZE, DEFAULT_QUEUE_RESIZE);
+		core::dynamic_array<listener::mouse_right_click>  mouse_right_click(DEFAULT_QUEUE_SIZE, DEFAULT_QUEUE_RESIZE);
+		core::dynamic_array<listener::mouse_scroll>       mouse_scroll(DEFAULT_QUEUE_SIZE, DEFAULT_QUEUE_RESIZE);
 
-		core::dynamic_array<keypress_up_listener>   keypress_up(DEFAULT_QUEUE_SIZE , DEFAULT_QUEUE_RESIZE);
-		core::dynamic_array<keypress_down_listener> keypress_down(DEFAULT_QUEUE_SIZE , DEFAULT_QUEUE_RESIZE);
+		core::dynamic_array<listener::keypress_up>   keypress_up(DEFAULT_QUEUE_SIZE, DEFAULT_QUEUE_RESIZE);
+		core::dynamic_array<listener::keypress_down> keypress_down(DEFAULT_QUEUE_SIZE, DEFAULT_QUEUE_RESIZE);
 
-		core::dynamic_array<window_open_listener>   window_open(DEFAULT_QUEUE_SIZE , DEFAULT_QUEUE_RESIZE);
-		core::dynamic_array<window_close_listener>  window_close(DEFAULT_QUEUE_SIZE , DEFAULT_QUEUE_RESIZE);
-		core::dynamic_array<window_resize_listener> window_resize(DEFAULT_QUEUE_SIZE , DEFAULT_QUEUE_RESIZE);
+		core::dynamic_array<listener::window_open>   window_open(DEFAULT_QUEUE_SIZE, DEFAULT_QUEUE_RESIZE);
+		core::dynamic_array<listener::window_close>  window_close(DEFAULT_QUEUE_SIZE, DEFAULT_QUEUE_RESIZE);
+		core::dynamic_array<listener::window_resize> window_resize(DEFAULT_QUEUE_SIZE, DEFAULT_QUEUE_RESIZE);
 	} 
 
 	// todo: add memory allocator for event system
@@ -43,19 +44,19 @@ namespace event_system {
 			queues_size = queues_size ? queues_size : DEFAULT_QUEUE_SIZE;
 			queues_resize_value = queues_resize_value ? queues_resize_value : DEFAULT_QUEUE_RESIZE;
 
-			// allocate memory for listeners
-			listeners::unkown = core::dynamic_array<unkown_listener>(queues_size, queues_resize_value);
+			// allocate arrays for event-listeners
+			listeners::unkown = core::dynamic_array<listener::unkown_event>(queues_size, queues_resize_value);
 
-			listeners::left_click = core::dynamic_array<left_click_listener>(queues_size, queues_resize_value);
-			listeners::right_click = core::dynamic_array<right_click_listener>(queues_size, queues_resize_value);
-			listeners::mouse_scroll = core::dynamic_array<mouse_scroll_listener>(queues_size, queues_resize_value);
+			listeners::mouse_left_click  = core::dynamic_array<listener::mouse_left_click>(queues_size, queues_resize_value);
+			listeners::mouse_right_click = core::dynamic_array<listener::mouse_right_click>(queues_size, queues_resize_value);
+			listeners::mouse_scroll      = core::dynamic_array<listener::mouse_scroll>(queues_size, queues_resize_value);
 
-			listeners::keypress_up = core::dynamic_array<keypress_up_listener>(queues_size, queues_resize_value);
-			listeners::keypress_down = core::dynamic_array<keypress_down_listener>(queues_size, queues_resize_value);
+			listeners::keypress_up   = core::dynamic_array<listener::keypress_up>(queues_size, queues_resize_value);
+			listeners::keypress_down = core::dynamic_array<listener::keypress_down>(queues_size, queues_resize_value);
 
-			listeners::window_open = core::dynamic_array<window_open_listener>(queues_size, queues_resize_value);
-			listeners::window_close = core::dynamic_array<window_close_listener>(queues_size, queues_resize_value);
-			listeners::window_resize = core::dynamic_array<window_resize_listener>(queues_size, queues_resize_value);
+			listeners::window_open   = core::dynamic_array<listener::window_open>(queues_size, queues_resize_value);
+			listeners::window_close  = core::dynamic_array<listener::window_close>(queues_size, queues_resize_value);
+			listeners::window_resize = core::dynamic_array<listener::window_resize>(queues_size, queues_resize_value);
 
 			event_system::is_init = true;
 		}
@@ -63,8 +64,8 @@ namespace event_system {
 	}
 
 	template<event_type etype> 
-	DLL_API listener_id start_listening(event_listener_function<etype> listener_function) noexcept {
-
+	DLL_API listener_id start_listening(listener_function<etype> listener_function) noexcept {
+		return NULL;
 	}
 
 	template<event_type etype> 

@@ -19,9 +19,9 @@ namespace status = core::status;
 
 	#define INFO_ARRAY_CONSTUCTED() CORE_DEBUG( \
 		"0x{} -> core::array<{}>[{}] -> allocated using allocator \"{}\" for {} system", \
-		(void*)this , typeid(type).name(), this->size_ , \
+		(void*)this , typeid(int).name(), this->size_ , \
 		(this->allocator ? this->allocator.name() : "global allocator"), \
-		(this->allocator ? this->allocator.type() : "unkown !"), \
+		(this->allocator ? this->allocator.type() : "unkown") \
 	);
 
 #else 
@@ -71,8 +71,9 @@ namespace core {
 			for (type* ptr = this->begin_; ptr != this->end_; ptr++) {
 				new (ptr) type();
 			}
-
-			INFO_ARRAY_CONSTUCTED();
+			
+			// todo: fix bug here lead to compile error
+			// INFO_ARRAY_CONSTUCTED();
 		}
 		
 		array(const type* elements, u32 elements_count, core::memory_allocator* _allocator = nullptr)
