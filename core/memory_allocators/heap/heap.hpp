@@ -11,21 +11,21 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-#include "custom_allocator.hpp"
-#include "memory.hpp"
+#include "core/strings/string.hpp"
+#include "core/memory_allocators/interface.hpp"
 
 struct registry_pair {
-	void* pointer = nullptr;
+	void* pointer  = nullptr;
 	u32   count    = NULL;
 };
 
 namespace core {
 
-	DLL_API_CLASS memory_heap : public core::memory_allocator {
+	DLL_API_CLASS memory_heap : protected core::memory_allocator {
 
 	private:
 		// memory_heap static variables
-		static const u32 minimum_heap_size_allowed = 1   KB;
+		static const u32 minimum_heap_size_allowed =   1 KB;
 		static const u32 maximum_heap_size_allowed = 512 MB;
 
 		/*
@@ -35,19 +35,14 @@ namespace core {
 		memory_heap(memory_heap&& other) = delete;
 		memory_heap& operator = (const memory_heap& other) = delete;
 
-	public:
-		// memory_heap public static functions
-		static f32 minimum_size_allowed(memory_unit return_value_unit) noexcept;
-		static f32 maximum_size_allowed(memory_unit return_value_unit) noexcept;
-
 	private:
-		// memory_heap type/usage
+		// heap variables
 		memory_usage section = memory_usage::unkown;
 
 		// memory_heap global_memory variables
 		u32 max_allowed_allocations = 1000;
 		u32 alloc_size = NULL;
-		u32 heap_size = NULL;
+		u32 heap_size  = NULL;
 
 		byte* start = nullptr;
 		byte* end   = nullptr;
@@ -68,13 +63,14 @@ namespace core {
 		memory_heap(
 			u32 heap_size,
 			u32 max_allocation = 1000,
-			memory_usage heap_usage = memory_usage::unkown
+			memory_usage heap_usage = memory_usage::unkown,
+			string heap_name = ""
 		);
 		~memory_heap();
 
 		// memory_heap public functions
-		void* allocate(u32 count) override;
-		void  deallocate(void* pointer) override;
+		void* allocate(u32 count) noexcept override;
+		void  deallocate(void* pointer) noexcept override;
 
 		u32 count() noexcept;
 		f32 size_f(memory_unit return_value_unit) noexcept;
@@ -97,8 +93,16 @@ namespace core {
 		inline void sort_list_by_size(registry_pair* list, u32 count);
 		inline void sort_list_by_address(registry_pair* list, u32 count);
 		inline void init_registry_list(registry_pair* list, u32 count);
-	};
+		
 
-}
+	public:
+		// memory_heap public static functions
+		static f32 minimum_size_allowed(memory_unit return_value_unit) noexcept;
+		static f32 maximum_size_allowed(memory_unit return_value_unit) noexcept;
+
+	};
+	// class heap end
+
+} // namespace core end
 
 #endif

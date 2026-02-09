@@ -3,8 +3,6 @@
 #ifndef CORE_DYNAMIC_ARRAY_HPP
 #define CORE_DYNAMIC_ARRAY_HPP
 
-#include "core/types.hpp"
-#include "core/memory/memory.hpp"
 #include "array.hpp"
 
 #define CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE 32

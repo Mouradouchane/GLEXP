@@ -26,7 +26,7 @@
 #include "core/status/status.hpp"
 #include "core/logger/logger.hpp"
 
-#include "global_memory.hpp"
+#include "global.hpp"
 
 // allocated count for each section , in byte
 static std::array<uint64_t , 8> sections_sizes = {

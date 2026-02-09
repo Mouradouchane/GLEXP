@@ -1,14 +1,18 @@
 #pragma once 
 
-#ifndef CORE_CUSTOM_ALLOCATOR
-#define CORE_CUSTOM_ALLOCATOR
+#ifndef CORE_CUSTOM_STD_ALLOCATOR
+#define CORE_CUSTOM_STD_ALLOCATOR
 
-#include "global_memory.hpp"
+#include "core/memory_allocators/global/global.hpp"
+
+/*
+	note: maybe this need to get delete !!!
+*/
 
 namespace core {
 
 	/*
-		used to allocate/deallocate global_memory for std library
+		used to allocate/deallocate global_memory for std:: library
 	*/
 	template<class T> struct custom_allocator {
 

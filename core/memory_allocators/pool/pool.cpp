@@ -6,7 +6,7 @@
 #ifndef MEMORY_POOL_CPP
 #define MEMORY_POOL_CPP
 
-#include "memory_pool.hpp"
+#include "pool.hpp"
 
 // todo: implement memory_pool allocator
 

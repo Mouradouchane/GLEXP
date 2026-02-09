@@ -10,8 +10,9 @@
 	- first fit allocation
 */
 
-#include "custom_allocator.hpp"
-#include "memory.hpp"
+/*
+
+#include "core/memory_allocators/interface.hpp"
 
 namespace core {
 
@@ -19,18 +20,18 @@ namespace core {
 	DLL_API_CLASS memory_pool : public core::memory_allocator {
 
 	public:
-		memory_pool() {};
+		 memory_pool();
+		~memory_pool();
+		
+		void* allocate(u32 count) noexcept override;
 
-
-		void* allocate(u32 count) override {
-			return nullptr;
-		};
-		void  deallocate(void* pointer) override {
-			
-		}
+		void  deallocate(void* pointer) noexcept override;
 
 	}; // class memory_pool end
 
+
 } // namespace core end
+
+*/
 
 #endif

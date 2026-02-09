@@ -11,18 +11,19 @@
 #include "core/types.hpp"
 #include "core/assert.hpp"
 #include "core/status/status.hpp"
-#include "core/memory/memory.hpp"
+#include "core/memory_allocators/interface.hpp"
 
 namespace status = core::status;
 
 #ifdef DEBUG
 
-	#define INFO_ARRAY_CONSTUCTED() CORE_DEBUG( \
-		"0x{} -> core::array<{}>[{}] -> allocated using allocator \"{}\" for {} system", \
-		(void*)this , typeid(int).name(), this->size_ , \
-		(this->allocator ? this->allocator.name() : "global allocator"), \
-		(this->allocator ? this->allocator.type() : "unkown") \
-	);
+	#define INFO_ARRAY_CONSTUCTED(ARRAY_PTR , TYPE) \
+		CORE_DEBUG( \
+			"0x{} -> core::array<{}>[{}] -> allocated using allocator '{}\' for {} system", \
+			(void*)ARRAY_PTR , typeid(TYPE).name() , ARRAY_PTR->size_ , \
+			(ARRAY_PTR->allocator ? ARRAY_PTR->allocator.name() : "global-allocator"), \
+			(ARRAY_PTR->allocator ? ARRAY_PTR->allocator.type() : "unkown") \
+		);
 
 #else 
 
@@ -72,8 +73,8 @@ namespace core {
 				new (ptr) type();
 			}
 			
-			// todo: fix bug here lead to compile error
-			// INFO_ARRAY_CONSTUCTED();
+			// todo: fix bug here lead to compile error 
+			INFO_ARRAY_CONSTUCTED(this , type);
 		}
 		
 		array(const type* elements, u32 elements_count, core::memory_allocator* _allocator = nullptr)

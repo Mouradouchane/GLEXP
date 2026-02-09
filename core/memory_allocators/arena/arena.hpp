@@ -5,9 +5,7 @@
 
 /*
 	
-*/
-
-#include "core/memory/memory.hpp"
+#include "core/memory_allocators/interface.hpp"
 
 // todo: implement memory_arena allocator
 namespace core {
@@ -15,16 +13,17 @@ namespace core {
 	DLL_API_CLASS memory_arena : public core::memory_allocator {
 
 	public :
-		memory_arena() { }
+		 memory_arena();
+		~memory_arena();
 
-		void* allocate(u32 count) override {
-			return nullptr;
-		};
-		void  deallocate(void* pointer) override {
+		void* allocate(u32 count) noexcept override;
 
-		}
+		void  deallocate(void* pointer) noexcept override;
+
 	}; // class memory_arena end
 
 } // namespace core end
+
+*/
 
 #endif

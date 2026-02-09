@@ -5,7 +5,8 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-#include "core/memory/memory_heap.hpp"
+#include "core/memory_allocators/global/global.hpp"
+#include "core/memory_allocators/interface.hpp"
 
 /*
 	note: currently we using std::string under wrapper !

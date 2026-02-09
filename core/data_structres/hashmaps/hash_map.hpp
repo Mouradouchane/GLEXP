@@ -6,19 +6,22 @@
 #include <vector>
 #include <array>
 #include "core/types.hpp"
-#include "core/memory/memory.hpp"
+#include "core/memory_allocators/interface.hpp"
 
+// todo: rework 
+
+/*
+	hasm_map is a chaining hash table for <key , value>
+	note: chaining rows are std::vector not linked-list
+*/
+
+/*
 typedef u32 hash_key;
 
 template<typename _key, typename _val> struct pair {
 	_key key;
 	_val value;
 };
-
-/*
-	hasm_map is a chaining hash table for <key , value>
-	note: chaining rows are std::vector not linked-list
-*/
 
 template<typename key, typename value> class hash_map {
 
@@ -66,5 +69,7 @@ template<typename key> u32 hash_keys32(u32 const& _key) {
 template<typename key> u64 hash_keys64(u64 const& _key) {
 
 }
+
+*/
 
 #endif
