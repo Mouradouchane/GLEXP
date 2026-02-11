@@ -12,7 +12,7 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 #include "core/strings/string.hpp"
-#include "core/memory_allocators/interface.hpp"
+#include "core/memory/interface.hpp"
 
 struct registry_pair {
 	void* pointer  = nullptr;
@@ -25,8 +25,8 @@ namespace core {
 
 	private:
 		// memory_heap static variables
-		static const u32 minimum_heap_size_allowed =   1 KB;
-		static const u32 maximum_heap_size_allowed = 512 MB;
+		static const u32 min_size_allowed =   1 KB;
+		static const u32 max_size_allowed = 512 MB;
 
 		/*
 			copy/move constructor's and operator's disabled
@@ -37,12 +37,11 @@ namespace core {
 
 	private:
 		// heap variables
-		memory_usage section = memory_usage::unkown;
 
 		// memory_heap global_memory variables
-		u32 max_allowed_allocations = 1000;
+		u32 max_allowed_allocations = 1000u;
 		u32 alloc_size = NULL;
-		u32 heap_size  = NULL;
+		u32 _size_  = NULL;
 
 		byte* start = nullptr;
 		byte* end   = nullptr;
@@ -61,22 +60,18 @@ namespace core {
 	public:
 		// constructor / destructor
 		memory_heap(
-			u32 heap_size,
-			u32 max_allocation = 1000,
-			memory_usage heap_usage = memory_usage::unkown,
-			string heap_name = ""
-		);
+			string const& heap_name , memory_usage heap_usage, u32 heap_size, u32 max_allocation = 1000u
+		) noexcept;
 		~memory_heap();
 
 		// memory_heap public functions
-		void* allocate(u32 count) noexcept override;
-		void  deallocate(void* pointer) noexcept override;
+		void* allocate(u32 count) noexcept override final;
+		void  deallocate(void* pointer) noexcept override final;
 
-		u32 count() noexcept;
-		f32 size_f(memory_unit return_value_unit) noexcept;
+		u32 size() noexcept;
 
-		u32 allocated(memory_unit return_value_unit) noexcept;
-		u32 available(memory_unit return_value_unit) noexcept;
+		u32 allocated() noexcept;
+		u32 available() noexcept;
 
 	private:
 		// memory_heap private functions
@@ -97,8 +92,8 @@ namespace core {
 
 	public:
 		// memory_heap public static functions
-		static f32 minimum_size_allowed(memory_unit return_value_unit) noexcept;
-		static f32 maximum_size_allowed(memory_unit return_value_unit) noexcept;
+		static f32 min_size_allowed(memory_unit return_value_unit) noexcept;
+		static f32 max_size_allowed(memory_unit return_value_unit) noexcept;
 
 	};
 	// class heap end

@@ -19,7 +19,7 @@ namespace status = core::status;
 
 	#define INFO_ARRAY_CONSTUCTED(ARRAY_PTR , TYPE) \
 		CORE_DEBUG( \
-			"0x{} -> core::array<{}>[{}] -> allocated using allocator '{}\' for {} system", \
+			"0x{} core::array<{}>[{}] -> allocated using allocator '{}\' for {} system", \
 			(void*)ARRAY_PTR , typeid(TYPE).name() , ARRAY_PTR->size_ , \
 			(ARRAY_PTR->allocator ? ARRAY_PTR->allocator.name() : "global-allocator"), \
 			(ARRAY_PTR->allocator ? ARRAY_PTR->allocator.type() : "unkown") \

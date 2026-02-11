@@ -56,10 +56,12 @@
 	#if defined(WINDOWS)
 		#define DLL_API       extern "C"       __declspec(dllexport)
 		#define DLL_API_CLASS extern "C" class __declspec(dllexport)
+		#define DLL_API_INTERFACE extern "C" class __declspec(dllexport)
 
 	#elif defined(LINUX)
 		#define DLL_API       extern "C"       __attribute__((visibility("default")))
 		#define DLL_API_CLASS extern "C" class __attribute__((visibility("default")))
+		#define DLL_API_INTERFACE extern "C" class __attribute__((visibility("default")))
 
 	#else
 		static_assert(0, "compile-time-error --> unsupported operation system , line:" __LINE__ " file:" __FILE__);
@@ -69,10 +71,33 @@
 	#ifdef DLL_IMPORT
 		#define DLL_API       extern "C"       __declspec(dllimport)
 		#define DLL_API_CLASS extern "C" class __declspec(dllimport)
+		#define DLL_API_INTERFACE extern "C" class __declspec(dllimport)
 	#else 
 		#define DLL_API
 		#define DLL_API_CLASS class
+		#define DLL_API_INTERFACE class
 	#endif
 #endif
+
+
+/*
+	few macros to convert beetween memory units
+*/
+// convert "kb,mb,gb" to "BYTES"
+#define KB_TO_BYTE(_KB) u64(_KB) * 1024u
+#define MB_TO_BYTE(_MB) u64(_MB) * 1048576u
+#define GB_TO_BYTE(_GB) u64(_GB) * 1073741824u
+
+// example: 2 KB --> 2 *1024u
+#define KB   *1024u
+#define MB   *1048576u
+#define GB   *1073741824u
+
+// convert "BYTES" to "kb,mb,gb"
+#define BYTE_TO_KB(_BYTE) (_BYTE / 1024.0f)
+#define BYTE_TO_MB(_BYTE) (_BYTE / 1048576.0f)
+#define BYTE_TO_GB(_BYTE) (_BYTE / 1073741824.0f)
+// ===================================================
+
 
 #endif // MACROS_HPP
