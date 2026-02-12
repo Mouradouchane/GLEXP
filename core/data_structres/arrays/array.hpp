@@ -11,7 +11,7 @@
 #include "core/types.hpp"
 #include "core/assert.hpp"
 #include "core/status/status.hpp"
-#include "core/memory_allocators/interface.hpp"
+#include "core/memory/memory.hpp"
 
 namespace status = core::status;
 
@@ -21,8 +21,8 @@ namespace status = core::status;
 		CORE_DEBUG( \
 			"0x{} core::array<{}>[{}] -> allocated using allocator '{}\' for {} system", \
 			(void*)ARRAY_PTR , typeid(TYPE).name() , ARRAY_PTR->size_ , \
-			(ARRAY_PTR->allocator ? ARRAY_PTR->allocator.name() : "global-allocator"), \
-			(ARRAY_PTR->allocator ? ARRAY_PTR->allocator.type() : "unkown") \
+			(ARRAY_PTR->allocator ? ARRAY_PTR->allocator->get_name() : "global-allocator"), \
+			(ARRAY_PTR->allocator ? core::memory::tag_to_string(ARRAY_PTR->allocator->get_tag()) : "no_tag") \
 		);
 
 #else 
@@ -60,7 +60,7 @@ namespace core {
 
 			// allocate memory
 			if (this->allocator == nullptr) {
-				this->begin_ = (type*)(core::global_memory::allocate(this->size_));
+				this->begin_ = (type*)(core::memory::allocate(this->size_));
 			}
 			else {
 				this->begin_ = (type*)(this->allocator->allocate(this->size_));
@@ -73,7 +73,6 @@ namespace core {
 				new (ptr) type();
 			}
 			
-			// todo: fix bug here lead to compile error 
 			INFO_ARRAY_CONSTUCTED(this , type);
 		}
 		
@@ -85,7 +84,7 @@ namespace core {
 			this->size_  = (this->count_ * sizeof(type));
 
 			if (this->allocator == nullptr) {
-				this->begin_ = (type*)core::global_memory::allocate(this->size_);
+				this->begin_ = (type*)core::memory::allocate(this->size_);
 			}
 			else {
 				this->begin_ = (type*)this->allocator->allocate(this->size_);
@@ -104,7 +103,7 @@ namespace core {
 				}
 			}
 
-			INFO_ARRAY_CONSTUCTED();
+			DEBUG_INFO_ARRAY_CONSTUCTED();
 		}
 
 		// copy constructor
@@ -124,7 +123,7 @@ namespace core {
 				this->begin_ = (type*)this->allocator->allocate(this->size_);
 			}
 			else {
-				this->begin_ = (type*)core::global_memory::allocate(this->size_);
+				this->begin_ = (type*)core::memory::allocate(this->size_);
 			}
 
 			this->end_ = this->begin_ + this->count_;
@@ -191,7 +190,7 @@ namespace core {
 					this->allocator->deallocate(this->begin_);
 				}
 				else {
-					core::global_memory::deallocate(this->begin_);
+					core::memory::deallocate(this->begin_);
 				}
 
 			}
@@ -253,7 +252,7 @@ namespace core {
 					this->allocator->deallocate(this->begin_);
 				} 
 				else {
-					core::global_memory::deallocate(this->begin_);
+					core::memory::deallocate(this->begin_);
 				}
 			}
 
@@ -347,18 +346,6 @@ namespace core {
 
 		u32 size() noexcept {
 			return this->size_;
-		}
-
-		f64 size(memory_unit unit) noexcept {
-			
-			switch (unit) {
-				case memory_unit::kb : return BYTE_TO_KB(this->size_);
-				case memory_unit::mb : return BYTE_TO_MB(this->size_);
-				case memory_unit::gb : return BYTE_TO_GB(this->size_);
-
-				default: return f64(this->size_);
-			}
-
 		}
 
 	public:
@@ -531,7 +518,7 @@ namespace core {
 					_array.allocator->deallocate(_array.begin_);
 				}
 				else {
-					core::global_memory::deallocate(_array.begin_);
+					core::memory::deallocate(_array.begin_);
 				}
 			}
 
@@ -556,7 +543,7 @@ namespace core {
 				_array.begin_ = (type*)_array.allocator->allocate(_array.size_);
 			}
 			else {
-				_array.begin_ = (type*)core::global_memory::allocate(_array.size_);
+				_array.begin_ = (type*)core::memory::allocate(_array.size_);
 			}
 
 			// construct objects "optional"

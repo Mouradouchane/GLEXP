@@ -1,9 +1,9 @@
 #pragma once 
 
-#ifndef CORE_CUSTOM_STD_ALLOCATOR
-#define CORE_CUSTOM_STD_ALLOCATOR
+#ifndef CORE_STD_ALLOCATOR
+#define CORE_STD_ALLOCATOR
 
-#include "core/memory_allocators/global/global.hpp"
+#include "core/memory/memory.hpp"
 
 /*
 	note: maybe this need to get delete !!!
@@ -12,27 +12,27 @@
 namespace core {
 
 	/*
-		used to allocate/deallocate global_memory for std:: library
+		used for/by std:: library allocate/deallocate memory for objects
 	*/
-	template<class T> struct custom_allocator {
+	template<class T> struct std_allocator {
 
 		typedef T value_type;
 
-		 custom_allocator() = default;
-		~custom_allocator() = default;
+		 std_allocator() = default;
+		~std_allocator() = default;
 
-		template<class elm_type> constexpr custom_allocator(
-			const custom_allocator <elm_type>&
+		template<class elm_type> constexpr std_allocator(
+			const std_allocator <elm_type>&
 		) noexcept {
 
 		}
 
 		T* allocate(std::size_t count) {
-			return (T*)global_memory::allocate(count * sizeof(T), memory_usage::stdcpp);
+			return (T*)core::memory::allocate(count * sizeof(T), core::memory::tag::stdcpp);
 		}
 
 		void deallocate(T* pointer, std::size_t count) {
-			global_memory::deallocate(pointer);
+			core::memory::deallocate(pointer);
 		}
 
 		template<typename elm_type, typename... Args> void construct(
@@ -46,7 +46,7 @@ namespace core {
 			pointer->~obj();
 		}
 
-	}; // struct custom_allocator end
+	}; // struct std_allocator end
 
 } // core namespace end
 

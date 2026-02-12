@@ -6,7 +6,7 @@
 #include <vector>
 #include <array>
 #include "core/types.hpp"
-#include "core/memory_allocators/interface.hpp"
+#include "core/memory/memory.hpp"
 
 // todo: rework 
 

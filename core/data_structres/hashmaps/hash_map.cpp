@@ -9,6 +9,7 @@
 /*
 	 constructor
 */
+/*
 template<typename key, typename value> hash_map<key,value>::hash_map(
 	u32 (*hashing_function)(key const& _key), 
 	u16 map_size,
@@ -32,11 +33,12 @@ template<typename key, typename value> hash_map<key,value>::hash_map(
 template<typename key, typename value> hash_map<key, value>::~hash_map() {
 
 }
+*/
 
 /*
 	hash_map function's
 */
-
+/*
 // todo: implement insert
 template<typename key, typename value> bool hash_map<key,value>::insert(
 	key const& _key , value const& _value
@@ -50,5 +52,6 @@ template<typename key, typename value> bool hash_map<key,value>::insert(
 
 	return true;
 }
+*/
 
 #endif

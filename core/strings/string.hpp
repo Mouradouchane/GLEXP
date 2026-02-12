@@ -13,7 +13,8 @@
 	note: currently we using std::string under wrapper !
 			but latter we could move to core::c_string or core::o_string .
 */
-using string = std::string;
+typedef std::string string;
+#define STRING std::string
 
 namespace core {
 	
@@ -71,7 +72,7 @@ namespace core {
 	}; 
 	// class o_string end
 
-	DLL_API string pointer_to_hex_string(void* pointer);
+	DLL_API STRING pointer_to_hex_string(void* pointer);
 
 } // namespace core end
 

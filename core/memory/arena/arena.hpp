@@ -3,27 +3,30 @@
 #ifndef CORE_MEMORY_ARENA_HPP
 #define CORE_MEMORY_ARENA_HPP
 
-/*
-	
-#include "core/memory_allocators/interface.hpp"
+#include "core/memory/memory.hpp"
 
-// todo: implement memory_arena allocator
 namespace core {
 
-	DLL_API_CLASS memory_arena : public core::memory_allocator {
+	namespace memory {
 
-	public :
-		 memory_arena();
-		~memory_arena();
+		// todo: implement memory::arena allocator
+		DLL_API_CLASS arena : protected core::memory_allocator {
 
-		void* allocate(u32 count) noexcept override;
+		public :
+			 arena();
+			~arena();
 
-		void  deallocate(void* pointer) noexcept override;
+			virtual void* allocate(u32 count)        noexcept final;
+			virtual void  deallocate(void* pointer)  noexcept final;
 
-	}; // class memory_arena end
+			virtual std::string allocator_name()      noexcept final;
+			virtual core::memory::tag allocator_tag() noexcept final;
+
+		}; // class arena end
+		
+	} // namespace memory end
 
 } // namespace core end
 
-*/
 
 #endif

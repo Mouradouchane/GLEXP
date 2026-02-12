@@ -1,22 +1,21 @@
 #pragma once 
 
-#ifndef CORE_GLOBAL_MEMORY_HPP
-#define CORE_GLOBAL_MEMORY_HPP
+#ifndef CORE_MEMORY_HPP
+#define CORE_MEMORY_HPP
+
+#include <string>
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-#include "core/strings/string.hpp"
 
 namespace core {
 
 	namespace memory {
 
 		/*
-			note : each allocator gonna be used in some section/subsystem in engine or core it self,
-				   this memory::section enum used to "flag" each memory-allocator for what used for
+			note : this tag used to "flag" each memory-allocator for what used for
 		*/
-
-		enum class section : u8 {
+		enum class tag : u8 {
 			unkown = 0,
 			general,
 			assets,
@@ -39,47 +38,55 @@ namespace core {
 			byte = 0, kb = 1, mb = 2, gb = 3
 		};
 
+		DLL_API std::string tag_to_string(core::memory::tag _tag_);
 
 	/*
 		- note : this used by other memory-allocators 
 		- note : you can use it, but not recommended 
 	*/
-		DLL_API void* allocate(size_t count, core::memory::section _section_ = section::unkown) noexcept;
+		DLL_API void* allocate(size_t size, core::memory::tag memory_tag = core::memory::tag::unkown) noexcept;
 		DLL_API void  deallocate(void* pointer) noexcept;
 
 		DLL_API u64 sizeof_allocated() noexcept;
-		DLL_API u64 sizeof_section(core::memory::section _section_) noexcept;
+		DLL_API u64 sizeof_section(core::memory::tag memory_tag) noexcept;
 		
-	} // namespace memory end
+	};
+	// namespace memory end
 
 	/*
-		interface for using "memory-heap" & "memory-arena" as one type "polymorphism"
+		base class for other memory-allocator !
 	*/
-	DLL_API_INTERFACE memory_allocator {
+	DLL_API_CLASS memory_allocator {
 
 	protected:
-		string _name_;
-		core::memory::section _section_ = core::memory::section::unkown;
-		u32 _size_ = 0u;
+		// variables
+		std::string _name_;
+		core::memory::tag _tag_;
 
-		byte* start = nullptr;
-		byte* end   = nullptr;
+		// disabled contructor's
+		memory_allocator(memory_allocator const& other) = delete;
+		memory_allocator(memory_allocator&& other) = delete;
+		memory_allocator& operator = (const memory_allocator& other) = delete;
 
-	public:
-		memory_allocator(string allocator_name, core::memory::section allocator_usage , u32 memory_size) 
-			: _name_(allocator_name) , _section_(allocator_usage) , _size_(memory_size) { };
-		~memory_allocator() {};
+	public:	
+		// static variables 
+		static const u32 min_size_allowed = 1;
+		static const u32 max_size_allowed = 512 MB;
 
-		virtual void* allocate(u32 count)       noexcept = NEED_IMPL;
-		virtual void  deallocate(void* pointer) noexcept = NEED_IMPL;
+		// constructor : destructor
+		 memory_allocator(std::string const& name, core::memory::tag memory_tag) noexcept;
+		~memory_allocator() = default;
 
-		u32 size() noexcept { return this->_size_; };
+		// basics functions functions
 
-		static const string& name(memory_allocator& allocator) noexcept { return allocator._name_; }
-		static core::memory::section memory_section(memory_allocator& allocator) noexcept { return allocator._section_; }
+		virtual void* allocate(u32 size)        noexcept;
+		virtual void  deallocate(void* pointer) noexcept;
+
+		std::string get_name()       noexcept;
+		core::memory::tag get_tag()  noexcept;
 
 	}; 
-	// interface memory_allocator end
+	// class memory_allocator end
 
 } // core namespace end
 

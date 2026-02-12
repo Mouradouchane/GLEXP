@@ -114,7 +114,7 @@ namespace core {
 					this->allocator->deallocate(this->begin_);
 				} 
 				else {
-					core::global_memory::deallocate(this->begin_);
+					core::memory::deallocate(this->begin_);
 				}
 			}
 
@@ -175,7 +175,7 @@ namespace core {
 				new_buffer = (type*)this->allocator->allocate(this->size_);
 			}
 			else {
-				new_buffer = (type*)core::global_memory::allocate(this->size_);
+				new_buffer = (type*)core::memory::allocate(this->size_);
 			}
 
 			// move elements to new memory
@@ -205,7 +205,7 @@ namespace core {
 				this->allocator->deallocate(this->begin_);
 			} 
 			else {
-				core::global_memory::deallocate(this->begin_);
+				core::memory::deallocate(this->begin_);
 			}
 
 			// update variables
@@ -291,7 +291,7 @@ namespace core {
 				array_.allocator->deallocate(array_.begin_);
 			}
 			else {
-				core::global_memory::deallocate(array_.begin_);
+				core::memory::deallocate(array_.begin_);
 			}
 			
 			array_.begin_  = nullptr;
@@ -317,7 +317,7 @@ namespace core {
 				array_.begin_ = (type*)array_.allocator->allocate(array_.size_);
 			}
 			else {
-				array_.begin_ = (type*)core::global_memory::allocate(array_.size_);
+				array_.begin_ = (type*)core::memory::allocate(array_.size_);
 			}
 
 			// update array variables

@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef MEMORY_POOL_HPP
-#define MEMORY_POOL_HPP
+#ifndef CORE_MEMORY_POOL_HPP
+#define CORE_MEMORY_POOL_HPP
 
 /*
 	global_memory memory_pool : 
@@ -10,28 +10,28 @@
 	- first fit allocation
 */
 
-/*
-
-#include "core/memory_allocators/interface.hpp"
+#include "core/macros.hpp"
+#include "core/memory/memory.hpp"
 
 namespace core {
 
-	// todo: implement memory_pool allocator
-	DLL_API_CLASS memory_pool : public core::memory_allocator {
+	namespace memory {
 
-	public:
-		 memory_pool();
-		~memory_pool();
-		
-		void* allocate(u32 count) noexcept override;
+		// todo: implement memory_pool allocator
+		DLL_API_CLASS pool : protected core::memory_allocator {
 
-		void  deallocate(void* pointer) noexcept override;
+		public:
+			 pool();
+			~pool();
 
-	}; // class memory_pool end
+			void* allocate(u32 count)       noexcept override;
+			void  deallocate(void* pointer) noexcept override;
 
+		}; // class memory::pool end
+
+	} // namespace memory end
 
 } // namespace core end
 
-*/
 
 #endif
