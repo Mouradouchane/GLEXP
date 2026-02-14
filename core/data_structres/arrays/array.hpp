@@ -13,21 +13,27 @@
 #include "core/status/status.hpp"
 #include "core/memory/memory.hpp"
 
-namespace status = core::status;
 
 #ifdef DEBUG
-
-	#define INFO_ARRAY_CONSTUCTED(ARRAY_PTR , TYPE) \
+	#define DEBUG_ARRAY_CONSTUCTED(ARRAY , TYPE) \
 		CORE_DEBUG( \
-			"0x{} core::array<{}>[{}] -> allocated using allocator '{}\' for {} system", \
-			(void*)ARRAY_PTR , typeid(TYPE).name() , ARRAY_PTR->size_ , \
-			(ARRAY_PTR->allocator ? ARRAY_PTR->allocator->get_name() : "global-allocator"), \
-			(ARRAY_PTR->allocator ? core::memory::tag_to_string(ARRAY_PTR->allocator->get_tag()) : "no_tag") \
+			"0x{} core::array<{}>[{}] -> allocated using allocator '{}' for '{}' system", \
+			(void*)ARRAY, typeid(TYPE).name() , ARRAY->size_ , \
+			(ARRAY->allocator ? ARRAY->allocator->get_name() : "global-allocator"), \
+			(ARRAY->allocator ? core::memory::tag_to_string(ARRAY->allocator->get_tag()) : "no-tag") \
+		);
+
+	#define DEBUG_ARRAY_DESTUCTED(ARRAY , TYPE) \
+		CORE_DEBUG( \
+			"0x{} core::array<{}>[{}] -> deallocated using allocator '{}' for '{}' system", \
+			(void*)ARRAY, typeid(TYPE).name() , ARRAY->size_ , \
+			(ARRAY->allocator ? ARRAY->allocator->get_name() : "global-allocator"), \
+			(ARRAY->allocator ? core::memory::tag_to_string(ARRAY->allocator->get_tag()) : "no-tag") \
 		);
 
 #else 
-
-	#define INFO_ARRAY_CONSTUCTED()
+	#define DEBUG_ARRAY_CONSTUCTED()
+	#define DEBUG_ARRAY_DESTUCTED()
 
 #endif
 
@@ -73,7 +79,7 @@ namespace core {
 				new (ptr) type();
 			}
 			
-			INFO_ARRAY_CONSTUCTED(this , type);
+			DEBUG_ARRAY_CONSTUCTED(this , type);
 		}
 		
 		array(const type* elements, u32 elements_count, core::memory_allocator* _allocator = nullptr)
@@ -103,7 +109,7 @@ namespace core {
 				}
 			}
 
-			DEBUG_INFO_ARRAY_CONSTUCTED();
+			DEBUG_ARRAY_CONSTUCTED(this , type);
 		}
 
 		// copy constructor
@@ -139,7 +145,7 @@ namespace core {
 				}
 			}
 
-			INFO_ARRAY_CONSTUCTED();
+			DEBUG_ARRAY_CONSTUCTED(this , type);
 		}
 		
 		// move constructor 
@@ -195,7 +201,7 @@ namespace core {
 
 			}
 
-			CORE_DEBUG("0x{} -> core::array<{}>[{}] destructed + memory deallocated", (void*)this ,typeid(type).name(), this->size_);
+			DEBUG_ARRAY_DESTUCTED(this , type);
 		}
 
 		/*
