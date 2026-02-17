@@ -27,6 +27,7 @@ namespace core {
 		nullptr_memory,
 		nullptr_buffer,
 		failed_to_load_resource,
+		invalid_handle,
 
 		// "init" ========================
 		init_function_failed,
@@ -74,6 +75,8 @@ namespace core {
 
 	enum class warning : u16 {
 		none = 0,
+		runtime_crash,
+		segfault_crash,
 		allocated_with_global_memory,
 		self_assignment,
 	};

@@ -16,6 +16,7 @@
 */
 
 #include <memory>
+#include <typeinfo>
 #include <functional>
 
 #include "core/macros.hpp"
@@ -25,11 +26,11 @@
 #include "event_enums.hpp"
 
 // few macros for external instantiation
-#define INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(TYPE) \
-		extern template listener_id start_listening<TYPE>(listener_function<TYPE> const&) noexcept; \
-		extern template void stop_listening<TYPE>(listener_id) noexcept ; \
+#define INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(TYPE) \
+		extern template event_handle start_listen<TYPE>(std::function<void(core::event<TYPE> const& _event_)> const&) noexcept; \
+		extern template bool stop_listen<TYPE>(event_handle) noexcept ; \
 		extern template void trigger_event<TYPE>(core::event<TYPE> const& _event_) noexcept; \
-		extern template void queue_event<TYPE>(std::unique_ptr<core::event<TYPE>> _event_) noexcept;
+		extern template void queue_event<TYPE>(core::event<TYPE> _event_) noexcept;
 
 #define MAP_DATATYPE_TO_EVENT(EVENT_TYPE , DATA_TYPE) \
 		template<> struct event_data_type<EVENT_TYPE> { using data_type = DATA_TYPE; };
@@ -38,10 +39,30 @@
 	note: - each event object will carry "data-object" in it .
 	      - this all of them "for now" !
 */ 
-struct unkown_data;
-struct mouse_data;
-struct keyboard_data;
-struct window_data;
+
+struct unkown_data {
+	void* data;
+	u32   size;
+};
+
+struct mouse_data {
+	f32 x;
+	f32 y;
+	i32 scroll;
+};
+
+struct keyboard_data {
+	char value; 
+	i16  key; 
+	bool is_special;
+};
+
+struct window_data {
+	f32 x;
+	f32 y;
+	u16 width;
+	u16 height;
+};
 
 
 /*
@@ -55,17 +76,17 @@ template<core::event_type etype> struct event_data_type {
 MAP_DATATYPE_TO_EVENT(core::event_type::unkown, unkown_data);
 
 // mouse-events mapping
-MAP_DATATYPE_TO_EVENT(core::event_type::mouse_click_left, mouse_data);
-MAP_DATATYPE_TO_EVENT(core::event_type::mouse_click_right, mouse_data);
-MAP_DATATYPE_TO_EVENT(core::event_type::mouse_scroll, mouse_data);
+MAP_DATATYPE_TO_EVENT(core::event_type::mouse_left_click,  mouse_data);
+MAP_DATATYPE_TO_EVENT(core::event_type::mouse_right_click, mouse_data);
+MAP_DATATYPE_TO_EVENT(core::event_type::mouse_scroll,      mouse_data);
 
 // keyboard-events mapping
-MAP_DATATYPE_TO_EVENT(core::event_type::keypress_up, keyboard_data);
+MAP_DATATYPE_TO_EVENT(core::event_type::keypress_up,   keyboard_data);
 MAP_DATATYPE_TO_EVENT(core::event_type::keypress_down, keyboard_data);
 
 // window-events mapping
-MAP_DATATYPE_TO_EVENT(core::event_type::window_open, window_data);
-MAP_DATATYPE_TO_EVENT(core::event_type::window_close, window_data);
+MAP_DATATYPE_TO_EVENT(core::event_type::window_open,   window_data);
+MAP_DATATYPE_TO_EVENT(core::event_type::window_close,  window_data);
 MAP_DATATYPE_TO_EVENT(core::event_type::window_resize, window_data);
 
 	
@@ -96,10 +117,10 @@ namespace core {
 			inline bool is_repeated_event() noexcept { return this->repeated_; }
 
 			// event static functions 
-			static core::event_category category(event const& event_object) noexcept;
-			static string category_to_string(event const& event_object) noexcept;
-			static string type_to_string(event const& event_object) noexcept;
-
+			static DLL_API core::event_category category() noexcept;
+			static DLL_API string category_to_string(core::event_category _category_) noexcept;
+			static DLL_API string type_to_string() noexcept;
+	
 	}; 
 	// class event end
 
@@ -108,8 +129,8 @@ namespace core {
 	typedef core::event<core::event_type::unkown> unkown_event;
 
 	namespace mouse_event {
-		typedef core::event<core::event_type::mouse_click_left>  left_click;
-		typedef core::event<core::event_type::mouse_click_right> right_click;
+		typedef core::event<core::event_type::mouse_left_click>  left_click;
+		typedef core::event<core::event_type::mouse_right_click> right_click;
 		typedef core::event<core::event_type::mouse_scroll>      mouse_scroll;
 	}
 
@@ -127,25 +148,31 @@ namespace core {
 	// todo: add more namespaces for other events !!!
 
 
-	//	note: event-listeners function definition is :
-	//		  void function( core::event<core::event_type> const& _event_ );  
-	template<core::event_type etype>     
-	using listener_function = std::function<void(core::event<etype> const& event_object)>;
 
-	namespace listener {
-		typedef listener_function<core::event_type::unkown> unkown_event;
+	// void function( core::event<core::event_type> const& _event_ );  
+	#define TYPEDEF_EVENT_LISTENER(EVENT_TYPE , TYPE_NAME) \
+			typedef std::function<void(core::event<EVENT_TYPE> const& _event_)> TYPE_NAME;
 
-		typedef listener_function<core::event_type::mouse_click_left>  mouse_left_click;
-		typedef listener_function<core::event_type::mouse_click_right> mouse_right_click;
-		typedef listener_function<core::event_type::mouse_scroll>      mouse_scroll;
+	namespace event_listener {
+		// unkown/custom
+		TYPEDEF_EVENT_LISTENER(core::event_type::unkown, unkown_event);
+
+		// mouse 
+		TYPEDEF_EVENT_LISTENER(core::event_type::mouse_left_click,  mouse_left_click);
+		TYPEDEF_EVENT_LISTENER(core::event_type::mouse_right_click, mouse_right_click);
+		TYPEDEF_EVENT_LISTENER(core::event_type::mouse_scroll,      mouse_scroll);
 		
-		typedef listener_function<core::event_type::keypress_up>   keypress_up;
-		typedef listener_function<core::event_type::keypress_down> keypress_down;
+		// keyboard 
+		TYPEDEF_EVENT_LISTENER(core::event_type::keypress_up,   keypress_up);
+		TYPEDEF_EVENT_LISTENER(core::event_type::keypress_down, keypress_down);
 
-		typedef listener_function<core::event_type::window_open>   window_open;
-		typedef listener_function<core::event_type::window_close>  window_close;
-		typedef listener_function<core::event_type::window_resize> window_resize;
+		// window
+		TYPEDEF_EVENT_LISTENER(core::event_type::window_open,   window_open);
+		TYPEDEF_EVENT_LISTENER(core::event_type::window_close,  window_close);
+		TYPEDEF_EVENT_LISTENER(core::event_type::window_resize, window_resize);
 	}
+	// namespace event_listener end
+
 
 	/*
 		event-system -> dispatcher
@@ -154,13 +181,11 @@ namespace core {
 
 		DLL_API void init() noexcept;
 
+		template<core::event_type etype>
+		DLL_API event_handle start_listen(std::function<void(core::event<etype> const& _event_)> const& callback_function) noexcept;
 
 		template<core::event_type etype> 
-		DLL_API listener_id start_listening(core::listener_function<etype> const& listener_function) noexcept;
-
-		template<core::event_type etype> 
-		DLL_API void stop_listening(listener_id id) noexcept;
-
+		DLL_API bool stop_listen(event_handle handle) noexcept;
 
 		/*
 			note: - "trigger_event" will block "main-thread" from exection !
@@ -170,24 +195,24 @@ namespace core {
 		DLL_API void trigger_event(core::event<etype> const& _event_) noexcept;
 
 		template<core::event_type etype> 
-		DLL_API void queue_event(std::unique_ptr<core::event<etype>> _event_) noexcept;
+		DLL_API void queue_event(core::event<etype> _event_) noexcept;
 
 
 		/*
 			just a way to force instantiate event_system functions for our events
 		*/
-		INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(core::event_type::unkown);
+		INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(core::event_type::unkown);
 		// window events
-		INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(core::event_type::window_open);
-		INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(core::event_type::window_resize);
-		INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(core::event_type::window_close);
+		INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(core::event_type::window_open);
+		INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(core::event_type::window_resize);
+		INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(core::event_type::window_close);
 		// mouse events
-		INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(core::event_type::mouse_click_left);
-		INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(core::event_type::mouse_click_right);
-		INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(core::event_type::mouse_scroll);
+		INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(core::event_type::mouse_left_click);
+		INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(core::event_type::mouse_right_click);
+		INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(core::event_type::mouse_scroll);
 		// keyboard events
-		INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(core::event_type::keypress_up);
-		INSTANTIATE_EVENT_SYSTEM_FUNCTION_FOR(core::event_type::keypress_down);
+		INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(core::event_type::keypress_up);
+		INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(core::event_type::keypress_down);
 
 		// todo: instantiate the rest !!!
 		
@@ -195,33 +220,7 @@ namespace core {
 
 	} // event_system end
 
-
 } // namespace core end 
-
-
-struct unkown_data {
-	void* data;
-	u32   size;
-};
-
-struct mouse_data {
-	f32 x;
-	f32 y;
-	i32 scroll;
-};
-
-struct keyboard_data {
-	char value; 
-	i16  key; 
-	bool is_special;
-};
-
-struct window_data {
-	f32 x;
-	f32 y;
-	u16 width;
-	u16 height;
-};
 
 #include "event_impl.hpp"
 

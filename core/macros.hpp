@@ -14,6 +14,10 @@
 	#define DEBUG_BREAK
 #endif
 
+// to get function defintion as string
+#define FUNCTION_DEFINITION_FULL __PRETTY_FUNCTION__ " "
+#define FUNCTION_DEFINITION __FUNCTION__ " "
+
 // for class/interface
 #define NEED_IMPL 0
 
@@ -43,8 +47,8 @@
 #define DISABLE_WARNING_START __pragma(warning(push,0));
 #define DISABLE_WARNING_END   __pragma(warning(pop));
 
-#if defined(UNIT_TEST)
-	#define CORE_CRASH()
+#if defined(UNIT_TEST) || defined(DEBUG)
+	#define CORE_CRASH() DEBUG_BREAK;
 #else
 	#define CORE_CRASH() exit(-1);
 #endif
@@ -83,20 +87,18 @@
 /*
 	few macros to convert beetween memory units
 */
-// convert "kb,mb,gb" to "BYTES"
 #define KB_TO_BYTE(_KB) u64(_KB) * 1024u
 #define MB_TO_BYTE(_MB) u64(_MB) * 1048576u
 #define GB_TO_BYTE(_GB) u64(_GB) * 1073741824u
+
+#define BYTE_TO_KB(_BYTE) (_BYTE / 1024.0f)
+#define BYTE_TO_MB(_BYTE) (_BYTE / 1048576.0f)
+#define BYTE_TO_GB(_BYTE) (_BYTE / 1073741824.0f)
 
 // example: 2 KB --> 2 *1024u
 #define KB   *1024u
 #define MB   *1048576u
 #define GB   *1073741824u
-
-// convert "BYTES" to "kb,mb,gb"
-#define BYTE_TO_KB(_BYTE) (_BYTE / 1024.0f)
-#define BYTE_TO_MB(_BYTE) (_BYTE / 1048576.0f)
-#define BYTE_TO_GB(_BYTE) (_BYTE / 1073741824.0f)
 // ===================================================
 
 

@@ -217,7 +217,7 @@ namespace core {
 			note: using operator [] and push/pop function's in the same time could cause conflict's and overlap's !
 				  avoid using both of them at once to avoid conflict's and run-time bugs !
 		*/
-		void push(type const& new_element) {
+		u32 push(type const& new_element) {
 
 			// if resize is needed
 			if(this->push_index >= this->count_) this->resize(false);
@@ -225,6 +225,8 @@ namespace core {
 			// push then update counter
 			new (this->begin_ + this->push_index) type(new_element);
 			this->push_index += 1;
+
+			return this->push_index - 1;
 		}
 		
 		/*

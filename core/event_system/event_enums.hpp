@@ -22,11 +22,8 @@ namespace core {
 		animation,
 		network,
 
-		// for "debug only" !!!
-		#ifdef DEBUG
-			file,
-			memory,
-		#endif
+		file,
+		memory,
 
 	}; 
 	// enum event-category end
@@ -41,28 +38,25 @@ namespace core {
 		window_close,
 
 		// mouse events
-		mouse_click_left,
-		mouse_click_right,
+		mouse_left_click,
+		mouse_right_click,
 		mouse_scroll,
 
 		// keyboard events
 		keypress_up,
 		keypress_down,
 
-		// for "debug only" !!!
-		#ifdef DEBUG
-			// files events
-			file_open,
-			file_close,
-			file_write,
-			file_read,
-			file_exist,
-			file_not_exist,
+		// files events
+		file_open,
+		file_close,
+		file_write,
+		file_read,
+		file_exist,
+		file_not_exist,
 
-			// memory events
-			memory_allocated,
-			memory_deallocated,
-		#endif
+		// memory events
+		memory_allocated,
+		memory_deallocated,
 
 	}; // enum event-type end
 

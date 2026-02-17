@@ -24,6 +24,7 @@ static const std::map<core::error, string> errors = {
 	{core::error::nullptr_object , "pointer to object is null-pointer !"},
 	{core::error::nullptr_memory , "pointer to memory is null-pointer !"},
 	{core::error::nullptr_buffer , "pointer to buffer is null-pointer !"},
+	{core::error::invalid_handle , "invalid handle !"},
 
 	{core::error::failed_to_load_resource , "failed to load resource"},
 	
@@ -65,6 +66,8 @@ static const std::map<core::warning, string> warnings = {
 
 	// "common" ======================
 	{core::warning::none , "no warning"},
+	{core::warning::runtime_crash , "this will cause crash in runtime !"},
+	{core::warning::segfault_crash , "this will cause segfault crash in runtime !"},
 	{core::warning::allocated_with_global_memory , "{}byte allocated using 'core::global_memory' allocator ! please consider moving this allocation to the rigth place where it's belone too !"},
 	{core::warning::self_assignment , "assign object to it self is probably a bug !"}
 
