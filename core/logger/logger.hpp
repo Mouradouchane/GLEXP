@@ -22,8 +22,8 @@ DISABLE_WARNING_START
 	#include <libs/spdlog/fmt/ostr.h>
 DISABLE_WARNING_END
 
-// todo : replace std::string with our string 
-#include <string>
+// todo : replace STRING with our string 
+#include "core/strings/string.hpp"
 #include <stdarg.h>
 
 namespace core {
@@ -41,19 +41,19 @@ namespace core {
 			none, // no messages at all
 		};
 
-		DLL_API void init(std::string const& logger_name, logger::verbosity_level level, u32 trace_level = 32);
+		DLL_API void init(STRING const& logger_name, logger::verbosity_level level, u32 trace_level = 32);
 
 		DLL_API logger::verbosity_level get_level();
 		// works in debug only !
 		DLL_API void set_level(logger::verbosity_level level);
 
 		// logger public function's
-		DLL_API void fatal(std::string const& message);
-		DLL_API void error(std::string const& message);
-		DLL_API void warn (std::string const& message);
-		DLL_API void info (std::string const& message);
-		DLL_API void debug(std::string const& message);
-		DLL_API void trace(std::string const& message);
+		DLL_API void fatal(STRING const& message);
+		DLL_API void error(STRING const& message);
+		DLL_API void warn (STRING const& message);
+		DLL_API void info (STRING const& message);
+		DLL_API void debug(STRING const& message);
+		DLL_API void trace(STRING const& message);
 
 	} // namespace logger end
 
@@ -63,19 +63,19 @@ namespace core {
 	logger macros functions
 */
 
-#define CORE_FATAL(...) spdlog::critical(__VA_ARGS__);
-#define CORE_ERROR(...) spdlog::error(__VA_ARGS__);
-#define CORE_FATAL_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::critical(__VA_ARGS__);
-#define CORE_ERROR_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::error(__VA_ARGS__);
+#define CORE_FATAL(...) spdlog::critical(FUNCTION_DEFINITION , __VA_ARGS__);
+#define CORE_ERROR(...) spdlog::error(FUNCTION_DEFINITION , __VA_ARGS__);
+#define CORE_FATAL_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::critical(FUNCTION_DEFINITION , __VA_ARGS__);
+#define CORE_ERROR_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::error(FUNCTION_DEFINITION , __VA_ARGS__);
 
 #ifdef DEBUG // logger debug only functions
-	#define CORE_WARN(...)  spdlog::warn(__VA_ARGS__);
-	#define CORE_INFO(...)  spdlog::info(__VA_ARGS__);
-	#define CORE_DEBUG(...) spdlog::debug(__VA_ARGS__);
-	#define CORE_TRACE(...) spdlog::trace(__VA_ARGS__);
+	#define CORE_WARN(...)  spdlog::warn( FUNCTION_DEFINITION , __VA_ARGS__);
+	#define CORE_INFO(...)  spdlog::info( FUNCTION_DEFINITION , __VA_ARGS__);
+	#define CORE_DEBUG(...) spdlog::debug(FUNCTION_DEFINITION , __VA_ARGS__);
+	#define CORE_TRACE(...) spdlog::trace(FUNCTION_DEFINITION , __VA_ARGS__);
 			// log with if-condition
-	#define CORE_WARN_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::warn(__VA_ARGS__);
-	#define CORE_INFO_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::info(__VA_ARGS__);
+	#define CORE_WARN_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::warn(FUNCTION_DEFINITION , __VA_ARGS__);
+	#define CORE_INFO_IF(TRUE_EXPRESSION , ...) if(TRUE_EXPRESSION) spdlog::info(FUNCTION_DEFINITION , __VA_ARGS__);
 
 #else 
 	#define CORE_WARN(...)

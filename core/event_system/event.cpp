@@ -4,6 +4,7 @@
 #define CORE_EVENTS_CPP
 
 #include <unordered_map>
+
 #include "core/status/status.hpp"
 #include "core/data_structres/arrays/dynamic_array.hpp"
 #include "event.hpp"
@@ -83,12 +84,33 @@ namespace event_system {
 
 			CORE_DEBUG(FUNCTION_DEFINITION);
 			CORE_DEBUG("listeners arrays starts with size={} , resize={}", size, resize);
+
 		}
 		else {
 			CORE_INFO(FUNCTION_DEFINITION);
 			CORE_INFO("event_system is ready for usage !");
 		}
 
+		DEBUG_BREAK;
+		event_handle handle1 = core::event_system::start_listen<core::event_type::keypress_down>(
+			[=](core::keyboard_event::keypress_down _event_) -> void {
+				CORE_INFO("listener for {} is called !" , core::to_string(_event_.type));
+			}
+		);
+
+		event_handle u_handle = core::event_system::start_listen<core::event_type::unkown>(
+			[=](core::unkown_event _event_) -> void {
+				CORE_WARN(
+					"unkown listener is called -> event_data[data={} size={}]" ,
+					(void*)_event_.data.data , _event_.data.size
+				);
+			}
+		);
+
+		core::event_system::stop_listen<core::event_type::keypress_down>(handle1);
+		core::event_system::stop_listen<core::event_type::keypress_down>(event_handle{4,2});
+		core::event_system::stop_listen<core::event_type::unkown>(u_handle);
+		
 	} 
 	// init function end
 
@@ -109,9 +131,9 @@ namespace event_system {
 		listeners_array = (core::dynamic_array< std::function<void(core::event<etype> const&)> > &)listeners_map.at(etype);
 
 		// try to find empty place in array 
-		for (std::function<void(core::event<etype> const&)>& listener : listeners_array) {
+		for (std::function<void(core::event<etype> const& _event_)>& listener : listeners_array) {
 
-			if (listener) handle.index2 += 1;
+			if (listener.target<void(core::event<etype> const& _event_)>() != nullptr) handle.index2 += 1;
 			else {
 				// insert & save index
 				listeners_array[handle.index2] = listener_function;
@@ -124,7 +146,7 @@ namespace event_system {
 
 		CORE_DEBUG(
 			FUNCTION_DEFINITION, " 0x{} function start listening to {} event ." , 
-			(void*)&listener_function , core::event<etype>::type_to_string()
+			(void*)&listener_function , core::to_string(etype)
 		);
 
 		return handle;
@@ -137,9 +159,9 @@ namespace event_system {
 		
 		// note : index1 != etype -> means wrong handle is passed to this function !
 		if(handle.index1 != ((u16)etype)) {
-			CORE_ERROR(FUNCTION_DEFINITION, core::status::get_error(core::error::invalid_handle) );
-			CORE_WARN(FUNCTION_DEFINITION , "handle.index1 is for {}, but expected to be {} !" , handle.index1 , (u16)etype);
-			CORE_WARN(FUNCTION_DEFINITION , core::status::get_warning(core::warning::runtime_crash));
+			CORE_ERROR(core::status::get_error(core::error::invalid_handle) );
+			CORE_WARN("handle.index1 is for {}, but expected to be {} !" , core::to_string((core::event_type)((u16)handle.index1)), (u16)etype);
+			CORE_WARN(core::status::get_warning(core::warning::runtime_crash));
 
 			CORE_CRASH();
 			return false;
@@ -162,7 +184,7 @@ namespace event_system {
 		// remove listener "stop listening"
 		if (listeners_array[handle.index2]) {
 			CORE_DEBUG(FUNCTION_DEFINITION , " function 0x{} stoped listening for event {}",
-				(void*)&listeners_array[handle.index2], core::event<etype>::type_to_string()
+				(void*)&listeners_array[handle.index2], core::to_string(etype)
 			);
 
 			listeners_array[handle.index2] = nullptr;
@@ -208,6 +230,73 @@ namespace event_system {
 	
 } 
 // namespace event_system end
+
+
+#define CASE_EVENT_TYPE_TO_STR(EVENT_TYPE) \
+			case core::event_type:: EVENT_TYPE : return #EVENT_TYPE; break;
+
+	DLL_API STRING to_string(core::event_type _type_) noexcept {
+
+	switch (_type_) {
+		// mouse
+		CASE_EVENT_TYPE_TO_STR( mouse_scroll      );
+		CASE_EVENT_TYPE_TO_STR( mouse_left_click  );
+		CASE_EVENT_TYPE_TO_STR( mouse_right_click );
+		// keyboard
+		CASE_EVENT_TYPE_TO_STR( keypress_up   );
+		CASE_EVENT_TYPE_TO_STR( keypress_down );
+		// window
+		CASE_EVENT_TYPE_TO_STR( window_open   );
+		CASE_EVENT_TYPE_TO_STR( window_resize );
+		CASE_EVENT_TYPE_TO_STR( window_close  );
+		// files
+		CASE_EVENT_TYPE_TO_STR( file_open      );
+		CASE_EVENT_TYPE_TO_STR( file_close     );
+		CASE_EVENT_TYPE_TO_STR( file_write	   );
+		CASE_EVENT_TYPE_TO_STR( file_read	   );
+		CASE_EVENT_TYPE_TO_STR( file_exist	   );
+		CASE_EVENT_TYPE_TO_STR( file_not_exist );
+		// memory
+		CASE_EVENT_TYPE_TO_STR( memory_allocated   );
+		CASE_EVENT_TYPE_TO_STR( memory_deallocated );
+
+		// todo: implement the rest
+		// controller
+		// gui
+		// graphics
+		// physics
+		// animation
+		// network
+
+		default : return "unkown";
+	}
+
+}
+
+
+#define CASE_EVENT_CATEGORY_TO_STRING(EVENT_CATEGORE) \
+			case core::event_category:: EVENT_CATEGORE : return #EVENT_CATEGORE; break;
+
+	DLL_API STRING to_string(core::event_category _category_) noexcept {
+
+	switch (_category_) {
+
+		CASE_EVENT_CATEGORY_TO_STRING( mouse      );
+		CASE_EVENT_CATEGORY_TO_STRING( keyboard   );
+		CASE_EVENT_CATEGORY_TO_STRING( controller );
+		CASE_EVENT_CATEGORY_TO_STRING( window	  );
+		CASE_EVENT_CATEGORY_TO_STRING( gui	      );
+		CASE_EVENT_CATEGORY_TO_STRING( graphics	  );
+		CASE_EVENT_CATEGORY_TO_STRING( physics	  );
+		CASE_EVENT_CATEGORY_TO_STRING( animation  );
+		CASE_EVENT_CATEGORY_TO_STRING( network	  );
+		CASE_EVENT_CATEGORY_TO_STRING( file       );
+		CASE_EVENT_CATEGORY_TO_STRING( memory     );
+
+	default : return "unkown";
+	}
+
+}
 
 } // namespace core end 
 

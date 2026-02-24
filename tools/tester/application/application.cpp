@@ -16,6 +16,10 @@
 #include "tools/tester/log/log.hpp"
 #include "tools/tester/string/string_utility.hpp"
 
+#include "core/status/status.hpp"
+#include "core/event_system/event.hpp"
+
+
 // include tests
 #include "tools/tester/unit_tests/arrays/array_tests.hpp"
 #include "tools/tester/unit_tests/arrays/dynamic_array_tests.hpp"
@@ -47,7 +51,9 @@ namespace tester {
 	}
 
 	void init() { 
+
 		core::logger::init("tester_logger" , core::logger::verbosity_level::trace);
+		core::event_system::init();
 
 		/*
 			note: add your unit-tests here
@@ -106,7 +112,7 @@ namespace tester {
 
 		std::string command = *command_toknes->begin();
 
-		/*/
+		/*
 			find command to execute
 		*/ 
 

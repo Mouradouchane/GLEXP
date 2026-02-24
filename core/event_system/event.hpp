@@ -36,11 +36,18 @@
 		template<> struct event_data_type<EVENT_TYPE> { using data_type = DATA_TYPE; };
 
 /*
+	note: this few templates just used for meta-programming to do "compile-time polymorphism"
+*/ 
+template<core::event_type etype> struct event_data_type {
+	using data_type = void*;
+};
+
+/*
 	note: - each event object will carry "data-object" in it .
 	      - this all of them "for now" !
 */ 
 
-struct unkown_data {
+struct unkown_event_data {
 	void* data;
 	u32   size;
 };
@@ -64,16 +71,8 @@ struct window_data {
 	u16 height;
 };
 
-
-/*
-	note: this few templates just used for meta-programming to do "polymorphism" in compile-time 
-*/ 
-template<core::event_type etype> struct event_data_type {
-	using data_type = void*;
-};
-
 // unkown-event mapping
-MAP_DATATYPE_TO_EVENT(core::event_type::unkown, unkown_data);
+MAP_DATATYPE_TO_EVENT(core::event_type::unkown, unkown_event_data);
 
 // mouse-events mapping
 MAP_DATATYPE_TO_EVENT(core::event_type::mouse_left_click,  mouse_data);
@@ -89,7 +88,8 @@ MAP_DATATYPE_TO_EVENT(core::event_type::window_open,   window_data);
 MAP_DATATYPE_TO_EVENT(core::event_type::window_close,  window_data);
 MAP_DATATYPE_TO_EVENT(core::event_type::window_resize, window_data);
 
-	
+// todo: map other events !
+
 namespace core {
 
 	template<core::event_type etype> class event {
@@ -98,7 +98,7 @@ namespace core {
 			bool repeated_ = false;
 
 		public:
-			COMPILE_TIME_ASSERT(std::is_void_v<typename event_data_type<etype>::data_type>, "COMPILE-TIME-ERROR: CORE -> 'unsupported' core::event_type !");
+			COMPILE_TIME_ASSERT(std::is_void_v<typename event_data_type<etype>::data_type>, "CORE:COMPILE-TIME-ERROR -> class event -> 'unsupported' core::event_type !");
 			using data_type = typename event_data_type<etype>::data_type;
 
 			const core::event_type type = etype;
@@ -115,15 +115,12 @@ namespace core {
 
 			inline bool is_handled()        noexcept { return this->handled_; }
 			inline bool is_repeated_event() noexcept { return this->repeated_; }
+			inline core::event_category category() noexcept { return core::event<etype>::get_event_category(); };
 
-			// event static functions 
-			static DLL_API core::event_category category() noexcept;
-			static DLL_API string category_to_string(core::event_category _category_) noexcept;
-			static DLL_API string type_to_string() noexcept;
-	
+			// public functions to get info about event
+			static core::event_category get_event_category() noexcept;
 	}; 
 	// class event end
-
 
 	// for unkown/custom events
 	typedef core::event<core::event_type::unkown> unkown_event;
@@ -146,7 +143,6 @@ namespace core {
 	}
 
 	// todo: add more namespaces for other events !!!
-
 
 
 	// void function( core::event<core::event_type> const& _event_ );  
@@ -220,8 +216,50 @@ namespace core {
 
 	} // event_system end
 
+	// function to convert event enums to strings
+	DLL_API STRING to_string(core::event_category _category_) noexcept;
+	DLL_API STRING to_string(core::event_type _type_) noexcept;
+
 } // namespace core end 
 
-#include "event_impl.hpp"
+
+template<core::event_type etype> core::event_category core::event<etype>::get_event_category() noexcept {
+
+	switch (etype) {
+		// mouse
+	case core::event_type::mouse_scroll      : return event_category::mouse; break;
+	case core::event_type::mouse_left_click  : return event_category::mouse; break;
+	case core::event_type::mouse_right_click : return event_category::mouse; break;
+		// keyboard
+	case core::event_type::keypress_down : return event_category::keyboard; break;
+	case core::event_type::keypress_up   : return event_category::keyboard; break;
+		// window
+	case core::event_type::window_open   : return event_category::window; break;
+	case core::event_type::window_resize : return event_category::window; break;
+	case core::event_type::window_close  : return event_category::window; break;
+		// files
+	case core::event_type::file_open       : return event_category::file; break;
+	case core::event_type::file_close      : return event_category::file; break;
+	case core::event_type::file_write	   : return event_category::file; break;
+	case core::event_type::file_read	   : return event_category::file; break;
+	case core::event_type::file_exist	   : return event_category::file; break;
+	case core::event_type::file_not_exist  : return event_category::file; break;
+		// memory events
+	case core::event_type::memory_allocated   : return event_category::memory; break;
+	case core::event_type::memory_deallocated : return event_category::memory; break;
+
+		// todo : implement the rest
+		// controller
+		// gui
+		// graphics
+		// physics
+		// animation
+		// network
+
+	default : return core::event_category::unkown;
+	}
+
+}
+
 
 #endif

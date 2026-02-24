@@ -61,7 +61,6 @@ static const std::map<core::error, string> errors = {
 
 }; // errors map end
 
-
 static const std::map<core::warning, string> warnings = {
 
 	// "common" ======================
@@ -73,20 +72,24 @@ static const std::map<core::warning, string> warnings = {
 
 }; // warnings map end
 
-namespace status {
+namespace core {
 
-	DLL_API string get_error(core::error error_code) noexcept {
+	namespace status {
 
-		auto error_itr = errors.find(error_code);
-		return ((error_itr == errors.end()) ? "error not found !" : error_itr->second);
-	}
+		DLL_API string get_error(core::error error_code) noexcept {
 
-	DLL_API string get_warning(core::warning warning_code) noexcept {
+			auto error_itr = errors.find(error_code);
+			return ((error_itr == errors.end()) ? "error not found !" : error_itr->second);
+		}
 
-		auto warning_itr = warnings.find(warning_code);
-		return ((warning_itr == warnings.end()) ? "warning not found !" : warning_itr->second);
-	}
+		DLL_API string get_warning(core::warning warning_code) noexcept {
 
-} // namespace status end 
+			auto warning_itr = warnings.find(warning_code);
+			return ((warning_itr == warnings.end()) ? "warning not found !" : warning_itr->second);
+		}
+
+	} // namespace status end 
+
+}// namespace core end
 
 #endif
