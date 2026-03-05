@@ -16,19 +16,17 @@
 
 #ifdef DEBUG
 	#define DEBUG_ARRAY_CONSTUCTED(ARRAY , TYPE) \
-		CORE_DEBUG( \
-			"0x{} core::array<{}>[{}] -> allocated using allocator '{}' for '{}' system", \
-			(void*)ARRAY, typeid(TYPE).name() , ARRAY->size_ , \
-			(ARRAY->allocator ? ARRAY->allocator->get_name() : "global-allocator"), \
-			(ARRAY->allocator ? core::memory::tag_to_string(ARRAY->allocator->get_tag()) : "no-tag") \
+		CORE_TRACE( \
+			"array<{}>[{}] constructed() | memory section '{}' !", \
+			typeid(TYPE).name() , ARRAY->size_ , \
+			(ARRAY->allocator ? core::memory::tag_to_string(ARRAY->allocator->get_tag()) : "none") \
 		);
 
 	#define DEBUG_ARRAY_DESTUCTED(ARRAY , TYPE) \
-		CORE_DEBUG( \
-			"0x{} core::array<{}>[{}] -> deallocated using allocator '{}' for '{}' system", \
+		CORE_TRACE( \
+			"{} array<{}>[{}] destructed() | memory section '{}' !", \
 			(void*)ARRAY, typeid(TYPE).name() , ARRAY->size_ , \
-			(ARRAY->allocator ? ARRAY->allocator->get_name() : "global-allocator"), \
-			(ARRAY->allocator ? core::memory::tag_to_string(ARRAY->allocator->get_tag()) : "no-tag") \
+			(ARRAY->allocator ? core::memory::tag_to_string(ARRAY->allocator->get_tag()) : "none") \
 		);
 
 #else 
@@ -169,7 +167,7 @@ namespace core {
 			array_to_move.size_     = 0;
 			array_to_move.count_    = 0;
 
-			CORE_INFO("core::array<{}> -> moved array ownership from 0x{} to 0x{}", typeid(type).name(), (void*)&array_to_move , (void*)this);
+			CORE_INFO("array<{}> -> moved array ownership from {} to {}", typeid(type).name(), (void*)&array_to_move , (void*)this);
 		}
 
 		/*
@@ -276,7 +274,7 @@ namespace core {
 			array_to_move.size_     = 0;
 			array_to_move.count_    = 0;
 
-			CORE_INFO("core::array<{}> -> moved array ownership from 0x{} to 0x{}", typeid(type).name(), (void*)&array_to_move , (void*)this);
+			CORE_INFO("core::array<{}> -> moved array ownership from {} to {}", typeid(type).name(), (void*)&array_to_move , (void*)this);
 			return *this;
 		}
 
@@ -370,7 +368,7 @@ namespace core {
 
 				#ifdef UNIT_TEST
 					CORE_FATAL(
-						"core::array<>::copy(0x{} , 0x{}) -> copying element to it self , will cause crash in runtime !", 
+						"core::array<>::copy({} , {}) -> copying element to it self , will cause crash in runtime !", 
 						(void*)&source, (void*)&destination
 					);
 					return;
@@ -389,7 +387,7 @@ namespace core {
 				if (source.size_ > destination.size_) {
 					#ifdef UNIT_TEST
 						CORE_FATAL(
-							"core::array<>::copy(0x{} , 0x{}) -> source is bigger than destination , this will cause crash in runtime !" , 
+							"core::array<>::copy({} , {}) -> source is bigger than destination , this will cause crash in runtime !" , 
 							(void*)&source, (void*)&destination
 						);
 						return;
@@ -428,7 +426,7 @@ namespace core {
 
 				#ifdef UNIT_TEST
 					CORE_FATAL(
-						"core::array<>::move(0x{} , 0x{}) -> moving element to it self this will cause crash in runtime !", 
+						"core::array<>::move({} , {}) -> moving element to it self this will cause crash in runtime !", 
 						(void*)&source, (void*)&destination
 					);
 					return;

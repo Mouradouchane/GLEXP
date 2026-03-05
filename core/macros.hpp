@@ -15,8 +15,12 @@
 #endif
 
 // to get function defintion as string
-#define FUNCTION_DEFINITION_FULL __PRETTY_FUNCTION__ " "
-#define FUNCTION_DEFINITION __FUNCTION__ " "
+#ifdef _MSC_VER
+	#define FUNCTION_DEFINITION_FULL __FUNCSIG__
+#else
+	#define FUNCTION_DEFINITION_FULL __PRETTY_FUNCTION__
+#endif
+#define FUNCTION_DEFINITION __FUNCTION__ 
 
 // for class/interface
 #define NEED_IMPL 0

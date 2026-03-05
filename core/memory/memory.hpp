@@ -18,6 +18,8 @@ namespace core {
 		enum class tag : u8 {
 			unkown = 0,
 			general,
+			event_system,
+			work_system,
 			assets,
 			gui,
 			graphics,

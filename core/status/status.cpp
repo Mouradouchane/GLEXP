@@ -27,6 +27,7 @@ static const std::map<core::error, string> errors = {
 	{core::error::invalid_handle , "invalid handle !"},
 
 	{core::error::failed_to_load_resource , "failed to load resource"},
+	{core::error::not_implemented_yet , "attempt to use {} before it's implemented !"},
 	
 	// "shader" ========================
 	{core::error::failed_to_save_shader, "failed to save shader"},

@@ -27,10 +27,10 @@
 
 // few macros for external instantiation
 #define INSTANTIATE_EVENT_SYSTEM_FUNCTIONS_FOR(TYPE) \
-		extern template event_handle start_listen<TYPE>(std::function<void(core::event<TYPE> const& _event_)> const&) noexcept; \
-		extern template bool stop_listen<TYPE>(event_handle) noexcept ; \
-		extern template void trigger_event<TYPE>(core::event<TYPE> const& _event_) noexcept; \
-		extern template void queue_event<TYPE>(core::event<TYPE> _event_) noexcept;
+		extern template DLL_API listener_id start_listen<TYPE>(std::function<void(core::event<TYPE> const& _event_)> const&) noexcept; \
+		extern template DLL_API bool stop_listen<TYPE>(listener_id id) noexcept; \
+		extern template DLL_API void trigger_event<TYPE>(core::event<TYPE> const& _event_) noexcept; \
+		extern template DLL_API void queue_event<TYPE>(core::event<TYPE> _event_) noexcept;
 
 #define MAP_DATATYPE_TO_EVENT(EVENT_TYPE , DATA_TYPE) \
 		template<> struct event_data_type<EVENT_TYPE> { using data_type = DATA_TYPE; };
@@ -102,7 +102,7 @@ namespace core {
 			using data_type = typename event_data_type<etype>::data_type;
 
 			const core::event_type type = etype;
-			data_type data;
+			const data_type data;
 
 			event(data_type const& event_data, bool is_repeated = false) noexcept 
 				: data(event_data) , repeated_(is_repeated)
@@ -178,21 +178,25 @@ namespace core {
 		DLL_API void init() noexcept;
 
 		template<core::event_type etype>
-		DLL_API event_handle start_listen(std::function<void(core::event<etype> const& _event_)> const& callback_function) noexcept;
+		DLL_API listener_id start_listen(std::function<void(core::event<etype> const& _event_)> const& callback_function) noexcept;
 
-		template<core::event_type etype> 
-		DLL_API bool stop_listen(event_handle handle) noexcept;
+		template<core::event_type etype>
+		DLL_API bool stop_listen(listener_id id) noexcept;
 
 		/*
 			note: - "trigger_event" will block "main-thread" from exection !
-		          - for none-blocking use "queue_event" !
+		          - for multi-threading use "queue_event" !
 		*/
 		template<core::event_type etype> 
 		DLL_API void trigger_event(core::event<etype> const& _event_) noexcept;
-
+		
 		template<core::event_type etype> 
-		DLL_API void queue_event(core::event<etype> _event_) noexcept;
+		DLL_API void   queue_event(core::event<etype> _event_) noexcept; // for multi-threading
 
+		// note: usefull for "messaging" , used to trigger only 1 listener
+		DLL_API void trigger_listener(listener_id id) noexcept;
+
+		DLL_API void   queue_listener(listener_id id) noexcept; // for multi-threading
 
 		/*
 			just a way to force instantiate event_system functions for our events

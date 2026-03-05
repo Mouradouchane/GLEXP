@@ -28,6 +28,7 @@ namespace core {
 		nullptr_buffer,
 		failed_to_load_resource,
 		invalid_handle,
+		not_implemented_yet,
 
 		// "init" ========================
 		init_function_failed,

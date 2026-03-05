@@ -44,7 +44,7 @@ template<typename type> struct t_vec4 {
 // ==========================
 
 // events 
-struct event_handle {
+struct listener_id {
 	u32 index1;
 	u32 index2;
 };
