@@ -24,7 +24,11 @@ static const std::map<core::error, string> errors = {
 	{core::error::nullptr_object , "pointer to object is null-pointer !"},
 	{core::error::nullptr_memory , "pointer to memory is null-pointer !"},
 	{core::error::nullptr_buffer , "pointer to buffer is null-pointer !"},
-	{core::error::invalid_handle , "invalid handle !"},
+	{core::error::invalid_handle , "invalid handle {} !"},
+	{core::error::invalid_id     , "invalid id {} !"},
+
+	// "event listener" ========================
+	{core::error::listener_not_found , "listener {} not found !"},
 
 	{core::error::failed_to_load_resource , "failed to load resource"},
 	{core::error::not_implemented_yet , "attempt to use {} before it's implemented !"},

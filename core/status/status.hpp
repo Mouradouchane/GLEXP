@@ -28,7 +28,12 @@ namespace core {
 		nullptr_buffer,
 		failed_to_load_resource,
 		invalid_handle,
+		invalid_id,
 		not_implemented_yet,
+
+		// event listener =====================
+		listener_not_found,
+
 
 		// "init" ========================
 		init_function_failed,
