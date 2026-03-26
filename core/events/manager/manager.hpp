@@ -36,13 +36,23 @@ namespace core {
 		static const u32 _default_size_   = 64u;
 		static const u32 _default_resize_ = 32u;
 
+		// this just to convert type T to integer-id
+		template<typename T> static u32 get_type_id() {
+			static const u32 id = _next_id_++;
+			return id;
+		}
+		static inline u32 _next_id_ = 0; // note: need C++17 for inline
+
 	private:
 		STRING _name_;
 		u32    _size_; // for 
 		u32    _resize_;
 		core::events_category _category_; 
 		core::memory_allocator* _allocator_ = nullptr;
-		std::unordered_map<u32, void*> _listeners_map_; // map of core::dispatchers
+		/*
+			todo: "optimization" change from map to array for direct access insted of .find( )
+		*/
+		std::unordered_map<u32, b_dispatcher*> _dispatchers_map_;
 
 	public:
 		// constructor/destructor
@@ -57,11 +67,11 @@ namespace core {
 		template<typename type> listener_id start_listen(core::callback<type> const& callback_function);
 		bool stop_listen(listener_id id);
 
-		template<typename type> void trigger_all(type const& data);
-		template<typename type> void trigger(listener_id id, type const& data);
+		template<typename type> void trigger_all(type const& data) noexcept;
+		template<typename type> void trigger(listener_id id, type const& data) noexcept;
 
-		template<typename type> void queue_all(type data);
-		template<typename type> void queue(listener_id id, type const& data);
+		template<typename type> void queue_all(type data) noexcept; 
+		template<typename type> void queue(listener_id id, type const& data) noexcept;
 
 	}; // class event_system end
 
@@ -80,13 +90,25 @@ event_manager::event_manager(
 ) 
 	: _category_(category) , _name_(name) , _size_(size) , _resize_(resize_value) , _allocator_(allocator)
 {
-	this->_listeners_map_ = std::unordered_map<u32, void*>(32u);
 	CORE_DEBUG("event_manager constructed");
 }
 
 event_manager::~event_manager() {
+	
+	// destruct all dispatchers
+	if (this->_allocator_) {
+		for (auto& [id, dispatcher] : this->_dispatchers_map_ ) {
+			dispatcher->~b_dispatcher(); 
+			this->_allocator_->deallocate((void*)dispatcher);
+		}
+	}
+	else {
+		for (auto& [id, dispatcher] : this->_dispatchers_map_ ) {
+			dispatcher->~b_dispatcher(); 
+			core::memory::deallocate((void*)dispatcher);
+		}
+	}
 
-	this->_listeners_map_.clear();
 	CORE_DEBUG("event_manager destructed");
 }
 
@@ -94,10 +116,109 @@ event_manager::~event_manager() {
 	event_manager functions
 */
 
-template<typename type> listener_id event_manager::start_listen<type>(core::callback<type> const& callback_function) noexcept {
+template<typename type> 
+listener_id event_manager::start_listen(core::callback<type> const& callback_function) noexcept {
+	// get type id/index
+	u32 type_index = core::event_manager::get_type_id<type>();
+
+	listener_id id = { type_index , 0u };
+	auto itr = this->_dispatchers_map_.find(id.index1);
+	core::dispatcher<type>* dptr;
+
+	// if dispatcher not found
+	if (itr == this->_dispatchers_map_.end()) {
+		// allocate dispatcher
+		void* mem;
+		if (this->_allocator_) {
+			mem = this->_allocator_->allocate(sizeof(core::dispatcher<type>));
+		}
+		else {
+			mem = core::memory::allocate(sizeof(core::dispatcher<type>), core::memory::tag::event_system);
+		}
+
+		// construct dispatcher
+		dptr = new (mem) core::dispatcher<type>(this->_size_, this->_resize_, this->_allocator_);
+		this->_dispatchers_map_[id.index1] = dptr;
+	}
+	else dptr = static_cast<core::dispatcher<type>*>( itr->second );
+
+	// insert "callback" in dispatcher
+	id.index2 = dptr->subscribe(callback_function);
+	CORE_TRACE("new listener start for <{}> id={}" , typeid(type).name(), id.index2);
+
+	return id;
+}
+
+bool core::event_manager::stop_listen(listener_id id) {
+
+	auto itr = this->_dispatchers_map_.find(id.index1);
+
+	if (itr == this->_dispatchers_map_.end()) {
+		CORE_ERROR(core::status::get_error(core::error::index_out_range));
+		CORE_CRASH();
+		return false;
+	}
+
+#ifdef DEBUG
+	bool unsub = itr->second->unsubscribe(id.index2);
+	if (unsub) CORE_TRACE("listener {} stoped {}" , id.index2 , id.index1);
+	return unsub;
+#else 
+	return itr->second->unsubscribe(id.index2);
+#endif
+}
 
 
+template<typename type> 
+void event_manager::trigger_all(type const& data) noexcept {
+	u32  type_index = core::event_manager::get_type_id<type>();
+	auto itr = this->_dispatchers_map_.find(type_index);
 
+	if (itr != this->_dispatchers_map_.end()) {
+		core::dispatcher<type>* dis = static_cast<core::dispatcher<type>*>(itr->second);
+		dis->trigger_all(data);
+		return;
+	}
+
+	CORE_WARN("event triggered for <{}> but no dispatcher found to handled yet !" , typeid(type).name() );
+}
+
+template<typename type>
+void event_manager::trigger(listener_id id, type const& data) noexcept {
+	u32  type_index = core::event_manager::get_type_id<type>();
+
+	// note type_index not matching index1 is a -> "user bug"
+	if (type_index != id.index1) {
+		CORE_WARN_D("listener id not matching with type id ? this is probablly a bug !");
+		CORE_ERROR_D(core::status::get_error(core::error::invalid_id),id.index1);
+		CORE_CRASH();
+		return;
+	}
+
+	auto itr = this->_dispatchers_map_.find(type_index);
+	if (itr != this->_dispatchers_map_.end()) {
+		core::dispatcher<type>* dis = static_cast<core::dispatcher<type>*>(itr->second);
+		dis->trigger(id.index2,data);
+		return;
+	}
+
+	CORE_WARN("event triggered for <{}> but no dispatcher found to handled yet !" , typeid(type).name() );
+}
+
+// todo: implement this
+template<typename type> 
+void event_manager::queue_all(type data) noexcept {
+
+	CORE_TRACE_CURRENT_FUNCTION();
+	CORE_ASSERT(1, "not implemented yet !");
+}
+
+// todo: implement this
+template<typename type>
+void event_manager::queue(listener_id id, type const& data) noexcept {
+
+	CORE_TRACE_CURRENT_FUNCTION();
+	CORE_ASSERT(1, "not implemented yet !");
 }
 
 

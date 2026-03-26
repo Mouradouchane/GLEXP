@@ -10,6 +10,10 @@
 #include "core/data_structres/arrays/dynamic_array.hpp"
 #include "event.hpp"
 
+#ifdef DEBUG
+	static bool logs_enabled = true;
+#endif
+
 #define DEFAULT_LISTENER_ARRAY_SIZE   16
 #define DEFAULT_LISTENER_ARRAY_RESIZE  8
 

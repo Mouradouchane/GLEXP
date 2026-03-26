@@ -16,19 +16,24 @@ namespace core {
 
 	template<typename type> using callback = std::function<void(type const& data)>;
 
+	class b_dispatcher {
+		public:
+			virtual ~b_dispatcher() = default;
+			virtual bool unsubscribe(u32 index) = NEED_IMPL;
+	};
 
-	template<typename type> class dispatcher {
+	template<typename type> class dispatcher : public b_dispatcher {
 		private:
 			core::dynamic_array< core::callback<type> > _listeners_;
 
 		public:
 			// constructor/destructor
 			 dispatcher(u32 count, u32 resize_value , core::memory_allocator* allocator = nullptr);
-			~dispatcher();
+			~dispatcher() override;
 
 			// dispatcher public functions
 			u32  subscribe(core::callback<type> const& callback_function);
-			bool unsubscribe(u32 index);
+			bool unsubscribe(u32 index) override;
 
 			void trigger(u32 index, type const& data); 
 			void trigger_all(type const& data);
@@ -53,14 +58,12 @@ namespace core {
 template<typename type> dispatcher<type>::dispatcher(
 	u32 count , u32 resize_value , core::memory_allocator* allocator = nullptr
 ) {
-	this->_listeners_ = core::dynamic_array<type>(count, resize_value ,allocator);
+	this->_listeners_ = core::dynamic_array<core::callback<type>>(count, resize_value ,allocator);
 	CORE_DEBUG("dispatcher constructed <{}>",typeid(type).name());
 }
 
 // destructor
 template<typename type> dispatcher<type>::~dispatcher() {
-
-	this->_listeners_.~dynamic_array();
 	CORE_DEBUG("dispatcher destructed <{}>", typeid(type).name());
 }
 
@@ -81,7 +84,7 @@ template<typename type> bool dispatcher<type>::unsubscribe(u32 index) noexcept {
 		return false;
 	}
 
-	std::memset((void*)&this->_listeners_[index], 0, sizeof(core::callback<type>));
+	this->_listeners_[index] = nullptr;
 	return true;
 }
 
