@@ -1,7 +1,7 @@
 #pragma once 
 
-#ifndef CORE_EVENT_SYSTEM_HPP
-#define CORE_EVENT_SYSTEM_HPP
+#ifndef CORE_EVENT_MANAGER_HPP
+#define CORE_EVENT_MANAGER_HPP
 
 #include <unordered_map>
 #include "core/strings/string.hpp"
@@ -33,8 +33,9 @@ namespace core {
 
 	class event_manager {
 	private:
-		static const u32 _default_size_   = 64u;
-		static const u32 _default_resize_ = 32u;
+		static inline u32 _total_event_managers_ = 0u;
+		static const  u32 _default_size_   = 32u;
+		static const  u32 _default_resize_ = 32u;
 
 		// this just to convert type T to integer-id
 		template<typename T> static u32 get_type_id() {
@@ -90,6 +91,7 @@ event_manager::event_manager(
 ) 
 	: _category_(category) , _name_(name) , _size_(size) , _resize_(resize_value) , _allocator_(allocator)
 {
+	core::event_manager::_total_event_managers_ += 1;
 	CORE_DEBUG("event_manager constructed");
 }
 
@@ -109,6 +111,10 @@ event_manager::~event_manager() {
 		}
 	}
 
+	if (core::event_manager::_total_event_managers_) {
+		core::event_manager::_total_event_managers_ -= 1;
+	}
+
 	CORE_DEBUG("event_manager destructed");
 }
 
@@ -124,6 +130,8 @@ listener_id event_manager::start_listen(core::callback<type> const& callback_fun
 	listener_id id = { type_index , 0u };
 	auto itr = this->_dispatchers_map_.find(id.index1);
 	core::dispatcher<type>* dptr;
+
+	DEBUG_BREAK;
 
 	// if dispatcher not found
 	if (itr == this->_dispatchers_map_.end()) {
@@ -150,8 +158,8 @@ listener_id event_manager::start_listen(core::callback<type> const& callback_fun
 }
 
 bool core::event_manager::stop_listen(listener_id id) {
-
 	auto itr = this->_dispatchers_map_.find(id.index1);
+	DEBUG_BREAK;
 
 	if (itr == this->_dispatchers_map_.end()) {
 		CORE_ERROR(core::status::get_error(core::error::index_out_range));
@@ -166,6 +174,7 @@ bool core::event_manager::stop_listen(listener_id id) {
 #else 
 	return itr->second->unsubscribe(id.index2);
 #endif
+
 }
 
 
@@ -173,6 +182,8 @@ template<typename type>
 void event_manager::trigger_all(type const& data) noexcept {
 	u32  type_index = core::event_manager::get_type_id<type>();
 	auto itr = this->_dispatchers_map_.find(type_index);
+	
+	DEBUG_BREAK;
 
 	if (itr != this->_dispatchers_map_.end()) {
 		core::dispatcher<type>* dis = static_cast<core::dispatcher<type>*>(itr->second);
@@ -186,8 +197,10 @@ void event_manager::trigger_all(type const& data) noexcept {
 template<typename type>
 void event_manager::trigger(listener_id id, type const& data) noexcept {
 	u32  type_index = core::event_manager::get_type_id<type>();
+	
+	DEBUG_BREAK;
 
-	// note type_index not matching index1 is a -> "user bug"
+	// note: if type_index not matching index1 , this usually a "usage-bug"
 	if (type_index != id.index1) {
 		CORE_WARN_D("listener id not matching with type id ? this is probablly a bug !");
 		CORE_ERROR_D(core::status::get_error(core::error::invalid_id),id.index1);
