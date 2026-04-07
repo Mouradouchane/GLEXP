@@ -8,6 +8,7 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
+
 namespace core {
 
 	namespace memory {

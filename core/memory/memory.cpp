@@ -28,6 +28,10 @@
 
 #include "memory.hpp"
 
+#ifdef DEBUG 
+	static bool logs_enabled = true;
+#endif
+
 typedef struct alloc_info {
 	size_t count;
 	u8     memory_section;

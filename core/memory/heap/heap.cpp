@@ -8,6 +8,10 @@
 #include "core/assert.hpp"
 #include "heap.hpp"
 
+#ifdef DEBUG 
+	static bool logs_enabled = true;
+#endif
+
 /*
 	constructor
 */
