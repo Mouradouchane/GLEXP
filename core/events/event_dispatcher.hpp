@@ -5,11 +5,13 @@
 
 #include <functional>
 
+#include "core/macros.hpp"
+#include "core/logger/logger.hpp"
 #include "core/memory/memory.hpp"
 #include "core/data_structres/arrays/dynamic_array.hpp"
 
 #ifdef DEBUG
-	static bool logs_enabled = true;
+	 static auto _logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
 #endif
 
 namespace core {

@@ -22,7 +22,6 @@ DISABLE_WARNING_START
 	#include <libs/spdlog/fmt/ostr.h>
 DISABLE_WARNING_END
 
-// todo : replace STRING with our string 
 #include "core/strings/string.hpp"
 #include <stdarg.h>
 
@@ -59,6 +58,8 @@ namespace core {
 
 } // namespace core end
 
+#define CORE_GET_LOGGER(NAME) spdlog::get(NAME)
+
 /*
 	logger macros functions
 */
@@ -75,21 +76,21 @@ namespace core {
 #define CORE_ERROR_IF(TRUE_EXPRESSION ,FORMAT ,  ...) if(TRUE_EXPRESSION) spdlog::error(FORMAT , __VA_ARGS__);
 
 #ifdef DEBUG // logger debug only functions
-	#define CORE_WARN(FORMAT , ...)  if(logs_enabled) spdlog::warn( FORMAT , __VA_ARGS__);
-	#define CORE_INFO(FORMAT , ...)  if(logs_enabled) spdlog::info( FORMAT , __VA_ARGS__);
-	#define CORE_DEBUG(FORMAT , ...) if(logs_enabled) spdlog::debug(FORMAT , __VA_ARGS__);
-	#define CORE_TRACE(FORMAT , ...) if(logs_enabled) spdlog::trace(FORMAT , __VA_ARGS__);
+	#define CORE_WARN(FORMAT , ...)  if(_logger_) spdlog::warn( FORMAT , __VA_ARGS__);
+	#define CORE_INFO(FORMAT , ...)  if(_logger_) spdlog::info( FORMAT , __VA_ARGS__);
+	#define CORE_DEBUG(FORMAT , ...) if(_logger_) spdlog::debug(FORMAT , __VA_ARGS__);
+	#define CORE_TRACE(FORMAT , ...) if(_logger_) spdlog::trace(FORMAT , __VA_ARGS__);
 
-	#define CORE_WARN_D(FORMAT , ...)  if(logs_enabled) spdlog::warn( "{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
-	#define CORE_INFO_D(FORMAT , ...)  if(logs_enabled) spdlog::info( "{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
-	#define CORE_DEBUG_D(FORMAT , ...) if(logs_enabled) spdlog::debug("{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
-	#define CORE_TRACE_D(FORMAT , ...) if(logs_enabled) spdlog::trace("{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
+	#define CORE_WARN_D(FORMAT , ...)  if(_logger_) spdlog::warn( "{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
+	#define CORE_INFO_D(FORMAT , ...)  if(_logger_) spdlog::info( "{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
+	#define CORE_DEBUG_D(FORMAT , ...) if(_logger_) spdlog::debug("{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
+	#define CORE_TRACE_D(FORMAT , ...) if(_logger_) spdlog::trace("{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
 
 	// log if-condition
-	#define CORE_WARN_IF(TRUE_EXPRESSION ,FORMAT ,  ...) if(TRUE_EXPRESSION) if(logs_enabled) spdlog::warn(FORMAT , __VA_ARGS__);
-	#define CORE_INFO_IF(TRUE_EXPRESSION ,FORMAT ,  ...) if(TRUE_EXPRESSION) if(logs_enabled) spdlog::info(FORMAT , __VA_ARGS__);
+	#define CORE_WARN_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_logger_) spdlog::warn(FORMAT , __VA_ARGS__);
+	#define CORE_INFO_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_logger_) spdlog::info(FORMAT , __VA_ARGS__);
 
-	#define CORE_TRACE_CURRENT_FUNCTION() if(logs_enabled) CORE_TRACE("{} | {} | {}" , __LINE__ , FUNCTION_DEFINITION , __FILE__); \
+	#define CORE_TRACE_CURRENT_FUNCTION() if(_logger_) CORE_TRACE("{} | {} | {}" , __LINE__ , FUNCTION_DEFINITION , __FILE__); \
 
 #else 
 	#define CORE_WARN(...)

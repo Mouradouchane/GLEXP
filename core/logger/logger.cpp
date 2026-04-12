@@ -8,6 +8,11 @@
 #include "core/assert.hpp"
 #include "logger.hpp"
 
+#define CREATE_LOGGER(NAME, CONSOLE_SINK) { \
+			auto _LOGGER_ = std::make_shared<spdlog::logger>(NAME, CONSOLE_SINK); \
+			spdlog::register_logger(_LOGGER_); \
+		};
+
 /*
 	logger private variables
 */
@@ -61,11 +66,11 @@ namespace core {
 
 			// create logger
 			spd_logger = std::make_shared<spdlog::logger>(logger_name, sinks.begin() , sinks.end());
-			
+
 			// register logger
 			spdlog::register_logger(spd_logger);
 			spdlog::set_default_logger(spd_logger);
-			
+
 			// setup logger sink's 
 			file_sink->set_level(spdlog::level::level_enum(core::logger::verbosity_level::warning));
 			file_sink->set_pattern("[%D] [%n] [%l] : %v\n");
@@ -75,6 +80,14 @@ namespace core {
 			console_sink->set_color(spdlog::level::trace, 8);
 			console_sink->set_color(spdlog::level::debug, 11);
 			console_sink->set_color(spdlog::level::info, 10);
+
+			spdlog::flush_on(spdlog::level::err);
+
+			// create core sub-logger's
+			CREATE_LOGGER(EVENT_SYSTEM_LOGGER,	   console_sink);
+			CREATE_LOGGER(WORK_SYSTEM_LOGGER,      console_sink);
+			CREATE_LOGGER(MEMORY_ALLOCATOR_LOGGER, console_sink);
+			CREATE_LOGGER(DATA_STRUCTER_LOGGER,    console_sink);
 
 			// setup logger
 			#ifdef DEBUG
@@ -89,10 +102,8 @@ namespace core {
 				spd_logger->set_level(spdlog::level::level_enum::err);
 			#endif
 
-			initilized = true;
-
 			// unit-test logger test
-			#if !defined(UNIT_TEST)
+			#if defined(UNIT_TEST)
 				spd_logger->trace("init-logger test trace {} !" , 1);
 				spd_logger->debug("init-logger test debug {} !" , 1);
 				spd_logger->info("init-logger test info {} !" , 1);
@@ -101,6 +112,7 @@ namespace core {
 				spd_logger->critical("init-logger test critical {} !" , 1);
 			#endif
 
+			initilized = true;
 		}
 
 		/*

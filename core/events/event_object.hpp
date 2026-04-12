@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef CORE_EVENT_HPP
-#define CORE_EVENT_HPP
+#ifndef CORE_EVENT_OBJECT_HPP
+#define CORE_EVENT_OBJECT_HPP
 
 #include "core/types.hpp"
 
@@ -32,6 +32,9 @@ namespace core {
 		u16 type;
 	};
 
+	/*
+		event object struct
+	*/
 	template<typename type> struct event {
 		core::event_info info;
 		const type       data;

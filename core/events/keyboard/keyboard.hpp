@@ -11,7 +11,7 @@ namespace core {
 	
 	namespace keyboard {
 
-		// event object
+		// keyboard event object
 		struct event {
 			char value; // key value
 			i16  key;   // physical key 
@@ -31,12 +31,12 @@ namespace core {
 			multi_key_press_down,
 		};
 
-		DLL_API listener_id on_event(
+		DLL_API listener_id start_listen(
 			core::keyboard::event_type keyboard_event, 
 			core::callback<core::keyboard::event> const& callback_function
 		);
 
-		DLL_API bool stop(listener_id event_listener_id);
+		DLL_API bool stop_listen(listener_id event_listener_id);
 
 	}; // namespace keyboard end
 

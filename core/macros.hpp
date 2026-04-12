@@ -111,5 +111,12 @@
 #define GB   *1073741824u
 // ===================================================
 
+/*
+	logger's names
+*/
+#define EVENT_SYSTEM_LOGGER		"CORE_EVENT_SYSTEM"
+#define WORK_SYSTEM_LOGGER		"CORE_WORK_SYSTEM"
+#define MEMORY_ALLOCATOR_LOGGER "CORE_MEMORY_ALLOCATOR"
+#define DATA_STRUCTER_LOGGER	"CORE_DATA_STRUCTER"
 
 #endif // MACROS_HPP

@@ -4,11 +4,13 @@
 #define CORE_EVENT_MANAGER_HPP
 
 #include <unordered_map>
+
+#include "core/macros.hpp"
 #include "core/strings/string.hpp"
 #include "core/events/event_dispatcher.hpp"
 
 #ifdef DEBUG
-	static bool logs_enabled = true;
+	static auto _logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
 #endif
 
 namespace core {
@@ -227,7 +229,7 @@ template<typename type>
 void event_manager::queue_all(type data) noexcept {
 
 	CORE_TRACE_CURRENT_FUNCTION();
-	CORE_ASSERT(1, "not implemented yet !");
+	CORE_ASSERT(1, "todo:not implemented yet !");
 }
 
 // todo: implement this
@@ -235,7 +237,7 @@ template<typename type>
 void event_manager::queue(listener_id id, type const& data) noexcept {
 
 	CORE_TRACE_CURRENT_FUNCTION();
-	CORE_ASSERT(1, "not implemented yet !");
+	CORE_ASSERT(1, "todo:not implemented yet !");
 }
 
 
