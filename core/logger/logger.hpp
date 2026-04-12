@@ -89,7 +89,7 @@ namespace core {
 	#define CORE_WARN_IF(TRUE_EXPRESSION ,FORMAT ,  ...) if(TRUE_EXPRESSION) if(logs_enabled) spdlog::warn(FORMAT , __VA_ARGS__);
 	#define CORE_INFO_IF(TRUE_EXPRESSION ,FORMAT ,  ...) if(TRUE_EXPRESSION) if(logs_enabled) spdlog::info(FORMAT , __VA_ARGS__);
 
-	#define CORE_TRACE_CURRENT_FUNCTION() CORE_TRACE("{} | {} | {}" , __LINE__ , FUNCTION_DEFINITION , __FILE__); \
+	#define CORE_TRACE_CURRENT_FUNCTION() if(logs_enabled) CORE_TRACE("{} | {} | {}" , __LINE__ , FUNCTION_DEFINITION , __FILE__); \
 
 #else 
 	#define CORE_WARN(...)

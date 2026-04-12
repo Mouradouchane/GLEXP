@@ -87,6 +87,12 @@
 	#endif
 #endif
 
+/*
+	type casting macros
+*/
+#define C_CAST(TARGET , TYPE) (TYPE)TARGET 
+#define S_CAST(TARGET , TYPE)  static_cast<TYPE>(TARGET)
+#define D_CAST(TARGET , TYPE) dynamic_cast<TYPE>(TARGET)
 
 /*
 	few macros to convert beetween memory units

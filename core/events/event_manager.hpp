@@ -5,7 +5,7 @@
 
 #include <unordered_map>
 #include "core/strings/string.hpp"
-#include "core/events/dispatcher/dispatcher.hpp"
+#include "core/events/event_dispatcher.hpp"
 
 #ifdef DEBUG
 	static bool logs_enabled = true;
@@ -32,7 +32,8 @@ namespace core {
 	};
 
 	class event_manager {
-	private:
+	
+	private: // private static configs
 		static inline u32 _total_event_managers_ = 0u;
 		static const  u32 _default_size_   = 32u;
 		static const  u32 _default_resize_ = 32u;
@@ -42,20 +43,23 @@ namespace core {
 			static const u32 id = _next_id_++;
 			return id;
 		}
+
 		static inline u32 _next_id_ = 0; // note: need C++17 for inline
 
-	private:
+	private: // event manager private variables
 		STRING _name_;
-		u32    _size_; // for 
+		u32    _size_;
 		u32    _resize_;
 		core::events_category _category_; 
+
+		// todo: move from ptr to refcounted
 		core::memory_allocator* _allocator_ = nullptr;
-		/*
-			todo: "optimization" change from map to array for direct access insted of .find( )
-		*/
+
+		// todo: "optimization" change from map to array for 0(1) insted of log(n) -> map.find( )
 		std::unordered_map<u32, b_dispatcher*> _dispatchers_map_;
 
-	public:
+	public: // event manager public function
+
 		// constructor/destructor
 		event_manager(
 			core::events_category category, STRING name,
