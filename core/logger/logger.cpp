@@ -36,7 +36,7 @@ namespace core {
 
 	namespace logger {
 
-		void init(std::string const& logger_name, verbosity_level level, u32 trace_level) {
+		void init(STRING const& logger_name, verbosity_level level, u32 trace_level) {
 			
 			if (initilized) return;
 
@@ -129,33 +129,33 @@ namespace core {
 		#endif
 		}
 
-		void fatal(std::string const& message) {
+		void fatal(STRING const& message) {
 			spdlog::critical(message);
 		}
 
-		void error(std::string const& message) {
+		void error(STRING const& message) {
 			spdlog::error(message);
 		}
 
-		void warn(std::string const& message) {
+		void warn(STRING const& message) {
 		#ifdef DEBUG
 			spdlog::warn(message);
 		#endif
 		}
 
-		void info(std::string const& message) {
+		void info(STRING const& message) {
 		#ifdef DEBUG
 			spdlog::info(message);
 		#endif
 		}
 
-		void debug(std::string const& message) {
+		void debug(STRING const& message) {
 		#ifdef DEBUG
 			spdlog::debug(message);
 		#endif
 		}
 
-		void trace(std::string const& message) {
+		void trace(STRING const& message) {
 		#ifdef DEBUG
 			spdlog::trace(message);
 		#endif

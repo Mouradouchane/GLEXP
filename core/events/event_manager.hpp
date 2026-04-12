@@ -15,8 +15,9 @@
 
 namespace core {
 
-	enum class events_category : u16 {
+	enum class event_manager_category : u16 {
 		unspecified_events = 0,
+
 		mouse_events,
 		keyboard_events,
 		window_events,
@@ -26,15 +27,16 @@ namespace core {
 		physics_events,
 		collision_events,
 		ai_events,
+		memory_events,
 
 	#ifdef DEBUG
-		memory_events,
 		dev_events,
 	#endif
 	};
 
+
 	class event_manager {
-	
+
 	private: // private static configs
 		static inline u32 _total_event_managers_ = 0u;
 		static const  u32 _default_size_   = 32u;
@@ -52,7 +54,7 @@ namespace core {
 		STRING _name_;
 		u32    _size_;
 		u32    _resize_;
-		core::events_category _category_; 
+		event_manager_category _category_;
 
 		// todo: move from ptr to refcounted
 		core::memory_allocator* _allocator_ = nullptr;
@@ -62,9 +64,10 @@ namespace core {
 
 	public: // event manager public function
 
+
 		// constructor/destructor
 		event_manager(
-			core::events_category category, STRING name,
+			event_manager_category category, STRING name,
 			u32 size = _default_size_, u32 resize_value = _default_resize_,
 			core::memory_allocator* allocator = nullptr
 		);
@@ -80,7 +83,9 @@ namespace core {
 		template<typename type> void queue_all(type data) noexcept; 
 		template<typename type> void queue(listener_id id, type const& data) noexcept;
 
-	}; // class event_system end
+	}; 
+	// class event_system end
+
 
 } // namespace core end
 
@@ -92,7 +97,7 @@ namespace core {
 namespace core {
 
 event_manager::event_manager(
-	core::events_category category, STRING name, u32 size = _default_size_, u32 resize_value = _default_resize_ ,
+	event_manager_category category, STRING name, u32 size = _default_size_, u32 resize_value = _default_resize_ ,
 	core::memory_allocator* allocator = nullptr
 ) 
 	: _category_(category) , _name_(name) , _size_(size) , _resize_(resize_value) , _allocator_(allocator)
@@ -128,11 +133,10 @@ event_manager::~event_manager() {
 	event_manager functions
 */
 
-template<typename type> 
+template<typename type>
 listener_id event_manager::start_listen(core::callback<type> const& callback_function) noexcept {
-	// get type id/index
+	
 	u32 type_index = core::event_manager::get_type_id<type>();
-
 	listener_id id = { type_index , 0u };
 	auto itr = this->_dispatchers_map_.find(id.index1);
 	core::dispatcher<type>* dptr;
@@ -154,16 +158,17 @@ listener_id event_manager::start_listen(core::callback<type> const& callback_fun
 		dptr = new (mem) core::dispatcher<type>(this->_size_, this->_resize_, this->_allocator_);
 		this->_dispatchers_map_[id.index1] = dptr;
 	}
-	else dptr = static_cast<core::dispatcher<type>*>( itr->second );
+	else dptr = static_cast<core::dispatcher<type>*>(itr->second);
 
 	// insert "callback" in dispatcher
 	id.index2 = dptr->subscribe(callback_function);
-	CORE_TRACE("new listener start for <{}> id={}" , typeid(type).name(), id.index2);
+	CORE_TRACE("new listener start for <{}> id={}", typeid(type).name(), id.index2);
 
 	return id;
 }
 
-bool core::event_manager::stop_listen(listener_id id) {
+
+bool event_manager::stop_listen(listener_id id) {
 	auto itr = this->_dispatchers_map_.find(id.index1);
 	DEBUG_BREAK;
 
@@ -182,7 +187,6 @@ bool core::event_manager::stop_listen(listener_id id) {
 #endif
 
 }
-
 
 template<typename type> 
 void event_manager::trigger_all(type const& data) noexcept {

@@ -24,7 +24,8 @@ namespace core {
 			virtual bool unsubscribe(u32 index) = NEED_IMPL;
 	};
 
-	template<typename type> class dispatcher : public b_dispatcher {
+	template<typename type> 
+	class dispatcher : public b_dispatcher {
 		private:
 			core::dynamic_array< core::callback<type> > _listeners_;
 
