@@ -11,8 +11,12 @@
 #include "core/data_structres/arrays/dynamic_array.hpp"
 
 #ifdef DEBUG
-	 static auto _logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
+	static auto _ed_hpp_logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
+#else 
+	static auto _ed_hpp_logger_ = nullptr;
 #endif
+
+#define _LOGGER_ _ed_hpp_logger_
 
 namespace core {
 
@@ -27,7 +31,7 @@ namespace core {
 	template<typename type> 
 	class dispatcher : public b_dispatcher {
 		private:
-			core::dynamic_array< core::callback<type> > _listeners_;
+			core::dynamic_array< core::callback<type> > _listeners_ = core::dynamic_array < core::callback<type>>(8,8,nullptr);
 
 		public:
 			// constructor/destructor
@@ -35,13 +39,13 @@ namespace core {
 			~dispatcher() override;
 
 			// dispatcher public functions
-			u32  subscribe(core::callback<type> const& callback_function);
-			bool unsubscribe(u32 index) override;
+			u32    subscribe(core::callback<type> const& callback_function) noexcept;
+			bool unsubscribe(u32 index) noexcept override;
 
-			void trigger(u32 index, type const& data); 
-			void trigger_all(type const& data);
+			void trigger(u32 index, type const& data) noexcept;
+			void trigger_all(type const& data) noexcept;
 		
-			void clear();
+			void clear() noexcept;
 
 			// note/todo : maybe later --> queue(data); for multi-threading
 
@@ -58,15 +62,16 @@ namespace core {
 namespace core {
 
 // constructor 
-template<typename type> dispatcher<type>::dispatcher(
-	u32 count , u32 resize_value , core::memory_allocator* allocator = nullptr
-) {
-	this->_listeners_ = core::dynamic_array<core::callback<type>>(count, resize_value ,allocator);
+template<typename type> 
+dispatcher<type>::dispatcher(u32 count, u32 resize_value, core::memory_allocator* allocator) {
+
+	this->_listeners_ = core::dynamic_array<core::callback<type>>(count, resize_value, allocator);
 	CORE_DEBUG("dispatcher constructed <{}>",typeid(type).name());
 }
 
 // destructor
-template<typename type> dispatcher<type>::~dispatcher() {
+template<typename type> 
+dispatcher<type>::~dispatcher() {
 	CORE_DEBUG("dispatcher destructed <{}>", typeid(type).name());
 }
 
@@ -80,7 +85,8 @@ u32 dispatcher<type>::subscribe(callback<type> const& callback_function) noexcep
 	return this->_listeners_.push(callback_function);
 }
 
-template<typename type> bool dispatcher<type>::unsubscribe(u32 index) noexcept {
+template<typename type> 
+bool dispatcher<type>::unsubscribe(u32 index) noexcept {
 
 	if (index >= _listeners_.size()) {
 		CORE_ERROR_D(core::status::get_error(core::error::index_out_range),index , _listeners_.size());
@@ -92,7 +98,8 @@ template<typename type> bool dispatcher<type>::unsubscribe(u32 index) noexcept {
 }
 
 // call all listeners 
-template<typename type> void dispatcher<type>::trigger_all(type const& data) noexcept {
+template<typename type> 
+void dispatcher<type>::trigger_all(type const& data) noexcept {
 
 	for (u32 i = 0; i < this->_listeners_.size(); i++ ) {
 		if (this->_listeners_[i]) {
@@ -104,7 +111,8 @@ template<typename type> void dispatcher<type>::trigger_all(type const& data) noe
 }
 
 // call specific listener
-template<typename type> void dispatcher<type>::trigger(u32 index, type const& data) noexcept {
+template<typename type> 
+void dispatcher<type>::trigger(u32 index, type const& data) noexcept {
 	
 	if (index >= _listeners_.size()) {
 		CORE_ERROR_D(core::status::get_error(core::error::index_out_range), index);
@@ -122,7 +130,8 @@ template<typename type> void dispatcher<type>::trigger(u32 index, type const& da
 
 }
 
-template<typename type> void dispatcher<type>::clear() noexcept {
+template<typename type> 
+void dispatcher<type>::clear() noexcept {
 	this->_listeners_.clear();
 	CORE_INFO_D("all listeners in {} for {} is deleted !" , (void*)this , typeid(type).name());
 }

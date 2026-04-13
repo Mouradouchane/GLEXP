@@ -9,9 +9,14 @@
 #include "core/strings/string.hpp"
 #include "core/events/event_dispatcher.hpp"
 
+
 #ifdef DEBUG
-	static auto _logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
+	static auto _em_hpp_logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
+#else 
+	static auto _em_hpp_logger_ = nullptr;
 #endif
+
+#define _LOGGER_ _em_hpp_logger_
 
 namespace core {
 
@@ -74,8 +79,8 @@ namespace core {
 		~event_manager();
 
 		// manager public functions
-		template<typename type> listener_id start_listen(core::callback<type> const& callback_function);
-		bool stop_listen(listener_id id);
+		template<typename type> listener_id start_listen(core::callback<type> const& callback_function) noexcept;
+		bool stop_listen(listener_id id) noexcept;
 
 		template<typename type> void trigger_all(type const& data) noexcept;
 		template<typename type> void trigger(listener_id id, type const& data) noexcept;
@@ -97,8 +102,7 @@ namespace core {
 namespace core {
 
 event_manager::event_manager(
-	event_manager_category category, STRING name, u32 size = _default_size_, u32 resize_value = _default_resize_ ,
-	core::memory_allocator* allocator = nullptr
+	event_manager_category category, STRING name, u32 size , u32 resize_value , core::memory_allocator* allocator
 ) 
 	: _category_(category) , _name_(name) , _size_(size) , _resize_(resize_value) , _allocator_(allocator)
 {
@@ -168,7 +172,7 @@ listener_id event_manager::start_listen(core::callback<type> const& callback_fun
 }
 
 
-bool event_manager::stop_listen(listener_id id) {
+bool event_manager::stop_listen(listener_id id) noexcept {
 	auto itr = this->_dispatchers_map_.find(id.index1);
 	DEBUG_BREAK;
 

@@ -8,9 +8,13 @@
 #include "core/assert.hpp"
 #include "heap.hpp"
 
-#ifdef DEBUG 
-	static bool logs_enabled = true;
+#ifdef DEBUG
+	static auto _heap_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
+#else 
+	static auto _heap_logger_ = nullptr;
 #endif
+
+#define _LOGGER_ _heap_logger_
 
 /*
 	constructor

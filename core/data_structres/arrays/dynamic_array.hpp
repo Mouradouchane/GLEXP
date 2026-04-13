@@ -7,6 +7,14 @@
 
 #define CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE 32
 
+#ifdef DEBUG
+	static auto _dsda_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
+#else 
+	static auto _dsda_logger_ = nullptr;
+#endif
+
+#define _LOGGER_ _dsda_logger_
+
 namespace core {
 
 	template<typename type> class dynamic_array : public core::array<type> {

@@ -28,9 +28,13 @@
 
 #include "memory.hpp"
 
-#ifdef DEBUG 
-	static bool logs_enabled = true;
+#ifdef DEBUG
+	static auto _mem_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
+#else 
+	static auto _mem_logger_ = nullptr;
 #endif
+
+#define _LOGGER_ _mem_logger_
 
 typedef struct alloc_info {
 	size_t count;

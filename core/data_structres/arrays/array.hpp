@@ -13,6 +13,13 @@
 #include "core/status/status.hpp"
 #include "core/memory/memory.hpp"
 
+#ifdef DEBUG
+	static auto _dssa_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
+#else 
+	static auto _dssa_logger_ = nullptr;
+#endif
+
+#define _LOGGER_ _dssa_logger_
 
 #ifdef DEBUG
 	#define DEBUG_ARRAY_CONSTUCTED(ARRAY , TYPE) \

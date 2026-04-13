@@ -25,6 +25,9 @@
 // for class/interface
 #define NEED_IMPL 0
 
+// to enable/disable error handling/stack-winding
+#define NOEXP noexcept
+
 // current arch x64 or x32 maybe other arch later 
 #if defined(_WIN64) || defined(WIN64) || defined(__x86_64__) || defined(_____LP64_____)
 	#define X64

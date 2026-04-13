@@ -7,11 +7,12 @@
 #include "keyboard.hpp"
 
 #ifdef DEBUG
-	static auto _logger_ = CORE_GET_LOGGER(EVENT_SYSTEM_LOGGER);
+	static auto _key_event_logger_ = CORE_GET_LOGGER(EVENT_SYSTEM_LOGGER);
+#else 
+	static auto _key_event_logger_ = nullptr;
 #endif
 
-#define FORCE_INSTANTIATE_START_LISTEN(EVENT_ENUM) \
-		template DLL_API listener_id start_listen<EVENT_ENUM>(core::callback<core::event<key_data>> const& _callback_);
+#define _LOGGER_ _key_event_logger_
 
 namespace core {
 
@@ -19,17 +20,29 @@ namespace core {
 		
 		core::event_manager manager(core::event_manager_category::keyboard_events , "KEYBOARD_EVENTS_MANAGER");
 
-		template<core::keyboard::event_type etype>
-		listener_id start_listen(core::callback<core::event<key_data>> const& callback_function) {
-
-			u16 index = S_CAST(etype, u16);
-			
+		DLL_API listener_id start_listen(core::callback<key_up> const& callback_function) {
+			return keyboard::manager.start_listen<key_up>(callback_function);
 		}
 
-		FORCE_INSTANTIATE_START_LISTEN(event_type::key_up);
-		FORCE_INSTANTIATE_START_LISTEN(event_type::key_down);
-		FORCE_INSTANTIATE_START_LISTEN(event_type::special_key_down);
+		DLL_API listener_id start_listen(core::callback<key_down> const& callback_function){
+			return keyboard::manager.start_listen<key_down>(callback_function);
+		}
 
+		DLL_API listener_id start_listen(core::callback<special_key_up> const& callback_function){
+			return keyboard::manager.start_listen<special_key_up>(callback_function);
+		}
+
+		DLL_API listener_id start_listen(core::callback<special_key_down> const& callback_function){
+			return keyboard::manager.start_listen<special_key_down>(callback_function);
+		}
+
+		DLL_API listener_id start_listen(core::callback<keys_down> const& callback_function){
+			return keyboard::manager.start_listen<keys_down>(callback_function);
+		}
+
+		DLL_API bool stop_listen(listener_id event_listener_id) {
+			return keyboard::manager.stop_listen(event_listener_id);
+		}
 
 	} // namespace keyboard end
 
