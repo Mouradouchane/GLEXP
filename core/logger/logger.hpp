@@ -6,10 +6,17 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
+#ifndef _LOGGER_
+	#define _LOGGER_ nullptr
+#endif
 /*
-	logger --> used to log information to "console,files,gui" !
-	todo: add log info to ui-console !
+
+	core logger : used to log "info , errors , warns , ..." to "console , files , gui , ..."
+	
 */
+
+// todo[future] : add log info to gui !
+
 
 // disable fmt & spdlog warnings
 DISABLE_WARNING_START
@@ -58,39 +65,75 @@ namespace core {
 
 } // namespace core end
 
-#define CORE_GET_LOGGER(NAME) spdlog::get(NAME)
+#define CORE_GET_LOGGER(LOGGER_NAME) spdlog::get(LOGGER_NAME)
+#define CORE_GET_LOGGER_VAR(VAR_NAME, LOGGER_NAME) static auto VAR_NAME = spdlog::get(LOGGER_NAME);
+
+#define CORE_ENABLE_LOGGER( LOGGER_VAR, LOGGER_NAME) LOGGER_VAR = spdlog::get(LOGGER_NAME);
+
+#define CORE_ENABLE_LOGGER_IF(TRUE_CONDITION, LOGGER_VAR, LOGGER_NAME) \
+		if(TRUE_CONDITION) LOGGER_VAR = spdlog::get(LOGGER_NAME); \
+		else LOGGER_VAR = nullptr;
+
+#define CORE_DISABLE_LOGGER(LOGGER_VAR) LOGGER_VAR = nullptr;
 
 /*
 	logger macros functions
 */
 
-#define CORE_FATAL(FORMAT , ...)   spdlog::critical(FORMAT , __VA_ARGS__);
-#define CORE_FATAL_D(FORMAT , ...) spdlog::critical("{}", FORMAT , FUNCTION_DEFINITION , " " , __VA_ARGS__);
-#define CORE_FATAL_F(FORMAT , ...) spdlog::critical("{}", FORMAT , __PRETTY_FUNCTION__ , " " , __VA_ARGS__);
+// log fatals/errors
+#define CORE_FATAL(FORMAT , ...)   \
+		if(_LOGGER_) _LOGGER_->critical(FORMAT , ##__VA_ARGS__); \
+		else           spdlog::critical(FORMAT , ##__VA_ARGS__);
 
-#define CORE_ERROR(FORMAT , ...)   spdlog::error(FORMAT , __VA_ARGS__);
-#define CORE_ERROR_D(FORMAT , ...) spdlog::error("{}", FORMAT , FUNCTION_DEFINITION  , " " , __VA_ARGS__);
-#define CORE_ERROR_F(FORMAT , ...) spdlog::error("{}", FORMAT ,  __PRETTY_FUNCTION__ , " " , __VA_ARGS__);
+#define CORE_FATAL_D(FORMAT , ...) \
+		if(_LOGGER_){ _LOGGER_->critical(FUNCTION_DEFINITION); _LOGGER_->critical(FORMAT , ##__VA_ARGS__); } \
+		else {          spdlog::critical(FUNCTION_DEFINITION);   spdlog::critical(FORMAT , ##__VA_ARGS__); }
 
-#define CORE_FATAL_IF(TRUE_EXPRESSION ,FORMAT ,  ...) if(TRUE_EXPRESSION) spdlog::critical(FORMAT , __VA_ARGS__);
-#define CORE_ERROR_IF(TRUE_EXPRESSION ,FORMAT ,  ...) if(TRUE_EXPRESSION) spdlog::error(FORMAT , __VA_ARGS__);
+#define CORE_FATAL_F(FORMAT , ...) \
+		if(_LOGGER_){ _LOGGER_->critical(FUNCTION_DEFINITION_FULL); _LOGGER_->critical(FORMAT , ##__VA_ARGS__); } \
+		else{           spdlog::critical(FUNCTION_DEFINITION_FULL);   spdlog::critical(FORMAT , ##__VA_ARGS__); }
 
-#ifdef DEBUG // logger debug only functions
-	#define CORE_WARN(FORMAT , ...)  if(_LOGGER_) spdlog::warn( FORMAT , __VA_ARGS__);
-	#define CORE_INFO(FORMAT , ...)  if(_LOGGER_) spdlog::info( FORMAT , __VA_ARGS__);
-	#define CORE_DEBUG(FORMAT , ...) if(_LOGGER_) spdlog::debug(FORMAT , __VA_ARGS__);
-	#define CORE_TRACE(FORMAT , ...) if(_LOGGER_) spdlog::trace(FORMAT , __VA_ARGS__);
+#define CORE_ERROR(FORMAT , ...)   \
+		if(_LOGGER_) _LOGGER_->error(FORMAT , ##__VA_ARGS__); \
+		else           spdlog::error(FORMAT , ##__VA_ARGS__);
 
-	#define CORE_WARN_D(FORMAT , ...)  if(_LOGGER_) spdlog::warn( "{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
-	#define CORE_INFO_D(FORMAT , ...)  if(_LOGGER_) spdlog::info( "{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
-	#define CORE_DEBUG_D(FORMAT , ...) if(_LOGGER_) spdlog::debug("{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
-	#define CORE_TRACE_D(FORMAT , ...) if(_LOGGER_) spdlog::trace("{}", FORMAT , FUNCTION_DEFINITION ," ", __VA_ARGS__);
+#define CORE_ERROR_D(FORMAT , ...) \
+		if(_LOGGER_){ _LOGGER_->error(FUNCTION_DEFINITION); _LOGGER_->error(FORMAT , ##__VA_ARGS__); } \
+		else {          spdlog::error(FUNCTION_DEFINITION);   spdlog::error(FORMAT , ##__VA_ARGS__); }
 
-	// log if-condition
-	#define CORE_WARN_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_LOGGER_) spdlog::warn(FORMAT , __VA_ARGS__);
-	#define CORE_INFO_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_LOGGER_) spdlog::info(FORMAT , __VA_ARGS__);
+#define CORE_ERROR_F(FORMAT , ...) \
+		if(_LOGGER_){ _LOGGER_->error(FUNCTION_DEFINITION_FULL); _LOGGER_->error(FORMAT , ##__VA_ARGS__); } \
+		else {          spdlog::error(FUNCTION_DEFINITION_FULL);   spdlog::error(FORMAT , ##__VA_ARGS__); }
 
-	#define CORE_TRACE_CURRENT_FUNCTION() if(_LOGGER_) CORE_TRACE("{} | {} | {}" , __LINE__ , FUNCTION_DEFINITION , __FILE__); \
+// log errors if true
+#define CORE_FATAL_IF(TRUE_EXPRESSION ,FORMAT ,  ...) \
+		if(TRUE_EXPRESSION) { \
+			if(_LOGGER_) _LOGGER_->critical(FORMAT , ##__VA_ARGS__); \
+			else           spdlog::critical(FORMAT , ##__VA_ARGS__); \
+		}
+
+#define CORE_ERROR_IF(TRUE_EXPRESSION ,FORMAT ,  ...) \
+		if(TRUE_EXPRESSION) { \
+			if(_LOGGER_) _LOGGER_->error(FORMAT , ##__VA_ARGS__); \
+			else           spdlog::error(FORMAT , ##__VA_ARGS__); \
+		}
+
+#ifdef DEBUG // debug-only functions
+	#define CORE_WARN(FORMAT , ...)  if(_LOGGER_) _LOGGER_->warn( FORMAT , ##__VA_ARGS__);
+	#define CORE_INFO(FORMAT , ...)  if(_LOGGER_) _LOGGER_->info( FORMAT , ##__VA_ARGS__);
+	#define CORE_DEBUG(FORMAT , ...) if(_LOGGER_) _LOGGER_->debug(FORMAT , ##__VA_ARGS__);
+	#define CORE_TRACE(FORMAT , ...) if(_LOGGER_) _LOGGER_->trace(FORMAT , ##__VA_ARGS__);
+
+	#define CORE_WARN_D(FORMAT  , ...) if(_LOGGER_){ _LOGGER_->warn(FUNCTION_DEFINITION);  _LOGGER_->warn(FORMAT, ##__VA_ARGS__); }
+	#define CORE_INFO_D(FORMAT  , ...) if(_LOGGER_){ _LOGGER_->info(FUNCTION_DEFINITION);  _LOGGER_->info(FORMAT, ##__VA_ARGS__); }
+	#define CORE_DEBUG_D(FORMAT , ...) if(_LOGGER_){ _LOGGER_->debug(FUNCTION_DEFINITION); _LOGGER_->debug(FORMAT, ##__VA_ARGS__);}
+	#define CORE_TRACE_D(FORMAT , ...) if(_LOGGER_){ _LOGGER_->trace(FUNCTION_DEFINITION); _LOGGER_->trace(FORMAT, ##__VA_ARGS__);}
+
+	// log if true
+	#define CORE_WARN_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_LOGGER_) _LOGGER_->warn(FORMAT , ##__VA_ARGS__);
+	#define CORE_INFO_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_LOGGER_) _LOGGER_->info(FORMAT , ##__VA_ARGS__);
+
+	#define CORE_TRACE_CURRENT_FUNCTION() if(_LOGGER_) CORE_TRACE("{} | {} | {}" , __LINE__ , FUNCTION_DEFINITION , __FILE__);
 
 #else 
 	#define CORE_WARN(...)

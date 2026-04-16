@@ -88,6 +88,7 @@ namespace core {
 			CREATE_LOGGER(WORK_SYSTEM_LOGGER,      console_sink);
 			CREATE_LOGGER(MEMORY_ALLOCATOR_LOGGER, console_sink);
 			CREATE_LOGGER(DATA_STRUCTER_LOGGER,    console_sink);
+			CREATE_LOGGER(REFS_LOGGER,             console_sink);
 
 			// setup logger
 			#ifdef DEBUG

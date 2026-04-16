@@ -16,29 +16,39 @@
 */
 DLL_API_CLASS refcounter {
 	protected :
-		std::atomic<u32> count = 0;
+		// counters
+		std::atomic<u32> __strong__ = 0; 
+		std::atomic<u32>  __weak__  = 0;
 
-		refcounter(const refcounter&) = delete;
-		refcounter& operator=(const refcounter&) = delete;
+		// note: copying counter not allowed
+		refcounter(refcounter const&) = delete;
+		refcounter& operator=(refcounter const&) = delete;
 
 	public :
 		// constructor's
 		refcounter() = default;
-		DLL_API refcounter(u32 _count_ = 0);
+		refcounter(u32 strong_counter = 0 , u32 weak_counter = 0);
 		
 		// destructor
 		virtual ~refcounter();
 
-		// refcounter functions
-		DLL_API inline void add_ref()     NOEXP;
-		DLL_API inline void release_ref() NOEXP;
+		// public functions
+		INLINE void     add_strong_ref() NOEXP;
+		INLINE void release_strong_ref() NOEXP;
 
-		// debug only functions
+		INLINE void     add_weak_ref()   NOEXP;
+		INLINE void release_weak_ref()   NOEXP;
+
+		// debug-only functions
 	#ifdef DEBUG
-		DLL_API inline u32 get_ref_count() NOEXP;
-		DLL_API inline u32 get_ref_count() const NOEXP;
+		INLINE u32 get_strong_count() NOEXP;
+		INLINE u32 get_strong_count() const NOEXP;
+
+		INLINE u32 get_weak_count() NOEXP;
+		INLINE u32 get_weak_count() const NOEXP;
 	#endif
 
 }; 
+// class refcounter end
 
 #endif

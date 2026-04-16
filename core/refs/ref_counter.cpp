@@ -3,45 +3,67 @@
 #ifndef CORE_REFCOUNTER_CPP
 #define CORE_REFCOUNTER_CPP
 
+#include "core/logger/logger.hpp"
 #include "ref_counter.hpp"
 
+CORE_GET_LOGGER_VAR(_ref_ctr_logger_, REFS_LOGGER);
+#define _LOGGER_ _ref_ctr_logger_
 
-DLL_API_CLASS refcounter {
-	protected :
-		std::atomic<u32> __count__ = 0;
+/*
+	constructor
+*/
+refcounter::refcounter(u32 strong_counter = 0, u32 weak_counter = 0)
+	: __strong__(strong_counter), __weak__(weak_counter) {
 
-		refcounter(refcounter const&) = delete;
-		refcounter& operator=(refcounter const&) = delete;
+};
 
-	public :
-		// constructor's
-		refcounter() = default;
-		DLL_API refcounter(u32 _count_ = 0) : __count__(_count_) {
+// refcounter functions
+INLINE void refcounter::add_strong_ref() NOEXP {
+	this->__strong__ += 1;
+}
 
-		}
-		
-		// destructor
-		virtual ~refcounter() = default;
+INLINE void refcounter::release_strong_ref() NOEXP {
+	if (this->__strong__ ) this->__strong__ -= 1;
+#ifdef DEBUG
+	else { 
+		// todo: define errors for refs + log
+		CORE_ERROR("");
+		DebugBreak;
+	}
+#endif
+}
 
-		// refcounter functions
-		DLL_API inline void add_ref() NOEXP {
-			__count__ += 1;
-		}
+INLINE void refcounter::add_weak_ref() NOEXP {
+	this->__weak__ += 1;
+}
 
-		DLL_API inline void release_ref() NOEXP {
-			if (__count__) __count__ -= 1;
-		}
+INLINE void refcounter::release_weak_ref() NOEXP {
+	if (this->__weak__) this->__weak__ -= 1;
+#ifdef DEBUG
+	else {
+		// todo: define warnings for refs + log
+		CORE_WARN("some weak_ref double release , probably caused by a bug !");
+	}
+#endif
+}
 
-		// debug only functions
-	#ifdef DEBUG
-		DLL_API inline u32 get_ref_count() NOEXP {
-			return __count__;
-		}
-		DLL_API inline u32 get_ref_count() const NOEXP {
-			return __count__;
-		}
-	#endif
+/*
+	debug-only functions
+*/
+#ifdef DEBUG
+	INLINE u32 refcounter::get_strong_count() NOEXP {
+		return this->__strong__;
+	}
+	INLINE u32 refcounter::get_strong_count() const NOEXP {
+		return this->__strong__;
+	}
 
-}; 
+	INLINE u32 refcounter::get_weak_count() NOEXP {
+		return this->__weak__;
+	}
+	INLINE u32 refcounter::get_weak_count() const NOEXP {
+		return this->__weak__;
+	}
+#endif
 
 #endif

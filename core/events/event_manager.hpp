@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #ifndef CORE_EVENT_MANAGER_HPP
 #define CORE_EVENT_MANAGER_HPP
@@ -11,12 +11,12 @@
 
 
 #ifdef DEBUG
-	static auto _em_hpp_logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
+	CORE_GET_LOGGER_VAR(_em_hpp_logger_, EVENT_SYSTEM_LOGGER);
 #else 
 	static auto _em_hpp_logger_ = nullptr;
 #endif
 
-#define _LOGGER_ _em_hpp_logger_
+#define _LOGGER_    _em_hpp_logger_
 
 namespace core {
 

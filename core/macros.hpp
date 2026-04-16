@@ -10,7 +10,7 @@
 #ifdef DEBUG
 	#include <intrin.h>
 	#define DEBUG_BREAK __debugbreak();
-#else	
+#else
 	#define DEBUG_BREAK
 #endif
 
@@ -20,6 +20,7 @@
 #else
 	#define FUNCTION_DEFINITION_FULL __PRETTY_FUNCTION__
 #endif
+
 #define FUNCTION_DEFINITION __FUNCTION__ 
 
 // for class/interface
@@ -56,8 +57,10 @@
 
 #if defined(UNIT_TEST) || defined(DEBUG)
 	#define CORE_CRASH() DEBUG_BREAK;
+	#define CORE_FATAL_CRASH(MESSAGE) CORE_FATAL(MESSAGE); DEBUG_BREAK;
 #else
 	#define CORE_CRASH() exit(-1);
+	#define CORE_FATAL_CRASH(MESSAGE) CORE_FATAL(MESSAGE); exit(-1);
 #endif
 
 /*
@@ -91,6 +94,25 @@
 #endif
 
 /*
+	inline macros
+*/
+
+#if defined(_MSC_VER) // Microsoft Visual C++
+    #define FORCE_INLINE __forceinline
+    #define NO_INLINE    __declspec(noinline)
+
+#elif defined(__GNUC__) || defined(__clang__) // GCC or Clang
+    #define FORCE_INLINE __attribute__((always_inline)) inline
+    #define NO_INLINE    __attribute__((noinline))
+
+#else // for others
+    #define FORCE_INLINE inline
+    #define NO_INLINE
+#endif
+
+#define INLINE inline 
+
+/*
 	type casting macros
 */
 #define C_CAST(TARGET , TYPE) (TYPE)TARGET 
@@ -120,6 +142,7 @@
 #define EVENT_SYSTEM_LOGGER		"CORE_EVENT_SYSTEM"
 #define WORK_SYSTEM_LOGGER		"CORE_WORK_SYSTEM"
 #define MEMORY_ALLOCATOR_LOGGER "CORE_MEMORY_ALLOCATOR"
+#define REFS_LOGGER             "CORE_REFERENCES"
 #define DATA_STRUCTER_LOGGER	"CORE_DATA_STRUCTER"
 
 #endif // MACROS_HPP
