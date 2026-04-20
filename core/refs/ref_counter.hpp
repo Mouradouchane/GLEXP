@@ -10,11 +10,17 @@
 #include "core/assert.hpp"
 #include "core/types.hpp"
 
+		
 /*
 	note: refcounter class used as "intrusive refernce counter" !
 	      used for management objects life-time automatically
 */
 DLL_API_CLASS refcounter {
+
+	// who can access refcounter class 
+	template<typename type> friend class ref;
+	template<typename type> friend class weak_ref;
+
 	protected :
 		// counters
 		std::atomic<u32> __strong__ = 0; 
@@ -31,23 +37,6 @@ DLL_API_CLASS refcounter {
 		
 		// destructor
 		virtual ~refcounter();
-
-		// public functions
-		INLINE void     add_strong_ref() NOEXP;
-		INLINE void release_strong_ref() NOEXP;
-
-		INLINE void     add_weak_ref()   NOEXP;
-		INLINE void release_weak_ref()   NOEXP;
-
-		// debug-only functions
-	#ifdef DEBUG
-		INLINE u32 get_strong_count() NOEXP;
-		INLINE u32 get_strong_count() const NOEXP;
-
-		INLINE u32 get_weak_count() NOEXP;
-		INLINE u32 get_weak_count() const NOEXP;
-	#endif
-
 }; 
 // class refcounter end
 

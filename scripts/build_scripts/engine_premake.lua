@@ -12,7 +12,7 @@ local engine = {
     kind             = "WindowedApp",
     arch             = "x64",
     lang             = "C++",
-    lang_version = "C++17",
+    lang_version = "C++20",
 }
 
 local link_with = {

@@ -10,7 +10,7 @@ local core = {
     kind = "StaticLib",
     arch = "x64",
     lang = "C++",
-    lang_version = "C++17",
+    lang_version = "C++20",
 	
 	lib = {
 		filename = "core.lib",

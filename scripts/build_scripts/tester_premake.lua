@@ -9,7 +9,7 @@ local tester = {
     kind = "ConsoleApp",
     arch = "x64",
     lang = "C++",
-    lang_version = "C++17"
+    lang_version = "C++20"
 }
 
 -- function run( )

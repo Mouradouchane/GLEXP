@@ -5,15 +5,33 @@
 
 #include "ref_counter.hpp"
 
+
+// few rules/demands here for template type for class ref
+template<typename type> concept refcounted_type = requires(type t) {
+	typename type::__is_refcounter_type__;
+
+	requires std::has_virtual_destructor_v<type>;
+	requires std::is_nothrow_destructible_v<type>;
+
+} && std::destructible<type>;
+
+
+// inject this macro at the end of your class !
+// to make it acceptable by "ref counter classes"
+#define INJECT_REF_COUNTER(THIS_TYPE) \
+		public: \
+			using __is_refcounter_type__ = void; \
+		protected : \
+			template<refcounted_type THIS_TYPE> friend class ref; \
+			std::atomic<u32> __strong__ = 0; \
+			std::atomic<u32>  __weak__  = 0;
+
 /*
-	class ref --> intrusive and shared
+	ref is a "shared/intrusive ref counting" class , used to manage the life-time of shared-object/memory .
+	object life-time get managed automatically depened on how many ref's alive pointing at the object .
+	important-note: type should obey the rules/demands above in "refcounted_type concept" .
 */
-template<typename type> class ref { 
-	// note : type should inherite from refcounter before using it with ref
-	COMPILE_TIME_ASSERT(
-		!std::is_base_of<refcounter, type>::value,
-		"class ref : " + typeid(type).name() + " type should inherite class refcounter !"
-	);
+template<refcounted_type type> class ref {
 
 protected:
 	type* object = nullptr;
@@ -43,6 +61,7 @@ public:
 	bool  operator bool() NOEXP;
 
 	// destructor
+	// todo: implement thread-safe destruction to avoid object multi-destruction
 	~ref();
 
 	// ref functions
@@ -51,8 +70,21 @@ public:
 
 	// note: use this to do downcasting "base --> derived"
 	// note: don't use dynamic_cast a lot to avoid preformance costs
+	// todo: don't forget to increment __strong__ counter , you're giving a new ref<family_type> !
 	template<typename family_type> ref<family_type> dynamic_cast();
 
+	// debug-only functions
+#ifdef DEBUG
+	INLINE u32 get_strong_count() NOEXP;
+	INLINE u32 get_strong_count() const NOEXP;
+
+	INLINE u32 get_weak_count() NOEXP;
+	INLINE u32 get_weak_count() const NOEXP;
+#endif
+
+	// static function's
+	template<typename... constructor_parameters> 
+	static ref<type> make_ref(constructor_parameters&& parameters);
 }; 
 // class ref definition end
 
@@ -61,5 +93,4 @@ public:
 	class ref implementation 
 */
 
-//
 #endif
