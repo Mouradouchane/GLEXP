@@ -9,8 +9,8 @@
 #include "logger.hpp"
 
 #define CREATE_LOGGER(NAME, CONSOLE_SINK) { \
-			auto _LOGGER_ = std::make_shared<spdlog::logger>(NAME, CONSOLE_SINK); \
-			spdlog::register_logger(_LOGGER_); \
+			auto __logger__ = std::make_shared<spdlog::logger>(NAME, CONSOLE_SINK); \
+			spdlog::register_logger(__logger__); \
 		};
 
 /*
