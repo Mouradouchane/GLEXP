@@ -13,10 +13,9 @@ CORE_GET_LOGGER_VAR(_shared_ref_ctr_logger_, REFS_LOGGER);
 #define _LOGGER_ _shared_ref_ctr_logger_
 
 /*
-	"intrusive" shared_ref counting class !
-	- used to manage the life-time of shared memory .
-	- memory life-time get managed automatically depened on how many ref's alive pointing at the memory .
-	- important-note: any type should obey the rules of "refcounted_type concept" .
+	* shared_ref is "intrusive" and "strong" refernce-counter.
+	- used to manage the life-time of shared memory.
+	- memory life-time get managed automatically depened on how many ref's still alive pointing at the memory.
 */
 template<refcounted_type type> class shared_ref {
 
@@ -28,32 +27,31 @@ public:
 	shared_ref() = default;
 	shared_ref(type* pointer) NOEXP;
 	shared_ref(shared_ref<type> const& other) NOEXP; // copy
-	shared_ref(shared_ref<type>&& other) NOEXP; // move
+	shared_ref(shared_ref<type> &&     other) NOEXP; // move
 
 	// note: use this for upcasting "base <-- derived"
-	// todo[important]: check if base_type is from refcounter
-	template<typename base_type> shared_ref(base_type* pointer) NOEXP;
-	template<typename base_type> shared_ref(shared_ref<base_type> const& other);
+	template<std::derived_from<type> derived_type> shared_ref(derived_type* pointer) NOEXP;
+	template<std::derived_from<type> derived_type> shared_ref(shared_ref<derived_type> const& other);
 
 	// operator's 
 	shared_ref<type>& operator= (shared_ref<type> const& other) NOEXP;
-	shared_ref<type>& operator= (shared_ref<type>&& other) NOEXP;
+	shared_ref<type>& operator= (shared_ref<type> &&     other) NOEXP;
 
-	type* operator->() NOEXP;
-	type* operator->() NOEXP const;
+	      type* operator->() NOEXP;
+	const type* operator->() const NOEXP;
 
-	type& operator *();
-	type& operator *() const;
+	      type& operator *();
+	const type& operator *() const;
 
-	bool  operator bool() NOEXP;
+	operator bool() const NOEXP;
 
 	// destructor
 	~shared_ref();
 
 	// note: use this to do downcasting "base --> derived"
-	// note: don't use dynamic_cast a lot to avoid preformance costs
-	// todo: don't forget to increment __strong__ counter , you're giving a new ref<family_type> !
-	template<typename family_type> shared_ref<family_type> dynamic_cast();
+	// note: don't use dynamic_cast_to a lot to avoid preformance costs
+	template<typename family_type> 
+	shared_ref<family_type> dynamic_cast_to();
 
 // debug-only functions
 #ifdef DEBUG
@@ -64,94 +62,33 @@ public:
 	INLINE u32 get_weak_count() const NOEXP;
 #endif
 
+
+private: // private helper function
+	INLINE void deal_with_current_refernce() NOEXP;
+
 }; 
 // class shared_ref end
 
 
-// few function for shared refernces
+/*
+
+	few function for shared refernces
+
+*/
 namespace core {
 
 	namespace make {
-	
+
+		// this for type and 
 		template<refcounted_type type, typename... constructor_parameters> 
-		shared_ref<type> shared_refernce(constructor_parameters&&... parameters) {
+		shared_ref<type> shared_refernce(constructor_parameters&&... parameters);
 
-			// todo: implement this !
-
-		}
-
-	}
+	} // namespace make end
 
 } // namespace core end
 
 
-/*
-	class shared_ref implementation 
-*/
-
-template<refcounted_type type>  
-shared_ref<type>::shared_ref(type* pointer) NOEXP : memory(pointer) {
-	this->memory->__strong__ += 1;
-}
-
-template<refcounted_type type>  
-shared_ref<type>::shared_ref(shared_ref<type> const& other) NOEXP { // copy
-	this->memory = other.memory;
-	this->memory->__strong__ += 1;
-}
-
-template<refcounted_type type>  
-shared_ref<type>::shared_ref(shared_ref<type>&& other) NOEXP { // move
-	this->memory = other.memory;
-	other.memory = nullptr;
-}
-
-template<refcounted_type type>
-shared_ref<type>::~shared_ref() {
-	// todo: maybe implement thread-safe destruction 
-	//       to avoid object multi-destruction
-
-	if (this->memory->__strong__) this->memory->__strong__ -= 1;
-#ifdef DEBUG
-	else {
-		// bug -> probably cause by destructor begin called multiple times somewhere !
-	}
-#endif
-
-	// if strong and weak is zero 
-	if ((!this->memory->__strong__) && (!this->memory->__weak__) ) {
-		// destruct object in memory
-		// deallocating memory is object responsiblity
-		this->memory->~type();
-	}
-
-}
-
-
-/*
-	debug-only functions
-*/
-#ifdef DEBUG
-template<refcounted_type type> INLINE u32 shared_ref<type>::get_strong_count() NOEXP {
-	return this->__strong__;
-}
-template<refcounted_type type> INLINE u32 shared_ref<type>::get_strong_count() const NOEXP {
-	return this->__strong__;
-}
-
-template<refcounted_type type> INLINE u32 shared_ref<type>::get_weak_count() NOEXP {
-	return this->__weak__;
-}
-template<refcounted_type type> INLINE u32 shared_ref<type>::get_weak_count() const NOEXP {
-	return this->__weak__;
-}
-#endif
-
-
-/*
-	shared_ref public functions
-*/ 
-
-
+// tempaltes implementation is here 
+#include "shared_ref_impl.hpp"
 
 #endif
