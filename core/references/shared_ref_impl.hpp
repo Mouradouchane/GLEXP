@@ -15,7 +15,10 @@
 template<refcounted_type type>
 shared_ref<type>::shared_ref(type* pointer) NOEXP {
 	this->memory = pointer;
-	if (this->memory) this->memory->__strong__.fetch_add(1, std::memory_order_relaxed);
+	if (this->memory) INCREMENT_REF(this->memory->__strong__);
+	else {
+		CORE_WARN("nullptr memory passed to shared_ref<{}> during construction !" , typeid(type).name);
+	}
 }
 
 template<refcounted_type type>
@@ -23,9 +26,12 @@ shared_ref<type>::shared_ref(shared_ref<type> const& other) NOEXP { // copy
 
 	if (other.memory) {
 		this->memory = other.memory;
-		this->memory->__strong__.fetch_add(1, std::memory_order_relaxed);
+		INCREMENT_REF(this->memory->__strong__);
 	}
-	// todo: add log for invalid shared_ref
+	else {
+		CORE_WARN("nullptr memory passed to shared_ref<{}> during construction !", typeid(type).name);
+	}
+
 }
 
 template<refcounted_type type>
@@ -35,7 +41,10 @@ shared_ref<type>::shared_ref(shared_ref<type>&& other) NOEXP { // move
 		this->memory = other.memory;
 		other.memory = nullptr;
 	}
-	// todo: add log for invalid shared_ref
+	else {
+		CORE_WARN("nullptr memory passed to shared_ref<{}> during construction !", typeid(type).name);
+	}
+
 }
 
 /*
@@ -73,25 +82,19 @@ shared_ref<type>::~shared_ref() {
 
 	if (this->memory) {
 
-	#ifdef DEBUG // debug-only check for -> double destruction bug 
-		if((!this->memory->__strong__) && (!this->memory->__weak__)) {
-			CORE_ERROR_D("reference counters is 0 during destruction time !");
-			CORE_WARN("BUG : this is probably cause by a bug in move/copy constructor's or operator's !");
-		}
-	#endif
-		// todo: call destructor when strong hit 0 , deallocate when weak to hit 0
-		// destruct if no ref is left
-		if (this->memory->__strong__.fetch_sub(1, std::memory_order_acq_rel) == 1 && (!this->memory->__weak__)) {
+		// if no refernce is left
+		if (DECREMENT_REF_ORDER(this->memory->__strong__) == 1 && (this->memory->__weak__ == 0)) {
+
 			this->memory->~type();
-			this->memory = nullptr;
-		};
+		}
 
-		return;
 	}
-	
-	CORE_WARN_D("shared_ref memory is null !");
-
-} // shared_ref destructor end
+#ifdef DEBUG
+	else {
+		CORE_WARN("shared_ptr<{}> : memory-block pointer is nullptr during destruction !" , TYPE_NAME(type));
+	}
+#endif
+} // shared_ref destructor end			
 
 
 /*
@@ -107,7 +110,11 @@ template<refcounted_type type>
 template<typename family_type> 
 shared_ref<family_type> shared_ref<type>::dynamic_cast_to() {
 
-	// todo: compile-time check if family_type is valid 
+	COMPILE_TIME_ASSERT(
+		!std::is_base_of_v<type, family_type> && !std::is_base_of_v<family_type, type> ,
+		"shared_ref<type> is not related to {} type !" , TYPE_NAME(family_type)
+	);
+	
 	family_type* ptr = D_CAST(this->memory, family_type*) );
 
 	return shared_ref<family_type>( ptr );
@@ -122,7 +129,7 @@ INLINE void shared_ref<type>::deal_with_current_refernce() NOEXP {
 	if (this->memory) {
 
 		// destruct if no ref is left
-		if (this->memory->__strong__.fetch_sub(1, std::memory_order_acq_rel) == 1 && (!this->memory->__weak__)) {
+		if (DECREMENT_REF_ORDER(this->memory->__strong__.fetch_sub) == 1 && (this->memory->__weak__ == 0)) {
 
 			// todo: handle memory deallocation if we move to global_allocator approch
 			this->memory->~type();
@@ -149,7 +156,7 @@ shared_ref<type>& shared_ref<type>::operator= (shared_ref<type> const& other) NO
 		shared_ref<type>::deal_with_current_refernce();
 
 		this->memory = other.memory;
-		if (this->memory) this->memory->__strong__.fetch_add(1, std::memory_order_relaxed);
+		if (this->memory) DECREMENT_REF_ORDER(this->memory->__strong__);
 	}
 	
 	return *this;
@@ -199,17 +206,23 @@ shared_ref<type>::operator bool() const NOEXP {
 
 // debug-only functions
 #ifdef DEBUG
-template<refcounted_type type> INLINE u32 shared_ref<type>::get_strong_count() NOEXP {
-	return this->memory->__strong__;
-}
-template<refcounted_type type> INLINE u32 shared_ref<type>::get_strong_count() const NOEXP {
+template<refcounted_type type> 
+DEBUG_ONLY INLINE u32 shared_ref<type>::get_strong_count() NOEXP {
 	return this->memory->__strong__;
 }
 
-template<refcounted_type type> INLINE u32 shared_ref<type>::get_weak_count() NOEXP {
+template<refcounted_type type>
+DEBUG_ONLY INLINE u32 shared_ref<type>::get_strong_count() const NOEXP {
+	return this->memory->__strong__;
+}
+
+template<refcounted_type type> 
+DEBUG_ONLY INLINE u32 shared_ref<type>::get_weak_count() NOEXP {
 	return this->memory->__weak__;
 }
-template<refcounted_type type> INLINE u32 shared_ref<type>::get_weak_count() const NOEXP {
+
+template<refcounted_type type> 
+DEBUG_ONLY INLINE u32 shared_ref<type>::get_weak_count() const NOEXP {
 	return this->memory->__weak__;
 }
 #endif
@@ -218,10 +231,15 @@ template<
 	refcounted_type type,
 	typename...     constructor_parameters
 >
-shared_ref<type> core::make::shared_refernce(constructor_parameters&&... parameters) {
+shared_ref<type> core::make::shared_refernce(core::memory_allocator& allocator, constructor_parameters&&... parameters) {
 
-	// todo: this need implement !
+	// allocate memory
+	type* memory = S_CAST(allocator.allocate(), type*);
 
+	// construct memory
+	new (memory) type(std::forward<constructor_parameters>(parameters)...);
+
+	return shared_ref<type>(memory);
 }
 
 #endif

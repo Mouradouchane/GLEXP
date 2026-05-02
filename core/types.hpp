@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#define TYPE_NAME(TYPE) typeid(TYPE).name
+
 // pointers for sizes
 typedef void*     ptr;
 typedef uint8_t*  ptr8;

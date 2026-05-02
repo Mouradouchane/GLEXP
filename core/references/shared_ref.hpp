@@ -12,6 +12,7 @@
 CORE_GET_LOGGER_VAR(_shared_ref_ctr_logger_, REFS_LOGGER);
 #define _LOGGER_ _shared_ref_ctr_logger_
 
+
 /*
 	* shared_ref is "intrusive" and "strong" refernce-counter.
 	- used to manage the life-time of shared memory.
@@ -20,11 +21,11 @@ CORE_GET_LOGGER_VAR(_shared_ref_ctr_logger_, REFS_LOGGER);
 template<refcounted_type type> class shared_ref {
 
 private:
-	type* memory = nullptr;
+	type*      memory = nullptr;
+	ref_status* status = ref_status::dead;
 
 public:
 	// constructor's
-	shared_ref() = default;
 	shared_ref(type* pointer) NOEXP;
 	shared_ref(shared_ref<type> const& other) NOEXP; // copy
 	shared_ref(shared_ref<type> &&     other) NOEXP; // move
@@ -55,11 +56,11 @@ public:
 
 // debug-only functions
 #ifdef DEBUG
-	INLINE u32 get_strong_count() NOEXP;
-	INLINE u32 get_strong_count() const NOEXP;
+	DEBUG_ONLY  INLINE u32 get_strong_count() NOEXP;
+	DEBUG_ONLY  INLINE u32 get_strong_count() const NOEXP;
 
-	INLINE u32 get_weak_count() NOEXP;
-	INLINE u32 get_weak_count() const NOEXP;
+	DEBUG_ONLY  INLINE u32 get_weak_count() NOEXP;
+	DEBUG_ONLY  INLINE u32 get_weak_count() const NOEXP;
 #endif
 
 
@@ -81,7 +82,7 @@ namespace core {
 
 		// this for type and 
 		template<refcounted_type type, typename... constructor_parameters> 
-		shared_ref<type> shared_refernce(constructor_parameters&&... parameters);
+		shared_ref<type> shared_refernce(core::memory_allocator& allocator, constructor_parameters&&... parameters);
 
 	} // namespace make end
 

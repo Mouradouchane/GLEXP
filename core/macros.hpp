@@ -112,6 +112,8 @@
 
 #define INLINE inline 
 
+#define DEBUG_ONLY
+
 /*
 	type casting macros
 */
