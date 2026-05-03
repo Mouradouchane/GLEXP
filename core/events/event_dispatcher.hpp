@@ -88,8 +88,11 @@ u32 dispatcher<type>::subscribe(callback<type> const& callback_function) noexcep
 template<typename type> 
 bool dispatcher<type>::unsubscribe(u32 index) noexcept {
 
-	if (index >= _listeners_.size()) {
-		CORE_ERROR_D(core::status::get_error(core::error::index_out_range),index , _listeners_.size());
+	if (index >= this->_listeners_.size()) {
+	#ifdef DEBUG
+		const STRING error_msg = core::status::get_error(core::error::index_out_range);
+		CORE_ERROR_D(fmt::runtime(error_msg), index , this->_listeners_.size());
+	#endif
 		return false;
 	}
 

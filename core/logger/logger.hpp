@@ -5,6 +5,7 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
+#include "core/bitset.hpp"
 
 #ifndef _LOGGER_
 	#define _LOGGER_ nullptr
@@ -13,10 +14,12 @@
 
 	core logger : used to log "info , errors , warns , ..." to "console , files , gui , ..."
 	
+	todo[future] : add log info to gui !
 */
 
-// todo[future] : add log info to gui !
-
+#ifndef FMT_USE_NONTYPE_TEMPLATE_ARGS 
+#define FMT_USE_NONTYPE_TEMPLATE_ARGS 0
+#endif
 
 // disable fmt & spdlog warnings
 DISABLE_WARNING_START
@@ -76,26 +79,71 @@ namespace core {
 
 #define CORE_DISABLE_LOGGER(LOGGER_VAR) LOGGER_VAR = nullptr;
 
+enum class log_config : u8 {
+	none = 0,
+	line_of_code,
+	file_name,
+	file_path,
+	time_stamp,
+	dump_stack_trace,
+	function_definition,
+	full_function_definition
+};
+
 /*
 	logger macros functions
 */
 
 // log fatals/errors
-#define CORE_FATAL(FORMAT , ...)   \
-		if(_LOGGER_) _LOGGER_->critical(FORMAT , ##__VA_ARGS__); \
-		else           spdlog::critical(FORMAT , ##__VA_ARGS__);
+#define CORE_FATAL(LOG_WITH , FORMAT , ...) \
+		if(_LOGGER_){ \
+			_LOGGER_->critical(FORMAT , ##__VA_ARGS__); \
+			_LOGGER_->dump_backtrace(); \
+			switch(LOG_WITH){ \
+				case log_with::line_of_code: { } break; \
+				case log_with::file_name: { } break; \
+				case log_with::file_path: { } break; \
+				case log_with::time_stamp: { } break; \
+				case log_with::dump_stack_trace: { } break; \
+				case log_with::function_definition: { } break; \
+				case log_with::full_function_definition: { } break; \
+			} \
+		} \
+		else        {   spdlog::critical(FORMAT , ##__VA_ARGS__)     spdlog::dump_backtrace(); }
 
 #define CORE_FATAL_D(FORMAT , ...) \
-		if(_LOGGER_){ _LOGGER_->critical(FUNCTION_DEFINITION); _LOGGER_->critical(FORMAT , ##__VA_ARGS__); } \
-		else {          spdlog::critical(FUNCTION_DEFINITION);   spdlog::critical(FORMAT , ##__VA_ARGS__); }
+		if(_LOGGER_){ \
+			_LOGGER_->critical(FUNCTION_DEFINITION); \
+			_LOGGER_->critical(FORMAT, ##__VA_ARGS__); \
+			_LOGGER_->dump_backtrace(); \
+		} \
+		else { \
+			spdlog::critical(FUNCTION_DEFINITION); \
+			spdlog::critical(FORMAT , ##__VA_ARGS__); \
+			spdlog::dump_backtrace();\
+		}
 
 #define CORE_FATAL_F(FORMAT , ...) \
-		if(_LOGGER_){ _LOGGER_->critical(FUNCTION_DEFINITION_FULL); _LOGGER_->critical(FORMAT , ##__VA_ARGS__); } \
-		else{           spdlog::critical(FUNCTION_DEFINITION_FULL);   spdlog::critical(FORMAT , ##__VA_ARGS__); }
+		if(_LOGGER_){ \
+			_LOGGER_->critical(FUNCTION_DEFINITION_FULL); \
+			_LOGGER_->critical(FORMAT , ##__VA_ARGS__); \
+			_LOGGER_->dump_backtrace(); \
+		} \
+		else{ \
+			spdlog::critical(FUNCTION_DEFINITION_FULL);   \
+			spdlog::critical(FORMAT , ##__VA_ARGS__); \
+			spdlog::dump_backtrace(); \
+		}
 
-#define CORE_ERROR(FORMAT , ...)   \
-		if(_LOGGER_) _LOGGER_->error(FORMAT , ##__VA_ARGS__); \
-		else           spdlog::error(FORMAT , ##__VA_ARGS__);
+#define CORE_ERROR(FORMAT , ...) \
+		if(_LOGGER_) { \
+			_LOGGER_->error(FORMAT , ##__VA_ARGS__); \
+			_LOGGER_->dump_backtrace(); \
+		}\
+		else { \
+			spdlog::error(FORMAT , ##__VA_ARGS__); \
+			spdlog::dump_backtrace(); \
+		}
 
 #define CORE_ERROR_D(FORMAT , ...) \
 		if(_LOGGER_){ _LOGGER_->error(FUNCTION_DEFINITION); _LOGGER_->error(FORMAT , ##__VA_ARGS__); } \

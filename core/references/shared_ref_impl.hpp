@@ -59,7 +59,7 @@ template<std::derived_from<type> derived_type>
 shared_ref<type>::shared_ref(derived_type* pointer) NOEXP {
 
 	this->memory = pointer;
-	if (this->memory) this->memory->__strong__.fetch_add(1, std::memory_order_relaxed);
+	if (this->memory) INCREMENT_REF(this->memory->__strong__);
 }
 
 // note: use this for upcasting "base <-- derived"
@@ -68,7 +68,7 @@ template<std::derived_from<type> derived_type>
 shared_ref<type>::shared_ref(shared_ref<derived_type> const& other) { // copy
 
 	this->memory = other.memory;
-	if (this->memory) this->memory->__strong__.fetch_add(1, std::memory_order_relaxed);
+	if (this->memory) INCREMENT_REF(this->memory->__strong__);
 }
 
 /*
@@ -78,7 +78,7 @@ shared_ref<type>::shared_ref(shared_ref<derived_type> const& other) { // copy
 */
 template<refcounted_type type>
 shared_ref<type>::~shared_ref() {
-	// todo: maybe implement thread-safe destruction , to avoid object multi-destruction
+	// todo: implement thread-safe destruction , to avoid object multi-destruction
 
 	if (this->memory) {
 
@@ -86,6 +86,7 @@ shared_ref<type>::~shared_ref() {
 		if (DECREMENT_REF_ORDER(this->memory->__strong__) == 1 && (this->memory->__weak__ == 0)) {
 
 			this->memory->~type();
+			this->memory = nullptr;
 		}
 
 	}
@@ -115,9 +116,7 @@ shared_ref<family_type> shared_ref<type>::dynamic_cast_to() {
 		"shared_ref<type> is not related to {} type !" , TYPE_NAME(family_type)
 	);
 	
-	family_type* ptr = D_CAST(this->memory, family_type*) );
-
-	return shared_ref<family_type>( ptr );
+	return shared_ref<family_type>( D_CAST(this->memory, family_type*) );
 }
 
 
@@ -125,17 +124,14 @@ shared_ref<family_type> shared_ref<type>::dynamic_cast_to() {
 template<refcounted_type type>
 INLINE void shared_ref<type>::deal_with_current_refernce() NOEXP {
 
-	// check if some ref exist
 	if (this->memory) {
 
 		// destruct if no ref is left
-		if (DECREMENT_REF_ORDER(this->memory->__strong__.fetch_sub) == 1 && (this->memory->__weak__ == 0)) {
+		if (DECREMENT_REF_ORDER(this->memory->__strong__) == 1 && (this->memory->__weak__ == 0)) {
 
-			// todo: handle memory deallocation if we move to global_allocator approch
 			this->memory->~type();
 			this->memory = nullptr;
 		}
-
 	}
 
 }
@@ -146,11 +142,12 @@ INLINE void shared_ref<type>::deal_with_current_refernce() NOEXP {
 
 */
 
-template<refcounted_type type>
-shared_ref<type>& shared_ref<type>::operator= (shared_ref<type> const& other) NOEXP { // copy
+// copy assignement
+template<refcounted_type type> 
+shared_ref<type>& shared_ref<type>::operator= (shared_ref<type> const& other) NOEXP { 
 	
 	if (this->memory == other.memory) {
-		CORE_WARN("{}", core::status::get_warning(core::warning::self_assignment));
+		CORE_WARN(core::status::get_warning(core::warning::self_assignment));
 	}
 	else {
 		shared_ref<type>::deal_with_current_refernce();

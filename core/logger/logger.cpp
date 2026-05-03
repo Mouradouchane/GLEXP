@@ -11,6 +11,7 @@
 #define CREATE_LOGGER(NAME, CONSOLE_SINK) { \
 			auto __logger__ = std::make_shared<spdlog::logger>(NAME, CONSOLE_SINK); \
 			spdlog::register_logger(__logger__); \
+			__logger__->enable_backtrace(back_trace_level);\
 		};
 
 /*
@@ -95,7 +96,7 @@ namespace core {
 				logger_level = level;
 				back_trace_level = trace_level;
 
-				spd_logger->enable_backtrace(back_trace_level);
+				// spd_logger->enable_backtrace(back_trace_level);
 				spd_logger->set_level(spdlog::level::level_enum(level));
 			#else 
 				back_trace_level = 0;

@@ -73,7 +73,7 @@ static const std::map<core::warning, string> warnings = {
 	{core::warning::runtime_crash , "this will cause crash in runtime !"},
 	{core::warning::segfault_crash , "this will cause segfault crash in runtime !"},
 	{core::warning::allocated_with_global_memory , "{}byte allocated using 'core::global_memory' allocator ! please consider moving this allocation to the rigth place where it's belone too !"},
-	{core::warning::self_assignment , "assign object to it self is probably a bug !"}
+	{core::warning::self_assignment , "self assignement is detected , this could be a bug !"}
 
 }; // warnings map end
 
