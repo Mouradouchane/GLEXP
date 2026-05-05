@@ -10,6 +10,7 @@
 #ifndef _LOGGER_
 	#define _LOGGER_ nullptr
 #endif
+
 /*
 
 	core logger : used to log "info , errors , warns , ..." to "console , files , gui , ..."
@@ -33,11 +34,26 @@ DISABLE_WARNING_START
 DISABLE_WARNING_END
 
 #include "core/strings/string.hpp"
+
 #include <stdarg.h>
+#include <source_location>
 
 namespace core {
 
 	namespace logger {
+
+		// used to choose what extra stuff to get printed
+		// note: you can combine them using bit-operations 
+		enum log_config : u8 {
+			none = 0,
+			line_of_code,
+			file_name,
+			file_path,
+			// time_stamp,
+			dump_stack_trace,
+			function_definition,
+			full_function_definition
+		};
 
 		// used to control logger verbosity level
 		enum class verbosity_level : u8 {
@@ -53,21 +69,55 @@ namespace core {
 		DLL_API void init(STRING const& logger_name, logger::verbosity_level level, u32 trace_level = 32);
 
 		DLL_API logger::verbosity_level get_level();
-		// works in debug only !
+
+	#ifdef DEBUG
 		DLL_API void set_level(logger::verbosity_level level);
+	#endif
 
 		// logger public function's
-		DLL_API void fatal(STRING const& message);
-		DLL_API void error(STRING const& message);
-		DLL_API void warn (STRING const& message);
-		DLL_API void info (STRING const& message);
-		DLL_API void debug(STRING const& message);
-		DLL_API void trace(STRING const& message);
+		template<typename... parameters> 
+		void fatal(core::logger::log_config config, STRING const& format, parameters&&... params) {
+
+			if (_LOGGER_) {
+				_LOGGER_->critical(format, std::forward<parameters>(params)...);
+			}
+			else {
+				spdlog::critical(format, std::forward<parameters>(params)...);
+			}
+		}
+
+		template<typename... parameters> 
+		void error(core::logger::log_config config, STRING const& format, STRING const& message) {
+
+		}
+
+		template<typename... parameters> 
+		void warn(core::logger::log_config config, STRING const& format, STRING const& message) NOEXP {
+
+		}
+
+		template<typename... parameters> 
+		void info(core::logger::log_config config, STRING const& format, STRING const& message) NOEXP {
+
+		}
+
+		template<typename... parameters> 
+		void debug(core::logger::log_config config, STRING const& format, STRING const& message) NOEXP {
+
+		}
+
+		template<typename... parameters> 
+		void trace(core::logger::log_config config, STRING const& format, STRING const& message) NOEXP {
+
+		}
 
 	} // namespace logger end
 
 } // namespace core end
 
+/*
+	few macros for logger
+*/ 
 #define CORE_GET_LOGGER(LOGGER_NAME) spdlog::get(LOGGER_NAME)
 #define CORE_GET_LOGGER_VAR(VAR_NAME, LOGGER_NAME) static auto VAR_NAME = spdlog::get(LOGGER_NAME);
 
@@ -79,91 +129,96 @@ namespace core {
 
 #define CORE_DISABLE_LOGGER(LOGGER_VAR) LOGGER_VAR = nullptr;
 
-enum class log_config : u8 {
-	none = 0,
-	line_of_code,
-	file_name,
-	file_path,
-	time_stamp,
-	dump_stack_trace,
-	function_definition,
-	full_function_definition
-};
+/*
+	just few helper macros fatal
+*/
+#define CORE_LOG_DETAILS(TYPE,CONFIG) { \
+			auto logger = (_LOGGER_) ? _LOGGER_ : spdlog::default_logger();\
+			std::source_location location = std::source_location::current();\
+			STRING second_msg = "";\
+			if( GET_BIT(config , core::logger::log_config::file_name) ) {\
+				second_msg += location.file_name();\
+				second_msg += ", ";\
+			}\
+			if( GET_BIT(config , core::logger::log_config::file_path) ){\
+				second_msg += __FILE__;\
+				second_msg += ", ";\
+			}\
+			if (GET_BIT(config , core::logger::log_config::line_of_code)) {\
+				second_msg += __LINE__;\
+				second_msg += ", ";\
+			}\
+			logger->TYPE(second_msg);\
+			if( GET_BIT(config , core::logger::log_config::dump_stack_trace ) ) {\
+				logger->dump_backtrace();\
+			}\
+		}
+
+#define CORE_LOG_HEADER(TYPE,CONFIG) {\
+			auto logger = (_LOGGER_) ? _LOGGER_ : spdlog::default_logger();\
+			if( GET_BIT(config , core::logger::log_config::function_definition) ) { \
+				logger->TYPE(FUNCTION_DEFINITION); \
+			}\
+			if( GET_BIT(config , core::logger::log_config::full_function_definition) ) { \
+				logger->TYPE(FUNCTION_DEFINITION_FULL); \
+			}\
+		}
+
 
 /*
-	logger macros functions
+	============ FATAL macros ================
 */
 
-// log fatals/errors
-#define CORE_FATAL(LOG_WITH , FORMAT , ...) \
-		if(_LOGGER_){ \
-			_LOGGER_->critical(FORMAT , ##__VA_ARGS__); \
-			_LOGGER_->dump_backtrace(); \
-			switch(LOG_WITH){ \
-				case log_with::line_of_code: { } break; \
-				case log_with::file_name: { } break; \
-				case log_with::file_path: { } break; \
-				case log_with::time_stamp: { } break; \
-				case log_with::dump_stack_trace: { } break; \
-				case log_with::function_definition: { } break; \
-				case log_with::full_function_definition: { } break; \
-			} \
-		} \
-		else        {   spdlog::critical(FORMAT , ##__VA_ARGS__)     spdlog::dump_backtrace(); }
-
-#define CORE_FATAL_D(FORMAT , ...) \
-		if(_LOGGER_){ \
-			_LOGGER_->critical(FUNCTION_DEFINITION); \
-			_LOGGER_->critical(FORMAT, ##__VA_ARGS__); \
-			_LOGGER_->dump_backtrace(); \
-		} \
-		else { \
-			spdlog::critical(FUNCTION_DEFINITION); \
-			spdlog::critical(FORMAT , ##__VA_ARGS__); \
-			spdlog::dump_backtrace();\
+#define CORE_FATAL(CONFIG, FORMAT , ...) {\
+			CORE_LOG_HEADER(fatal, CONFIG); \
+			auto logger = (_LOGGER_) ? _LOGGER_ : spdlog::default_logger(); \
+			logger->fatal(FORMAT, ##__VA_ARGS__); \
+			CORE_LOG_DETAILS(fatal, CONFIG);\
 		}
 
-#define CORE_FATAL_F(FORMAT , ...) \
-		if(_LOGGER_){ \
-			_LOGGER_->critical(FUNCTION_DEFINITION_FULL); \
-			_LOGGER_->critical(FORMAT , ##__VA_ARGS__); \
-			_LOGGER_->dump_backtrace(); \
-		} \
-		else{ \
-			spdlog::critical(FUNCTION_DEFINITION_FULL);   \
-			spdlog::critical(FORMAT , ##__VA_ARGS__); \
-			spdlog::dump_backtrace(); \
+#define CORE_FATAL_D(FORMAT , ...) {\
+			u8 cfg = core::logger::log_config::function_definition | core::logger::log_config::dump_stack_trace;\
+			CORE_FATAL(cfg , FORMAT , ##__VA_ARGS__);\
 		}
 
-#define CORE_ERROR(FORMAT , ...) \
-		if(_LOGGER_) { \
-			_LOGGER_->error(FORMAT , ##__VA_ARGS__); \
-			_LOGGER_->dump_backtrace(); \
-		}\
-		else { \
-			spdlog::error(FORMAT , ##__VA_ARGS__); \
-			spdlog::dump_backtrace(); \
+#define CORE_FATAL_F(FORMAT , ...){\
+			u8 cfg = core::logger::log_config::full_function_definition | core::logger::log_config::dump_stack_trace;\
+			CORE_FATAL(cfg , FORMAT , ##__VA_ARGS__);\
 		}
 
-#define CORE_ERROR_D(FORMAT , ...) \
-		if(_LOGGER_){ _LOGGER_->error(FUNCTION_DEFINITION); _LOGGER_->error(FORMAT , ##__VA_ARGS__); } \
-		else {          spdlog::error(FUNCTION_DEFINITION);   spdlog::error(FORMAT , ##__VA_ARGS__); }
 
-#define CORE_ERROR_F(FORMAT , ...) \
-		if(_LOGGER_){ _LOGGER_->error(FUNCTION_DEFINITION_FULL); _LOGGER_->error(FORMAT , ##__VA_ARGS__); } \
-		else {          spdlog::error(FUNCTION_DEFINITION_FULL);   spdlog::error(FORMAT , ##__VA_ARGS__); }
-
-// log errors if true
-#define CORE_FATAL_IF(TRUE_EXPRESSION ,FORMAT ,  ...) \
+#define CORE_FATAL_IF(TRUE_EXPRESSION , CONFIG, FORMAT,  ...) \
 		if(TRUE_EXPRESSION) { \
-			if(_LOGGER_) _LOGGER_->critical(FORMAT , ##__VA_ARGS__); \
-			else           spdlog::critical(FORMAT , ##__VA_ARGS__); \
+			u8 cfg = core::logger::log_config::function_definition | core::logger::log_config::dump_stack_trace;\
+			CORE_FATAL(CONFIG , FORMAT , ##__VA_ARGS__);\
 		}
 
-#define CORE_ERROR_IF(TRUE_EXPRESSION ,FORMAT ,  ...) \
+
+/*
+	============ error macros ================
+*/
+
+#define CORE_ERROR(CONFIG, FORMAT , ...) {\
+			CORE_LOG_HEADER(error, CONFIG); \
+			auto logger = (_LOGGER_) ? _LOGGER_ : spdlog::default_logger(); \
+			logger->error(FORMAT, ##__VA_ARGS__); \
+			CORE_LOG_DETAILS(error, CONFIG);\
+		}
+
+#define CORE_ERROR_D(FORMAT , ...) {\
+			u8 cfg = core::logger::log_config::function_definition | core::logger::log_config::dump_stack_trace;\
+			CORE_ERROR(cfg , FORMAT , ##__VA_ARGS__);\
+		}
+
+#define CORE_ERROR_F(FORMAT , ...){\
+			u8 cfg = core::logger::log_config::full_function_definition | core::logger::log_config::dump_stack_trace;\
+			CORE_ERROR(cfg , FORMAT , ##__VA_ARGS__);\
+		}
+
+#define CORE_ERROR_IF(TRUE_EXPRESSION , CONFIG, FORMAT,  ...) \
 		if(TRUE_EXPRESSION) { \
-			if(_LOGGER_) _LOGGER_->error(FORMAT , ##__VA_ARGS__); \
-			else           spdlog::error(FORMAT , ##__VA_ARGS__); \
+			u8 cfg = core::logger::log_config::function_definition | core::logger::log_config::dump_stack_trace;\
+			CORE_ERROR(CONFIG , FORMAT , ##__VA_ARGS__);\
 		}
 
 #ifdef DEBUG // debug-only functions
@@ -181,7 +236,8 @@ enum class log_config : u8 {
 	#define CORE_WARN_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_LOGGER_) _LOGGER_->warn(FORMAT , ##__VA_ARGS__);
 	#define CORE_INFO_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_LOGGER_) _LOGGER_->info(FORMAT , ##__VA_ARGS__);
 
-	#define CORE_TRACE_CURRENT_FUNCTION() if(_LOGGER_) CORE_TRACE("{} | {} | {}" , __LINE__ , FUNCTION_DEFINITION , __FILE__);
+	#define CORE_TRACE_CURRENT_FUNCTION() \
+			if(_LOGGER_) CORE_TRACE("{} | {} | {}" , __LINE__ , FUNCTION_DEFINITION , __FILE__);
 
 #else 
 	#define CORE_WARN(...)

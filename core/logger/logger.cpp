@@ -37,7 +37,7 @@ namespace core {
 
 	namespace logger {
 
-		void init(STRING const& logger_name, verbosity_level level, u32 trace_level) {
+		DLL_API void init(STRING const& logger_name, verbosity_level level, u32 trace_level) {
 			
 			if (initilized) return;
 
@@ -121,45 +121,13 @@ namespace core {
 			logger public function's
 		*/
 
-		verbosity_level get_level() {
+		DLL_API verbosity_level get_level() {
 			return logger_level;
 		}
 
-		void set_level(verbosity_level level) {
+		DLL_API DEBUG_ONLY void set_level(verbosity_level level) {
 		#ifdef DEBUG
 			spdlog::set_level(spdlog::level::level_enum(level));
-		#endif
-		}
-
-		void fatal(STRING const& message) {
-			spdlog::critical(message);
-		}
-
-		void error(STRING const& message) {
-			spdlog::error(message);
-		}
-
-		void warn(STRING const& message) {
-		#ifdef DEBUG
-			spdlog::warn(message);
-		#endif
-		}
-
-		void info(STRING const& message) {
-		#ifdef DEBUG
-			spdlog::info(message);
-		#endif
-		}
-
-		void debug(STRING const& message) {
-		#ifdef DEBUG
-			spdlog::debug(message);
-		#endif
-		}
-
-		void trace(STRING const& message) {
-		#ifdef DEBUG
-			spdlog::trace(message);
 		#endif
 		}
 
