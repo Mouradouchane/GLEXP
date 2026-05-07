@@ -35,4 +35,11 @@
 #define GET_BIT(VALUE, BIT_INDEX)   (( (VALUE) & (BIT_MASK(BIT_INDEX)) ) >> BIT_INDEX)
 #define IS_BIT_ON(VALUE, BIT_INDEX) (( (VALUE) & (BIT_MASK(BIT_INDEX)) ) != 0)
 
+
+// macros for max value
+#define _8_BIT_   0xFF
+#define _16_BIT_  0xFFFF
+#define _32_BIT_  0xFFFFFFFF
+#define _64_BIT_  0xFFFFFFFFFFFFFFFF
+
 #endif

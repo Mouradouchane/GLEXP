@@ -122,7 +122,7 @@ namespace core {
 			: allocator(_allocator)
 		{
 			if (this == &other_array) {
-				CORE_WARN(core::status::get_warning(core::warning::self_assignment));
+				CORE_WARN_D(core::status::get_warning(core::warning::self_assignment));
 				return;
 			}
 
@@ -156,7 +156,7 @@ namespace core {
 		// move constructor 
 		array(core::array<type>&& array_to_move) noexcept {
 			if (this == &array_to_move) {
-				CORE_WARN(core::status::get_warning(core::warning::self_assignment));
+				CORE_WARN_D(core::status::get_warning(core::warning::self_assignment));
 				return;
 			}
 
@@ -222,7 +222,7 @@ namespace core {
 					);
 					return *(this->begin_ + this->count_);
 				#else 
-					VCRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
+					CRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
 				#endif
 			}
 
@@ -233,7 +233,7 @@ namespace core {
 		// note: operator=  discard old elements
 		core::array<type>& operator = (core::array<type> const& array_to_copy) {
 			if (this == &array_to_copy) {
-				CORE_WARN( core::status::get_warning(core::warning::self_assignment) );
+				CORE_WARN_D( core::status::get_warning(core::warning::self_assignment) );
 				return *this;
 			}
 
@@ -245,7 +245,7 @@ namespace core {
 		// note: operator=  discard old elements
 		core::array<type>& operator = (core::array<type>&& array_to_move) {
 			if (this == &array_to_move) {
-				CORE_WARN( core::status::get_warning(core::warning::self_assignment) );
+				CORE_WARN_D( core::status::get_warning(core::warning::self_assignment) );
 				return *this;
 			}
 
@@ -298,7 +298,7 @@ namespace core {
 					);
 					return *(this->begin_ + this->count_);
 				#else 
-					VCRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
+					CRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
 				#endif
 			}
 
@@ -315,7 +315,7 @@ namespace core {
 					);
 					return ;
 				#else 
-					VCRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
+					CRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
 				#endif
 			}
 			else *(this->begin_ + index) = new_element;
@@ -380,7 +380,7 @@ namespace core {
 					);
 					return;
 				#else 
-					VCRASH_IF(true, core::status::get_error(core::error::source_equal_destination) , (void*)&source, (void*)&destination);
+					CRASH_IF(true, core::status::get_error(core::error::source_equal_destination) , (void*)&source, (void*)&destination);
 				#endif
 
 			}
@@ -399,7 +399,7 @@ namespace core {
 						);
 						return;
 					#else
-						VCRASH_IF(true, core::status::get_error(core::error::source_bigger_than_destination), (void*)&source, (void*)&destination);
+						CRASH_IF(true, core::status::get_error(core::error::source_bigger_than_destination), (void*)&source, (void*)&destination);
 					#endif
 				}
 				
@@ -438,7 +438,7 @@ namespace core {
 					);
 					return;
 				#else 
-					VCRASH_IF(true, core::status::get_error(core::error::source_equal_destination) , (void*)&source, (void*)&destination);
+					CRASH_IF(true, core::status::get_error(core::error::source_equal_destination) , (void*)&source, (void*)&destination);
 				#endif
 
 			}

@@ -14,6 +14,9 @@
 			__logger__->enable_backtrace(back_trace_level);\
 		};
 
+static auto _c_lg_cp = CORE_GET_DEFAULT_LOGGER();
+#define _LOGGER_ _c_lg_cp
+
 /*
 	logger private variables
 */
@@ -130,6 +133,34 @@ namespace core {
 			spdlog::set_level(spdlog::level::level_enum(level));
 		#endif
 		}
+
+		// logger public function's
+		DLL_API void fatal(core::logger::log_config config, STRING&& format, STRING const& message) {
+			CORE_FATAL(config, format, message);
+		}
+		
+		DLL_API void error(core::logger::log_config config, STRING&& format, STRING const& message) {
+			CORE_ERROR(config, format , message);
+		}
+	
+	#ifdef DEBUG
+
+		DLL_API DEBUG_ONLY void warn(core::logger::log_config config, STRING&& format, STRING const& message) NOEXP {
+			CORE_WARN(config, format, message);
+		}
+		DLL_API DEBUG_ONLY void debug(core::logger::log_config config, STRING&& format, STRING const& message) NOEXP {
+			CORE_DEBUG(config, format, message);
+		}
+
+		DLL_API DEBUG_ONLY void info(STRING&& format, STRING const& message) NOEXP {
+			CORE_INFO(format, message);
+		}
+
+		DLL_API DEBUG_ONLY void trace( STRING&& format, STRING const& message) NOEXP {
+			CORE_TRACE(format, message);
+		}
+
+	#endif
 
 	} // logger namespace end
 

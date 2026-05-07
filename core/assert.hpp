@@ -20,76 +20,41 @@
 	run-time assert
 */
 
-#if defined(DEBUG)
+#ifdef DEBUG
 
-	#define CORE_ASSERT_ERR(ERROR_ENUM , ASSERT_MESSAGE , ...) \
+	#define CORE_ASSERT_ERR(ERROR_ENUM , FORMAT , ...) \
 			if(ERROR_ENUM != core::error::none) {\
-				CORE_FATAL(ASSERT_MESSAGE , __VA_ARGS__); \
-				CORE_TRACE("CODE:{}", #ERROR_ENUM); \
-				CORE_TRACE("FILE:{}", __FILE__); \
-				CORE_TRACE("LINE:{}", __LINE__); \
-				DEBUG_BREAK; \
+				CORE_FATAL_F(FORMAT , ##__VA_ARGS__); \
+				CORE_TRACE("error:{}", #ERROR_ENUM); \
 				CORE_CRASH(); \
 			}
 
-	#define CORE_ASSERT(TRUE_CONDITION , ASSERT_MESSAGE ) \
-			if(TRUE_CONDITION) {\
-				CORE_FATAL(ASSERT_MESSAGE); \
-				CORE_TRACE("CODE:{}", #TRUE_CONDITION); \
-				CORE_TRACE("LINE:{}", __LINE__); \
-				CORE_TRACE("FILE:{}", __FILE__); \
-				DEBUG_BREAK; \
-				CORE_CRASH(); \
-			}
-
-	#define VCORE_ASSERT(TRUE_CONDITION , ASSERT_MESSAGE , ...) \
+	#define CORE_ASSERT(TRUE_CONDITION , FORMAT , ...) \
 				if(TRUE_CONDITION) {\
-					CORE_FATAL(ASSERT_MESSAGE , __VA_ARGS__); \
-					CORE_TRACE("CODE:{}", #TRUE_CONDITION); \
-					CORE_TRACE("LINE:{}", __LINE__); \
-					CORE_TRACE("FILE:{}", __FILE__); \
-					DEBUG_BREAK; \
+					CORE_FATAL_F(FORMAT , ##__VA_ARGS__); \
+					CORE_TRACE("condition:{}", #TRUE_CONDITION); \
 					CORE_CRASH(); \
 				}
 
-	#define VCRASH_IF(TRUE_CONDITION , CRASH_MESSAGE, ...) \
-				if(TRUE_CONDITION) {\
-					CORE_FATAL(CRASH_MESSAGE , __VA_ARGS__); \
-					CORE_TRACE("CODE:{}", #TRUE_CONDITION); \
-					CORE_TRACE("LINE:{}", __LINE__); \
-					CORE_TRACE("FILE:{}", __FILE__); \
-					DEBUG_BREAK; \
+	#define CRASH_IF(TRUE_CONDITION , FORMAT , ...) if(TRUE_CONDITION) { \
+					CORE_FATAL_F(FORMAT , ##__VA_ARGS__); \
+					CORE_TRACE("condition:{}", #TRUE_CONDITION); \
 					CORE_CRASH(); \
 				}
 
-	#define CRASH_IF(TRUE_CONDITION , CRASH_MESSAGE) \
-				if(TRUE_CONDITION) {\
-					CORE_FATAL(CRASH_MESSAGE); \
-					CORE_TRACE("CODE:{}", #TRUE_CONDITION); \
-					CORE_TRACE("LINE:{}", __LINE__); \
-					CORE_TRACE("FILE:{}", __FILE__); \
-					DEBUG_BREAK; \
-					CORE_CRASH(); \
-				}
-
-	#define CRASH_IF_ERROR(ERROR_ENUM , CRASH_MESSAGE) \
+	#define CRASH_IF_ERROR(ERROR_ENUM , FORMAT , ...) \
 			if(ERROR_ENUM != core::error::none) {\
-				CORE_FATAL(CRASH_MESSAGE); \
-				CORE_TRACE("CODE:{}", #ERROR_ENUM); \
-				CORE_TRACE("LINE:{}", __LINE__); \
-				CORE_TRACE("FILE:{}", __FILE__); \
-				DEBUG_BREAK; \
+				CORE_FATAL_F(FORMAT , ##__VA_ARGS__); \
+				CORE_TRACE("error:{}", #ERROR_ENUM); \
 				CORE_CRASH(); \
 			}
 
 #else
 
-	#define  CRASH_IF(TRUE_CONDITION    , CRASH_MESSAGE  , ...) if(TRUE_CONDITION) CORE_CRASH();
-	#define VCRASH_IF(TRUE_CONDITION    , CRASH_MESSAGE)        if(TRUE_CONDITION) CORE_CRASH();
-	#define  CRASH_IF_ERROR(ERROR_ENUM  , CRASH_MESSAGE  , ...) if(ERROR_ENUM != core::error::none) CORE_CRASH();
-	#define  CORE_ASSERT(TRUE_CONDITION , ASSERT_MESSAGE)       if(TRUE_CONDITION) CORE_CRASH();
-	#define VCORE_ASSERT(TRUE_CONDITION , ASSERT_MESSAGE , ...) if(TRUE_CONDITION) CORE_CRASH();
-	#define  CORE_ASSERT_ERR(ERROR_ENUM , ASSERT_MESSAGE , ...) if(ERROR_ENUM != core::error::none) CORE_CRASH();
+	#define  CRASH_IF(TRUE_CONDITION    , FORMAT , ...) if(TRUE_CONDITION) CORE_CRASH();
+	#define  CRASH_IF_ERROR(ERROR_ENUM  , FORMAT , ...) if(ERROR_ENUM != core::error::none) CORE_CRASH();
+	#define  CORE_ASSERT(TRUE_CONDITION , FORMAT , ...) if(TRUE_CONDITION) CORE_CRASH();
+	#define  CORE_ASSERT_ERR(ERROR_ENUM , FORMAT , ...) if(ERROR_ENUM != core::error::none) CORE_CRASH();
 
 #endif 
 

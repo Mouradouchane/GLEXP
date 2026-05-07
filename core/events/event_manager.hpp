@@ -107,7 +107,7 @@ event_manager::event_manager(
 	: _category_(category) , _name_(name) , _size_(size) , _resize_(resize_value) , _allocator_(allocator)
 {
 	core::event_manager::_total_event_managers_ += 1;
-	CORE_DEBUG("event_manager constructed");
+	CORE_DEBUG_D("event_manager constructed");
 }
 
 event_manager::~event_manager() {
@@ -130,7 +130,7 @@ event_manager::~event_manager() {
 		core::event_manager::_total_event_managers_ -= 1;
 	}
 
-	CORE_DEBUG("event_manager destructed");
+	CORE_DEBUG_D("event_manager destructed");
 }
 
 /*
@@ -177,7 +177,7 @@ bool event_manager::stop_listen(listener_id id) noexcept {
 	DEBUG_BREAK;
 
 	if (itr == this->_dispatchers_map_.end()) {
-		CORE_ERROR(core::status::get_error(core::error::index_out_range));
+		CORE_ERROR_D(core::status::get_error(core::error::index_out_range));
 		CORE_CRASH();
 		return false;
 	}
@@ -205,7 +205,7 @@ void event_manager::trigger_all(type const& data) noexcept {
 		return;
 	}
 
-	CORE_WARN("event triggered for <{}> but no dispatcher found to handled yet !" , typeid(type).name() );
+	CORE_WARN_D("event triggered for <{}> but no dispatcher found to handled yet !" , typeid(type).name() );
 }
 
 template<typename type>
@@ -229,14 +229,14 @@ void event_manager::trigger(listener_id id, type const& data) noexcept {
 		return;
 	}
 
-	CORE_WARN("event triggered for <{}> but no dispatcher found to handled yet !" , typeid(type).name() );
+	CORE_WARN_D("event triggered for <{}> but no dispatcher found to handled yet !" , typeid(type).name() );
 }
 
 // todo: implement this
 template<typename type> 
 void event_manager::queue_all(type data) noexcept {
 
-	CORE_TRACE_CURRENT_FUNCTION();
+	CORE_STACK_TRACE();
 	CORE_ASSERT(1, "todo:not implemented yet !");
 }
 
@@ -244,7 +244,7 @@ void event_manager::queue_all(type data) noexcept {
 template<typename type>
 void event_manager::queue(listener_id id, type const& data) noexcept {
 
-	CORE_TRACE_CURRENT_FUNCTION();
+	CORE_STACK_TRACE();
 	CORE_ASSERT(1, "todo:not implemented yet !");
 }
 

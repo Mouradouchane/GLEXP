@@ -26,16 +26,17 @@ core::memory::heap::heap(string const& heap_name, core::memory::tag memory_tag, 
 
 	// TODO: change to logger
 	// few checks first
-	CRASH_IF(heap_size < 1, "memory_heap: zero count memory_heap not allowed !");
-	CRASH_IF(
-		(heap_size < min_size_allowed) || (heap_size > max_size_allowed),
-		// todo: change it to better message later 
-		// when you have logger
-		"memory_heap: memory_heap count not allowed !"
+	CORE_FATAL_IF(heap_size < 1, CORE_LOG_CONFIG_ALL, "{}", "memory_heap: zero count memory_heap not allowed !");
+
+	CORE_FATAL_IF( 
+		(heap_size < min_size_allowed) || (heap_size > max_size_allowed), CORE_LOG_CONFIG_ALL ,
+		"{}", "memory_heap: memory_heap count not allowed !"
 	);
-	CRASH_IF(max_allocation < 1, "memory_heap: max allowed allocations cannot be 0 !");
+
+	CORE_FATAL_IF(max_allocation < 1, CORE_LOG_CONFIG_ALL, "{}", "memory_heap: max allowed allocations cannot be 0 !");
+	
 	// note: maybe this need to be a logger warning
-	CRASH_IF(heap_size < max_allocation, "memory_heap: max allowed allocations larger than the actuall global_memory !");
+	CORE_FATAL_IF(heap_size < max_allocation, CORE_LOG_CONFIG_ALL, "{}", "memory_heap: max allowed allocations larger than the actuall global_memory !");
 
 	// init memory_heap variables
 	this->max_allowed_allocations = max_allocation;

@@ -14,7 +14,9 @@
 	#define DEBUG_BREAK
 #endif
 
-// to get function defintion as string
+/*
+	function definition macros
+*/
 #ifdef _MSC_VER
 	#define FUNCTION_DEFINITION_FULL __FUNCSIG__
 #else
@@ -23,11 +25,13 @@
 
 #define FUNCTION_DEFINITION __FUNCTION__ 
 
-// for class/interface
-#define NEED_IMPL 0
-
-// to enable/disable error handling/stack-winding
-#define NOEXP noexcept
+/*
+	quality of life macros
+*/ 
+#define NEED_IMPL	0
+#define NOEXP		noexcept
+#define INLINE		inline
+#define DEBUG_ONLY
 
 // current arch x64 or x32 maybe other arch later 
 #if defined(_WIN64) || defined(WIN64) || defined(__x86_64__) || defined(_____LP64_____)
@@ -57,10 +61,10 @@
 
 #if defined(UNIT_TEST) || defined(DEBUG)
 	#define CORE_CRASH() DEBUG_BREAK;
-	#define CORE_FATAL_CRASH(MESSAGE) CORE_FATAL(MESSAGE); DEBUG_BREAK;
+	#define CORE_FATAL_CRASH(MESSAGE) CORE_FATAL_F(MESSAGE); DEBUG_BREAK;
 #else
 	#define CORE_CRASH() exit(-1);
-	#define CORE_FATAL_CRASH(MESSAGE) CORE_FATAL(MESSAGE); exit(-1);
+	#define CORE_FATAL_CRASH(MESSAGE) CORE_FATAL_F(MESSAGE); exit(-1);
 #endif
 
 /*
@@ -110,9 +114,6 @@
     #define NO_INLINE
 #endif
 
-#define INLINE inline 
-
-#define DEBUG_ONLY
 
 /*
 	type casting macros
@@ -120,6 +121,15 @@
 #define C_CAST(TARGET , TYPE) (TYPE)TARGET 
 #define S_CAST(TARGET , TYPE)  static_cast<TYPE>(TARGET)
 #define D_CAST(TARGET , TYPE) dynamic_cast<TYPE>(TARGET)
+
+/*
+	logger's names
+*/
+#define EVENT_SYSTEM_LOGGER		"CORE_EVENT_SYSTEM"
+#define WORK_SYSTEM_LOGGER		"CORE_WORK_SYSTEM"
+#define MEMORY_ALLOCATOR_LOGGER "CORE_MEMORY_ALLOCATOR"
+#define REFS_LOGGER             "CORE_REFERENCES"
+#define DATA_STRUCTER_LOGGER	"CORE_DATA_STRUCTER"
 
 /*
 	few macros to convert beetween memory units
@@ -137,14 +147,5 @@
 #define MB   *1048576u
 #define GB   *1073741824u
 // ===================================================
-
-/*
-	logger's names
-*/
-#define EVENT_SYSTEM_LOGGER		"CORE_EVENT_SYSTEM"
-#define WORK_SYSTEM_LOGGER		"CORE_WORK_SYSTEM"
-#define MEMORY_ALLOCATOR_LOGGER "CORE_MEMORY_ALLOCATOR"
-#define REFS_LOGGER             "CORE_REFERENCES"
-#define DATA_STRUCTER_LOGGER	"CORE_DATA_STRUCTER"
 
 #endif // MACROS_HPP

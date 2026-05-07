@@ -75,49 +75,25 @@ namespace core {
 	#endif
 
 		// logger public function's
-		template<typename... parameters> 
-		void fatal(core::logger::log_config config, STRING const& format, parameters&&... params) {
-
-			if (_LOGGER_) {
-				_LOGGER_->critical(format, std::forward<parameters>(params)...);
-			}
-			else {
-				spdlog::critical(format, std::forward<parameters>(params)...);
-			}
-		}
-
-		template<typename... parameters> 
-		void error(core::logger::log_config config, STRING const& format, STRING const& message) {
-
-		}
-
-		template<typename... parameters> 
-		void warn(core::logger::log_config config, STRING const& format, STRING const& message) NOEXP {
-
-		}
-
-		template<typename... parameters> 
-		void info(core::logger::log_config config, STRING const& format, STRING const& message) NOEXP {
-
-		}
-
-		template<typename... parameters> 
-		void debug(core::logger::log_config config, STRING const& format, STRING const& message) NOEXP {
-
-		}
-
-		template<typename... parameters> 
-		void trace(core::logger::log_config config, STRING const& format, STRING const& message) NOEXP {
-
-		}
+		DLL_API void fatal(core::logger::log_config config, STRING&& format, STRING const& message);
+		DLL_API void error(core::logger::log_config config, STRING&& format, STRING const& message);
+	#ifdef DEBUG
+		DLL_API void warn (core::logger::log_config config, STRING&& format, STRING const& message) NOEXP;
+		DLL_API void debug(core::logger::log_config config, STRING&& format, STRING const& message) NOEXP;
+		DLL_API void info (STRING&& format, STRING const& message) NOEXP;
+		DLL_API void trace(STRING&& format, STRING const& message) NOEXP;
+	#endif
 
 	} // namespace logger end
 
 } // namespace core end
 
+
 /*
-	few macros for logger
+	get/set logger macros
 */ 
+#define CORE_GET_DEFAULT_LOGGER() spdlog::default_logger()
+
 #define CORE_GET_LOGGER(LOGGER_NAME) spdlog::get(LOGGER_NAME)
 #define CORE_GET_LOGGER_VAR(VAR_NAME, LOGGER_NAME) static auto VAR_NAME = spdlog::get(LOGGER_NAME);
 
@@ -129,131 +105,143 @@ namespace core {
 
 #define CORE_DISABLE_LOGGER(LOGGER_VAR) LOGGER_VAR = nullptr;
 
+
 /*
 	just few helper macros fatal
 */
-#define CORE_LOG_DETAILS(TYPE,CONFIG) { \
+#define CORE_LOG_DETAILS(TYPE, CONFIG) { \
 			auto logger = (_LOGGER_) ? _LOGGER_ : spdlog::default_logger();\
 			std::source_location location = std::source_location::current();\
 			STRING second_msg = "";\
-			if( GET_BIT(config , core::logger::log_config::file_name) ) {\
+			if( GET_BIT(CONFIG , core::logger::log_config::file_name) ) {\
 				second_msg += location.file_name();\
 				second_msg += ", ";\
 			}\
-			if( GET_BIT(config , core::logger::log_config::file_path) ){\
+			if( GET_BIT(CONFIG , core::logger::log_config::file_path) ){\
 				second_msg += __FILE__;\
 				second_msg += ", ";\
 			}\
-			if (GET_BIT(config , core::logger::log_config::line_of_code)) {\
+			if (GET_BIT(CONFIG , core::logger::log_config::line_of_code)) {\
 				second_msg += __LINE__;\
 				second_msg += ", ";\
 			}\
 			logger->TYPE(second_msg);\
-			if( GET_BIT(config , core::logger::log_config::dump_stack_trace ) ) {\
+			if( GET_BIT(CONFIG , core::logger::log_config::dump_stack_trace ) ) {\
 				logger->dump_backtrace();\
 			}\
 		}
 
-#define CORE_LOG_HEADER(TYPE,CONFIG) {\
+#define CORE_LOG_HEADER(TYPE, CONFIG) {\
 			auto logger = (_LOGGER_) ? _LOGGER_ : spdlog::default_logger();\
-			if( GET_BIT(config , core::logger::log_config::function_definition) ) { \
+			if( GET_BIT(CONFIG , core::logger::log_config::function_definition) ) { \
 				logger->TYPE(FUNCTION_DEFINITION); \
 			}\
-			if( GET_BIT(config , core::logger::log_config::full_function_definition) ) { \
+			if( GET_BIT(CONFIG , core::logger::log_config::full_function_definition) ) { \
 				logger->TYPE(FUNCTION_DEFINITION_FULL); \
 			}\
 		}
 
 
 /*
-	============ FATAL macros ================
+	ready to use configs for logger
+*/
+
+#define CORE_LOG_CONFIG_ALL 0b11111111
+
+#define CORE_LOG_CONFIG_D ( \
+			core::logger::log_config::function_definition | core::logger::log_config::dump_stack_trace | \
+			core::logger::log_config::line_of_code | core::logger::log_config::file_name \
+		)
+
+#define CORE_LOG_CONFIG_F ( \
+			core::logger::log_config::full_function_definition | core::logger::log_config::dump_stack_trace | \
+			core::logger::log_config::line_of_code | core::logger::log_config::file_name \
+		)
+
+/*
+	============ log fatal macros ================
 */
 
 #define CORE_FATAL(CONFIG, FORMAT , ...) {\
-			CORE_LOG_HEADER(fatal, CONFIG); \
+			CORE_LOG_HEADER(critical, CONFIG); \
 			auto logger = (_LOGGER_) ? _LOGGER_ : spdlog::default_logger(); \
-			logger->fatal(FORMAT, ##__VA_ARGS__); \
-			CORE_LOG_DETAILS(fatal, CONFIG);\
+			logger->critical(fmt::runtime(FORMAT), ##__VA_ARGS__); \
+			CORE_LOG_DETAILS(critical, CONFIG);\
 		}
 
-#define CORE_FATAL_D(FORMAT , ...) {\
-			u8 cfg = core::logger::log_config::function_definition | core::logger::log_config::dump_stack_trace;\
-			CORE_FATAL(cfg , FORMAT , ##__VA_ARGS__);\
-		}
+#define CORE_FATAL_D(FORMAT, ...) CORE_FATAL(CORE_LOG_CONFIG_D , FORMAT , ##__VA_ARGS__);\
 
-#define CORE_FATAL_F(FORMAT , ...){\
-			u8 cfg = core::logger::log_config::full_function_definition | core::logger::log_config::dump_stack_trace;\
-			CORE_FATAL(cfg , FORMAT , ##__VA_ARGS__);\
-		}
+#define CORE_FATAL_F(FORMAT, ...) CORE_FATAL(CORE_LOG_CONFIG_F , FORMAT , ##__VA_ARGS__);\
 
 
-#define CORE_FATAL_IF(TRUE_EXPRESSION , CONFIG, FORMAT,  ...) \
+#define CORE_FATAL_IF(TRUE_EXPRESSION , CONFIG , FORMAT , ...) \
 		if(TRUE_EXPRESSION) { \
-			u8 cfg = core::logger::log_config::function_definition | core::logger::log_config::dump_stack_trace;\
 			CORE_FATAL(CONFIG , FORMAT , ##__VA_ARGS__);\
 		}
 
 
 /*
-	============ error macros ================
+	============ log error macros ================
 */
 
-#define CORE_ERROR(CONFIG, FORMAT , ...) {\
+#define CORE_ERROR(CONFIG, FORMAT , ...) { \
 			CORE_LOG_HEADER(error, CONFIG); \
 			auto logger = (_LOGGER_) ? _LOGGER_ : spdlog::default_logger(); \
-			logger->error(FORMAT, ##__VA_ARGS__); \
+			logger->error(fmt::runtime(FORMAT), ##__VA_ARGS__); \
 			CORE_LOG_DETAILS(error, CONFIG);\
 		}
 
-#define CORE_ERROR_D(FORMAT , ...) {\
-			u8 cfg = core::logger::log_config::function_definition | core::logger::log_config::dump_stack_trace;\
-			CORE_ERROR(cfg , FORMAT , ##__VA_ARGS__);\
-		}
+#define CORE_ERROR_D(FORMAT , ...) CORE_ERROR(CORE_LOG_CONFIG_D , FORMAT , ##__VA_ARGS__);
+		
+#define CORE_ERROR_F(FORMAT , ...) CORE_ERROR(CORE_LOG_CONFIG_F , FORMAT , ##__VA_ARGS__);
 
-#define CORE_ERROR_F(FORMAT , ...){\
-			u8 cfg = core::logger::log_config::full_function_definition | core::logger::log_config::dump_stack_trace;\
-			CORE_ERROR(cfg , FORMAT , ##__VA_ARGS__);\
-		}
-
-#define CORE_ERROR_IF(TRUE_EXPRESSION , CONFIG, FORMAT,  ...) \
+#define CORE_ERROR_IF(TRUE_EXPRESSION , CONFIG , FORMAT , ...) \
 		if(TRUE_EXPRESSION) { \
-			u8 cfg = core::logger::log_config::function_definition | core::logger::log_config::dump_stack_trace;\
-			CORE_ERROR(CONFIG , FORMAT , ##__VA_ARGS__);\
+			CORE_ERROR(CONFIG , FORMAT , ##__VA_ARGS__); \
 		}
 
 #ifdef DEBUG // debug-only functions
-	#define CORE_WARN(FORMAT , ...)  if(_LOGGER_) _LOGGER_->warn( FORMAT , ##__VA_ARGS__);
-	#define CORE_INFO(FORMAT , ...)  if(_LOGGER_) _LOGGER_->info( FORMAT , ##__VA_ARGS__);
-	#define CORE_DEBUG(FORMAT , ...) if(_LOGGER_) _LOGGER_->debug(FORMAT , ##__VA_ARGS__);
-	#define CORE_TRACE(FORMAT , ...) if(_LOGGER_) _LOGGER_->trace(FORMAT , ##__VA_ARGS__);
 
-	#define CORE_WARN_D(FORMAT  , ...) if(_LOGGER_){ _LOGGER_->warn(FUNCTION_DEFINITION);  _LOGGER_->warn(FORMAT, ##__VA_ARGS__); }
-	#define CORE_INFO_D(FORMAT  , ...) if(_LOGGER_){ _LOGGER_->info(FUNCTION_DEFINITION);  _LOGGER_->info(FORMAT, ##__VA_ARGS__); }
-	#define CORE_DEBUG_D(FORMAT , ...) if(_LOGGER_){ _LOGGER_->debug(FUNCTION_DEFINITION); _LOGGER_->debug(FORMAT, ##__VA_ARGS__);}
-	#define CORE_TRACE_D(FORMAT , ...) if(_LOGGER_){ _LOGGER_->trace(FUNCTION_DEFINITION); _LOGGER_->trace(FORMAT, ##__VA_ARGS__);}
+	#define CORE_WARN(CONFIG, FORMAT , ...) if(_LOGGER_) { \
+				CORE_LOG_HEADER(warn, CONFIG); \
+				_LOGGER_->warn(fmt::runtime(FORMAT), ##__VA_ARGS__); \
+				CORE_LOG_DETAILS(warn, CONFIG);\
+			}
+	
+	#define CORE_WARN_D(FORMAT , ...) CORE_WARN(CORE_LOG_CONFIG_D, FORMAT, ##__VA_ARGS__);
+	#define CORE_WARN_F(FORMAT , ...) CORE_WARN(CORE_LOG_CONFIG_F, FORMAT, ##__VA_ARGS__);
+	#define CORE_WARN_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) CORE_WARN(CORE_LOG_CONFIG_D, FORMAT, ##__VA_ARGS__);
 
-	// log if true
-	#define CORE_WARN_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_LOGGER_) _LOGGER_->warn(FORMAT , ##__VA_ARGS__);
-	#define CORE_INFO_IF(TRUE_EXPRESSION, FORMAT,  ...) if(TRUE_EXPRESSION) if(_LOGGER_) _LOGGER_->info(FORMAT , ##__VA_ARGS__);
+	#define CORE_DEBUG(CONFIG, FORMAT , ...) if(_LOGGER_) { \
+				CORE_LOG_HEADER(debug, CONFIG); \
+				_LOGGER_->debug(fmt::runtime(FORMAT), ##__VA_ARGS__); \
+				CORE_LOG_DETAILS(debug, CONFIG);\
+			}
 
-	#define CORE_TRACE_CURRENT_FUNCTION() \
-			if(_LOGGER_) CORE_TRACE("{} | {} | {}" , __LINE__ , FUNCTION_DEFINITION , __FILE__);
+	#define CORE_DEBUG_D(FORMAT , ...) CORE_DEBUG(CORE_LOG_CONFIG_D, FORMAT, ##__VA_ARGS__);
+	#define CORE_DEBUG_F(FORMAT , ...) CORE_DEBUG(CORE_LOG_CONFIG_F, FORMAT, ##__VA_ARGS__);
+
+	#define CORE_TRACE(FORMAT , ...) if(_LOGGER_) _LOGGER_->trace(fmt::runtime(FORMAT) , ##__VA_ARGS__);
+	#define CORE_INFO(FORMAT , ...) if(_LOGGER_) _LOGGER_->info (fmt::runtime(FORMAT) , ##__VA_ARGS__);
+
+	#define CORE_STACK_TRACE() if(_LOGGER_) _LOGGER_->dump_backtrace();
 
 #else 
-	#define CORE_WARN(...)
-	#define CORE_INFO(...)
-	#define CORE_DEBUG(...)
-	#define CORE_TRACE(...)
+	
+	#define CORE_DEBUG(CONFIG, FORMAT, ...)
+	#define CORE_DEBUG_D(FORMAT , ...)
+	#define CORE_DEBUG_F(FORMAT , ...)
 
-	#define CORE_WARN_D(...)
-	#define CORE_INFO_D(...)
-	#define CORE_DEBUG_D(...)
-	#define CORE_TRACE_D(...)
+	#define CORE_WARN(CONFIG, FORMAT,  ...)
+	#define CORE_WARN_D(FORMAT, ...)
+	#define CORE_WARN_F(FORMAT, ...)
+	#define CORE_WARN_IF(TRUE_EXPRESSION , FORMAT, ...)
+	
+	#define CORE_TRACE(fmt::runtime(FORMAT), ...)
+	#define CORE_INFO(fmt::runtime(FORMAT), ...)
 
-	#define CORE_WARN_IF(TRUE_EXPRESSION , ...) 
-	#define CORE_INFO_IF(TRUE_EXPRESSION , ...)
+	#define CORE_STACK_TRACE()
 
-	#define CORE_TRACE_CURRENT_FUNCTION(...) 
 #endif
 
 #endif 

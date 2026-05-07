@@ -68,13 +68,13 @@ namespace core {
 		}
 
 		DLL_API void* allocate(size_t count, core::memory::tag tag) noexcept {
-			CORE_TRACE_CURRENT_FUNCTION();
+			CORE_STACK_TRACE();
 
-			CRASH_IF(count < 1, "allocate zero count allocation not allowed !");
+			CORE_FATAL_IF(count < 1, CORE_LOG_CONFIG_D , "{}" , "allocate zero count allocation not allowed !");
 
 			void* pointer = new byte[count];
 
-			VCRASH_IF(pointer == nullptr, "failed to allocate memory with size = {}byte !" , count);
+			CORE_FATAL_IF(pointer == nullptr, CORE_LOG_CONFIG_D, "{}", "failed to allocate memory with size = {}byte !" , count);
 
 			// update total count
 			allocated_size += count;
@@ -100,16 +100,16 @@ namespace core {
 		}
 
 		DLL_API void deallocate(void* pointer) noexcept {
-			CORE_TRACE_CURRENT_FUNCTION();
+			CORE_STACK_TRACE();
 
-			CRASH_IF(pointer == nullptr, "attempt to deallocate null-pointer !");
+			CORE_FATAL_IF(pointer == nullptr, CORE_LOG_CONFIG_ALL , "{}", "attempt to deallocate null-pointer !");
 
 			// check alloc_list
 			auto allocation = allocations_list.find((ptr64)pointer);
 
-			VCRASH_IF(
+			CORE_FATAL_IF(
 				allocation == allocations_list.end(), 
-				"attempt to deallocate invalid-pointer {} !" , 
+				CORE_LOG_CONFIG_ALL, "attempt to deallocate invalid-pointer {} !" , 
 				core::pointer_to_hex_string(pointer)
 			);
 
@@ -177,9 +177,9 @@ core::memory_allocator::memory_allocator(std::string const& name, core::memory::
 }
 
 void* core::memory_allocator::allocate(u32 size) noexcept {
-	VCRASH_IF(
+	CORE_FATAL_IF(
 		size >= core::memory_allocator::max_size_allowed , 
-		"size={} size to big 'unsupported' !" , size
+		CORE_LOG_CONFIG_ALL, "size={} size to big 'unsupported' !" , size
 	);
 	
 	return core::memory::allocate(size, this->_tag_);

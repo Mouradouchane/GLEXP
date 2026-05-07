@@ -66,13 +66,13 @@ template<typename type>
 dispatcher<type>::dispatcher(u32 count, u32 resize_value, core::memory_allocator* allocator) {
 
 	this->_listeners_ = core::dynamic_array<core::callback<type>>(count, resize_value, allocator);
-	CORE_DEBUG("dispatcher constructed <{}>",typeid(type).name());
+	CORE_DEBUG_D("dispatcher constructed <{}>",typeid(type).name());
 }
 
 // destructor
 template<typename type> 
 dispatcher<type>::~dispatcher() {
-	CORE_DEBUG("dispatcher destructed <{}>", typeid(type).name());
+	CORE_DEBUG_D("dispatcher destructed <{}>", typeid(type).name());
 }
 
 /*
@@ -90,8 +90,8 @@ bool dispatcher<type>::unsubscribe(u32 index) noexcept {
 
 	if (index >= this->_listeners_.size()) {
 	#ifdef DEBUG
-		const STRING error_msg = core::status::get_error(core::error::index_out_range);
-		CORE_ERROR_D(fmt::runtime(error_msg), index , this->_listeners_.size());
+		STRING error_msg = core::status::get_error(core::error::index_out_range);
+		CORE_ERROR_D(error_msg, index , this->_listeners_.size());
 	#endif
 		return false;
 	}
@@ -110,7 +110,7 @@ void dispatcher<type>::trigger_all(type const& data) noexcept {
 		}
 	}
 
-	CORE_DEBUG_D("all listeners for <{}> in {} triggered !" , typeid(type).name() , (void*)this);
+	CORE_DEBUG_D_D("all listeners for <{}> in {} triggered !" , typeid(type).name() , (void*)this);
 }
 
 // call specific listener
