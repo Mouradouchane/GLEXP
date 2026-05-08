@@ -7,7 +7,7 @@
 #include "core/logger/logger.hpp"
 #include "core/status/status.hpp"
 
-#include "ref_counter.hpp"
+#include "core/references/ref_counter.hpp"
 
 CORE_GET_LOGGER_VAR(_shared_ref_ctr_logger_, REFS_LOGGER);
 #define _LOGGER_ _shared_ref_ctr_logger_
@@ -21,8 +21,10 @@ CORE_GET_LOGGER_VAR(_shared_ref_ctr_logger_, REFS_LOGGER);
 template<refcounted_type type> class shared_ref {
 
 private:
-	type*      memory = nullptr;
-	ref_status* status = ref_status::dead;
+	type* memory = nullptr;
+
+	shared_ref( ) = delete;
+	template<refcounted_type __TYPE__> friend class weak_ref;
 
 public:
 	// constructor's
@@ -32,11 +34,14 @@ public:
 
 	// note: use this for upcasting "base <-- derived"
 	template<std::derived_from<type> derived_type> shared_ref(derived_type* pointer) NOEXP;
-	template<std::derived_from<type> derived_type> shared_ref(shared_ref<derived_type> const& other);
+	template<std::derived_from<type> derived_type> shared_ref(shared_ref<derived_type> const& other) NOEXP;
+
+	// destructor
+	~shared_ref();
 
 	// operator's 
-	shared_ref<type>& operator= (shared_ref<type> const& other) NOEXP;
-	shared_ref<type>& operator= (shared_ref<type> &&     other) NOEXP;
+	shared_ref<type>& operator= (shared_ref<type> const& other) NOEXP; // copy
+	shared_ref<type>& operator= (shared_ref<type> &&     other) NOEXP; // assign
 
 	      type* operator->() NOEXP;
 	const type* operator->() const NOEXP;
@@ -45,9 +50,6 @@ public:
 	const type& operator *() const;
 
 	operator bool() const NOEXP;
-
-	// destructor
-	~shared_ref();
 
 	// note: use this to do downcasting "base --> derived"
 	// note: don't use dynamic_cast_to a lot to avoid preformance costs

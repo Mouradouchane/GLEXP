@@ -9,10 +9,19 @@
 #include "core/types.hpp"
 #include "core/assert.hpp"
 
-#define INCREMENT_REF(REF)       REF.fetch_add(1, std::memory_order_relaxed)
-#define DECREMENT_REF(REF)       REF.fetch_sub(1, std::memory_order_relaxed)
-#define DECREMENT_REF_ORDER(REF) REF.fetch_sub(1, std::memory_order_acq_rel)
+// few macros to inc/dec refernce's counters
 
+#define ADD_SHARED_REF(SHARED_REF_PTR) SHARED_REF_PTR->memory->__strong__.fetch_add(1, std::memory_order_relaxed)
+#define SUB_SHARED_REF(SHARED_REF_PTR) SHARED_REF_PTR->memory->__strong__.fetch_sub(1, std::memory_order_relaxed)
+// for atomic operations
+#define ADD_SHARED_REF_ATOMIC(SHARED_REF_PTR) SHARED_REF_PTR->memory->__strong__.fetch_add(1, std::memory_order_acq_rel)
+#define SUB_SHARED_REF_ATOMIC(SHARED_REF_PTR) SHARED_REF_PTR->memory->__strong__.fetch_sub(1, std::memory_order_acq_rel)
+
+#define ADD_WEAK_REF(WEAK_REF_PTR) WEAK_REF_PTR->memory->__weak__.fetch_add(1, std::memory_order_relaxed)
+#define SUB_WEAK_REF(WEAK_REF_PTR) WEAK_REF_PTR->memory->__weak__.fetch_sub(1, std::memory_order_relaxed)
+
+#define ADD_WEAK_REF_ATOMIC(WEAK_REF_PTR) WEAK_REF_PTR->memory->__weak__.fetch_add(1, std::memory_order_acq_rel)
+#define SUB_WEAK_REF_ATOMIC(WEAK_REF_PTR) WEAK_REF_PTR->memory->__weak__.fetch_sub(1, std::memory_order_acq_rel)
 
 // inject this macro at the end of your class !
 // to make it acceptable by "ref counter classes"
@@ -20,7 +29,6 @@
 		protected : \
 			template<refcounted_type __TYPE__> friend class shared_ref; \
 			template<refcounted_type __TYPE__> friend class weak_ref; \
-			template<refcounted_type __TYPE__> friend class strong_ref; \
 			std::atomic<u32> __strong__(0); \
 			std::atomic<u32>  __weak__(0); \
 			void                    set_memory_allocator(core::memory_allocator const& allocator);\

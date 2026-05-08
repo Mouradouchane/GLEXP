@@ -15,7 +15,7 @@
 template<refcounted_type type>
 shared_ref<type>::shared_ref(type* pointer) NOEXP {
 	this->memory = pointer;
-	if (this->memory) INCREMENT_REF(this->memory->__strong__);
+	if (this->memory) ADD_SHARED_REF_ATOMIC(this);
 	else {
 		CORE_WARN("nullptr memory passed to shared_ref<{}> during construction !" , typeid(type).name);
 	}
@@ -26,7 +26,7 @@ shared_ref<type>::shared_ref(shared_ref<type> const& other) NOEXP { // copy
 
 	if (other.memory) {
 		this->memory = other.memory;
-		INCREMENT_REF(this->memory->__strong__);
+		ADD_SHARED_REF_ATOMIC(this);
 	}
 	else {
 		CORE_WARN("nullptr memory passed to shared_ref<{}> during construction !", typeid(type).name);
@@ -54,21 +54,21 @@ shared_ref<type>::shared_ref(shared_ref<type>&& other) NOEXP { // move
 */
 
 // note: use this for upcasting "base <-- derived"
-template<refcounted_type   type>
+template<refcounted_type  type>
 template<std::derived_from<type> derived_type>
 shared_ref<type>::shared_ref(derived_type* pointer) NOEXP {
 
 	this->memory = pointer;
-	if (this->memory) INCREMENT_REF(this->memory->__strong__);
+	if (this->memory) ADD_SHARED_REF_ATOMIC(this);
 }
 
 // note: use this for upcasting "base <-- derived"
-template<refcounted_type   type>
+template<refcounted_type  type>
 template<std::derived_from<type> derived_type>
-shared_ref<type>::shared_ref(shared_ref<derived_type> const& other) { // copy
+shared_ref<type>::shared_ref(shared_ref<derived_type> const& other) NOEXP { // copy
 
 	this->memory = other.memory;
-	if (this->memory) INCREMENT_REF(this->memory->__strong__);
+	if (this->memory) ADD_SHARED_REF_ATOMIC(this);
 }
 
 /*
@@ -79,11 +79,11 @@ shared_ref<type>::shared_ref(shared_ref<derived_type> const& other) { // copy
 template<refcounted_type type>
 shared_ref<type>::~shared_ref() {
 	// todo: implement thread-safe destruction , to avoid object multi-destruction
-
+	
 	if (this->memory) {
 
 		// if no refernce is left
-		if (DECREMENT_REF_ORDER(this->memory->__strong__) == 1 && (this->memory->__weak__ == 0)) {
+		if (SUB_SHARED_REF_ATOMIC(this) == 1 && (this->memory->__weak__ == 0)) {
 
 			this->memory->~type();
 			this->memory = nullptr;
@@ -127,7 +127,7 @@ INLINE void shared_ref<type>::deal_with_current_refernce() NOEXP {
 	if (this->memory) {
 
 		// destruct if no ref is left
-		if (DECREMENT_REF_ORDER(this->memory->__strong__) == 1 && (this->memory->__weak__ == 0)) {
+		if (SUB_SHARED_REF_ATOMIC(this) == 1 && (this->memory->__weak__ == 0)) {
 
 			this->memory->~type();
 			this->memory = nullptr;
@@ -142,7 +142,7 @@ INLINE void shared_ref<type>::deal_with_current_refernce() NOEXP {
 
 */
 
-// copy assignement
+// assing operator
 template<refcounted_type type> 
 shared_ref<type>& shared_ref<type>::operator= (shared_ref<type> const& other) NOEXP { 
 	
@@ -153,7 +153,7 @@ shared_ref<type>& shared_ref<type>::operator= (shared_ref<type> const& other) NO
 		shared_ref<type>::deal_with_current_refernce();
 
 		this->memory = other.memory;
-		if (this->memory) DECREMENT_REF_ORDER(this->memory->__strong__);
+		if (this->memory) SUB_SHARED_REF_ATOMIC(this);
 	}
 	
 	return *this;
