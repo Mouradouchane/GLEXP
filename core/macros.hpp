@@ -123,15 +123,6 @@
 #define D_CAST(TARGET , TYPE) dynamic_cast<TYPE>(TARGET)
 
 /*
-	logger's names
-*/
-#define EVENT_SYSTEM_LOGGER		"CORE_EVENT_SYSTEM"
-#define WORK_SYSTEM_LOGGER		"CORE_WORK_SYSTEM"
-#define MEMORY_ALLOCATOR_LOGGER "CORE_MEMORY_ALLOCATOR"
-#define REFS_LOGGER             "CORE_REFERENCES"
-#define DATA_STRUCTER_LOGGER	"CORE_DATA_STRUCTER"
-
-/*
 	few macros to convert beetween memory units
 */
 #define KB_TO_BYTE(_KB) u64(_KB) * 1024u

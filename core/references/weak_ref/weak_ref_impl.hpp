@@ -7,6 +7,10 @@
 #include "core/status/status.hpp"
 #include "core/logger/logger.hpp"
 
+#ifndef _LOGGER_
+	#define _LOGGER_ nullptr
+#endif
+
 /*
 			constructor's
 */

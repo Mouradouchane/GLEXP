@@ -4,6 +4,7 @@
 #define CORE_WEAK_REF_HPP
 
 #include "core/references/ref_counter.hpp"
+#include "core/strings/string.hpp"
 
 template<refcounted_type type> class shared_ref;
 
@@ -12,7 +13,7 @@ template<refcounted_type type> class shared_ref;
 template<refcounted_type type> class weak_ref {
 
 private:
-	static const char* type_name = typeid(type).name;
+	static inline const STRING type_name = typeid(type).name();
 
 	type* memory = nullptr;
 
