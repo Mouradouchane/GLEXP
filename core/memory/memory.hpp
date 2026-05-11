@@ -8,10 +8,21 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
+#define BY_OTHERS  core::memory::management::by_others
+#define BY_IT_SELF core::memory::management::by_self
 
 namespace core {
 
 	namespace memory {
+
+		/*
+			note: use this to tell if object memory is self mananged internally or by some outside system
+		*/
+		enum class management : u8 {
+			by_self = 1, // use this when you have "object mananging his memory by it self"
+			by_others    // use this when you have "others mananging object memory"
+		};
+
 
 		/*
 			note : this tag used to "flag" each memory-allocator for what used for

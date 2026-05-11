@@ -3,8 +3,8 @@
 #ifndef CORE_UNIQUE_REF_IMPL_HPP
 #define CORE_UNIQUE_REF_IMPL_HPP
 
-#include "unique_ref.hpp"
 #include "core/logger/logger.hpp"
+#include "unique_ref.hpp"
 
 #ifdef DEBUG
 	static inline auto unique_ref_logger = CORE_GET_LOGGER(REFS_LOGGER);
@@ -16,7 +16,8 @@
 	constructor's
 */
 
-template<typename type> unique_ref<type>::unique_ref(type* pointer) NOEXP {
+UNIQUE_REF_TEMPLATE
+unique_ref<type, plan>::unique_ref(type* pointer) NOEXP REF_REQUIRE_MANAGEMENT_BY_IT_SELF {
 #ifdef DEBUG
 	if (pointer == nullptr) {
 		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL, "nullptr passed to unique_ref<{}> during construction time !", type_name);
@@ -27,8 +28,22 @@ template<typename type> unique_ref<type>::unique_ref(type* pointer) NOEXP {
 	this->memory = pointer;
 }
 
+UNIQUE_REF_TEMPLATE 
+unique_ref<type, plan>::unique_ref(type* pointer, core::memory_allocator const& allocator) NOEXP 
+	REF_REQUIRE_MANAGEMENT_BY_OTHERS {
 
-template<typename type> unique_ref<type>::unique_ref(unique_ref<type>&& other) NOEXP {
+#ifdef DEBUG
+	if (pointer == nullptr) {
+		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL, "nullptr passed to unique_ref<{}> during construction time !", type_name);
+		CORE_STACK_TRACE_HPP(unique_ref_logger);
+	}
+#endif
+
+	this->memory    = pointer;
+	this->allocator = allocator;
+}
+
+UNIQUE_REF_TEMPLATE unique_ref<type,plan>::unique_ref(unique_ref<type,plan>&& other) NOEXP {
 #ifdef DEBUG
 	if (other.memory == nullptr) {
 		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL, "nullptr passed to unique_ref<{}> during construction time !", type_name);
@@ -36,32 +51,35 @@ template<typename type> unique_ref<type>::unique_ref(unique_ref<type>&& other) N
 	}
 #endif
 
-	this->memory = other.memory;
-	other.memory = nullptr;
-}
-
-/*
-template<typename type> unique_ref<type>::unique_ref(unique_ref<type>& other) NOEXP {
-#ifdef DEBUG
-	if (other.memory == nullptr) {
-		CORE_WARN_HPP(unique_ref_logger, !other.memory, CORE_LOG_CONFIG_ALL, "nullptr passed to unique_ref<{}> during construction time !", type_name);
-		CORE_STACK_TRACE_HPP(unique_ref_logger);
+	if constexpr (plan == BY_OTHERS) {
+		this->allocator = other.allocator;
 	}
-#endif
 
 	this->memory = other.memory;
 	other.memory = nullptr;
 }
-*/
+
 
 /*
 			destructor
 */
-template<typename type>
-unique_ref<type>::~unique_ref() NOEXP {
+
+UNIQUE_REF_TEMPLATE
+unique_ref<type,plan>::~unique_ref() NOEXP {
 
 	if (this->memory) {
-		this->memory->~type();
+
+		if constexpr (plan == core::memory::management::by_self) {
+			// note: self mananged types should deallocate their on memory during destruction time
+			this->memory->~type();
+		}
+		else {
+			// destruct + deallocate
+			this->memory->~type();
+			this->allocator->deallocate(this->memory);
+			this->allocator = nullptr;
+		}
+
 		this->memory = nullptr;
 
 		return;
@@ -77,8 +95,8 @@ unique_ref<type>::~unique_ref() NOEXP {
 			operator's
 */
 
-template<typename type> 
-unique_ref<type>& unique_ref<type>::operator= (type* pointer) NOEXP {
+UNIQUE_REF_TEMPLATE 
+unique_ref<type,plan>& unique_ref<type,plan>::operator= (type* pointer) NOEXP REF_REQUIRE_MANAGEMENT_BY_IT_SELF {
 
 	if (pointer == nullptr) {
 		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL, "nullptr passed to unique_ref<{}> using 'operator =' !", type_name);
@@ -99,56 +117,45 @@ unique_ref<type>& unique_ref<type>::operator= (type* pointer) NOEXP {
 	return *this;
 }
 
-template<typename type> 
-unique_ref<type>& unique_ref<type>::operator= (unique_ref<type>&& other) NOEXP {
+UNIQUE_REF_TEMPLATE 
+unique_ref<type,plan>& unique_ref<type,plan>::operator= (unique_ref<type,plan>&& other) NOEXP {
 
 	if (other.memory == nullptr) {
 		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL, "nullptr passed to unique_ref<{}> using 'operator =' !", type_name);
 		return *this;
 	}
 
-	if (this->memory == other.memory) {
+	if (this->memory == other.memory || this == &other) {
 		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL , "self-assignement attempt to unique_ref<{}> using 'operator =' !" , type_name);
 		return *this;
 	}
 
-	if (this->memory) {
-		this->memory->~type();
-	}
+	if constexpr (plan == BY_OTHERS) {
 
-	this->memory = other.memory;
-	other.memory = nullptr;
+		if (this->memory) {
+			this->memory->~type();
+			this->allocator->deallocate(this->memory);
+		}
+
+		this->allocator = other.allocator;
+		this->memory    = other.memory;
+
+		other.memory    = nullptr;
+		other.allocator = nullptr;
+	}
+	else {
+
+		if (this->memory) this->memory->~type();
+
+		this->memory = other.memory;
+		other.memory = nullptr;
+	}
 	
 	return *this;
 }
 
 
-/*
-template<typename type>
-unique_ref<type>& unique_ref<type>::operator= (unique_ref<type>& other) NOEXP {
-#ifdef DEBUG
-	if (other.memory == nullptr) {
-		CORE_WARN_HPP(unique_ref_logger, !other.memory, CORE_LOG_CONFIG_ALL, "nullptr passed to unique_ref<{}> during construction time !", type_name);
-	}
-#endif
-
-	if (this == &other) {
-		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL, "self-assignement attempt to unique_ref<{}> !", type_name);
-		return *this;
-	}
-
-	if (this->memory) {
-		this->memory->~type();
-	}
-
-	this->memory = other.memory;
-	other.memory = nullptr;
-
-	return *this;
-}
-*/
-
-template<typename type> type* unique_ref<type>::operator->() NOEXP {
+UNIQUE_REF_TEMPLATE type* unique_ref<type,plan>::operator->() NOEXP {
 #ifdef DEBUG
 	// note: this will trigger 'debugger' in 'debug-build'
 	if (this->memory == nullptr) {
@@ -159,7 +166,7 @@ template<typename type> type* unique_ref<type>::operator->() NOEXP {
 	return this->memory;
 }
 
-template<typename type> type& unique_ref<type>::operator*() NOEXP {
+UNIQUE_REF_TEMPLATE type& unique_ref<type,plan>::operator*() NOEXP {
 
 #ifdef DEBUG  // note: this will trigger 'debugger' in 'debug-build'
 	if (this->memory == nullptr) {
@@ -170,7 +177,7 @@ template<typename type> type& unique_ref<type>::operator*() NOEXP {
 	return *this->memory;
 }
 
-template<typename type> const type& unique_ref<type>::operator*() const NOEXP {
+UNIQUE_REF_TEMPLATE const type& unique_ref<type,plan>::operator*() const NOEXP {
 
 #ifdef DEBUG  // this will trigger debugger in debug build
 	if (this->memory == nullptr) {
@@ -182,7 +189,7 @@ template<typename type> const type& unique_ref<type>::operator*() const NOEXP {
 }
 
 
-template<typename type> unique_ref<type>::operator bool() const NOEXP {
+UNIQUE_REF_TEMPLATE unique_ref<type,plan>::operator bool() const NOEXP {
 	return (this->memory != nullptr);
 }
 
@@ -190,17 +197,18 @@ template<typename type> unique_ref<type>::operator bool() const NOEXP {
 				function's
 */
 
-template<typename type>
-type* unique_ref<type>::pass_ownership() NOEXP {
+UNIQUE_REF_TEMPLATE
+type* unique_ref<type,plan>::pass_ownership() NOEXP REF_REQUIRE_MANAGEMENT_BY_IT_SELF{
 
 	type* ptr = this->memory;
 	this->memory = nullptr;
+
 	return ptr;
 }
 
 
-template<typename type> 
-bool unique_ref<type>::move_ownership(unique_ref<type>& ref, unique_ref<type>& new_owner) {
+UNIQUE_REF_TEMPLATE 
+bool unique_ref<type,plan>::move_ownership(unique_ref<type,plan>& ref, unique_ref<type,plan>& new_owner) {
 
 	if (ref.memory == nullptr) {
 		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL, "moving-ownership 'nullptr' unique_ref is not allowed!");
@@ -212,8 +220,14 @@ bool unique_ref<type>::move_ownership(unique_ref<type>& ref, unique_ref<type>& n
 		return false;
 	}
 
+	// clean for new reference
 	if (new_owner.memory) {
 		new_owner.memory->~type();
+	}
+
+	// pass ownership
+	if constexpr (plan == BY_OTHERS) {
+		new_owner.allocator = ref.allocator;
 	}
 
 	new_owner.memory = ref.memory;
@@ -222,11 +236,35 @@ bool unique_ref<type>::move_ownership(unique_ref<type>& ref, unique_ref<type>& n
 	return true;
 }
 
-template<core::memory_allocator& allocator, typename... Args>
-unique_ref<type> make_unique_ref(Args&&... args) {
-	// This assumes your custom allocation happens inside the type's constructor
-	// or via a specific 'new' overload.
-	return unique_ref<type>(new type(std::forward<Args>(args)...));
-}
+
+namespace core {
+	
+namespace make {
+
+	template<typename type, core::memory::management plan , typename... parameters> 
+	requires refcounted_type<type, plan>
+
+	unique_ref<type, plan> unique_ref_(
+		core::memory_allocator const& allocator, parameters&&... constructor_parameters
+	) NOEXP {
+
+		// allocate memory
+		type* pointer = (type*)allocator.allocate(sizeof(type));
+		// construct memory
+		new (pointer) type( std::forward<parameters>(constructor_parameters)... );
+
+		// pass allocator to the object if it self mananging memory
+		if constexpr(plan == BY_IT_SELF) {
+			pointer->allocator = (core::memory_allocator*)&allocator;
+			return unique_ref<type, plan>(pointer);
+		}
+		else return unique_ref<type,plan>(pointer, allocator);
+	}
+
+
+} // namespace make end
+
+} // namespace core end
+
 
 #endif
