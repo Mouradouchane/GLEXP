@@ -63,8 +63,10 @@ namespace core {
 			~heap();
 
 			// memory_heap public functions
-			void* allocate(u32 count) noexcept override final;
-			void  deallocate(void* pointer) noexcept override final;
+			void* allocate(u32 size) NOEXP override final;
+			void  deallocate(void* pointer) NOEXP override final;
+
+			tow_pointers allocate_tow(u32 size_of_a, u32 size_of_b) NOEXP override final;
 
 			u32 size() noexcept;
 

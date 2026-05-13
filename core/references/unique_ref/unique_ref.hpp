@@ -7,14 +7,14 @@
 #include "core/strings/string.hpp"
 #include "core/references/ref_counter.hpp"
 
-#define UNIQUE_REF_TEMPLATE template<refcounted_type type, core::memory::management plan>
 
 /*
 	unique_ref for fully ownership by one entity
 */
-template<refcounted_type type, core::memory::management plan = core::memory::management::by_others>
-class unique_ref : private memory_management_plan<plan> {
 
+template<typename type, core::memory::management plan = core::memory::management::by_others>
+class unique_ref : private memory_management_plan<plan> {
+	requires refcounted_type<type, plan>;
 private:
 	static inline const STRING type_name = typeid(type).name();
 	type* memory = nullptr;
@@ -27,15 +27,15 @@ private:
 public:
 
 	// constructor's
-	unique_ref(type* pointer, core::memory_allocator const& allocator) NOEXP REF_REQUIRE_MANAGEMENT_BY_OTHERS;
-	unique_ref(type* pointer) NOEXP REF_REQUIRE_MANAGEMENT_BY_IT_SELF;
+	unique_ref(type* pointer, core::memory_allocator const& allocator) NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_OTHERS;
+	unique_ref(type* pointer) NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_IT_SELF;
 	unique_ref(unique_ref<type,plan>&& other) NOEXP;
 
 	// destructor
 	~unique_ref( ) NOEXP;
 
 	// operator's
-	unique_ref<type,plan>& operator = (type* pointer) NOEXP REF_REQUIRE_MANAGEMENT_BY_IT_SELF;
+	unique_ref<type,plan>& operator = (type* pointer) NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_IT_SELF;
 	unique_ref<type,plan>& operator = (unique_ref<type,plan>&& other) NOEXP;
 
 	type* operator->() NOEXP;
@@ -45,7 +45,7 @@ public:
 	operator bool() const NOEXP;
 
 	// public function's
-	type* pass_ownership() NOEXP REF_REQUIRE_MANAGEMENT_BY_IT_SELF;
+	type* pass_ownership() NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_IT_SELF;
 
 	static bool move_ownership(unique_ref<type,plan>& ref , unique_ref<type,plan>& new_owner);
 

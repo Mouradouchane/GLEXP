@@ -230,6 +230,10 @@ void core::memory::heap::merge_free_areas() {
 */
 
 void* core::memory::heap::allocate(u32 size__) noexcept {
+
+	/*
+		todo: change these crash_if's
+	*/
 	CRASH_IF(size__ < 1, "memory_heap.allocate: 0 count allocation not allowed !");
 	CRASH_IF(size__ > this->_size_, "memory_heap.allocate: count of allocation asked for bigger than the memory_heap !");
 	CRASH_IF(this->registered >= this->max_allowed_allocations, "memory_heap.allocate: max allowed allocations is reached !");
@@ -280,6 +284,72 @@ void* core::memory::heap::allocate(u32 size__) noexcept {
 	}
 
 }
+
+tow_pointers core::memory::heap::allocate_tow(u32 size_of_a, u32 size_of_b) NOEXP {
+
+	CORE_FATAL_IF(
+		size_of_a + size_of_b < 2, CORE_LOG_CONFIG_ALL, 
+		"size of tow is less than 2 bytes : {} + {} !", size_of_a , size_of_b
+	);
+
+	tow_pointers pointers = { nullptr , nullptr };
+
+	u32     _size  = size_of_a + size_of_b;
+	u32 _available = (this->end >= this->seek) ? u32(this->end - this->seek) : 0u;
+
+	if ((this->seek < this->end) && (_size <= _available)) {
+		// allocate from seek
+		pointers.ptr1 = this->seek;
+		pointers.ptr2 = this->seek + size_of_a;
+
+		// update variables
+		this->seek += _size;
+
+		// register 2 allocations
+		this->register_allocation(pointers.ptr1 , size_of_a);
+		this->register_allocation(pointers.ptr2 , size_of_b);
+
+		return pointers;
+	}
+	else {
+		u32 index = this->max_allowed_allocations;
+
+		// search for empty spot
+		this->find_free_location(index, _size);
+
+		if (index < this->max_allowed_allocations) {
+			allocate_from_free_list(&pointers.ptr1, _size, index);
+
+			pointers.ptr2 = (byte*)pointers.ptr1 + size_of_a;
+			this->register_allocation(pointers.ptr2, size_of_b);
+
+			return pointers;
+		}
+		/*
+			else : try to merge empty spots is possible
+					and see if there's any spot for allocation
+		*/
+		this->merge_free_areas();
+
+		// search again after the merge process
+		this->find_free_location(index, _size);
+
+		// if no place found : crash -> "no global_memory left"
+		CORE_FATAL_IF(
+			index >= this->max_allowed_allocations, CORE_LOG_CONFIG_ALL,
+			"memory_heap.allocate: no memory left or found for allocation !"
+		);
+
+		allocate_from_free_list(&pointers.ptr1, _size, index);
+
+		pointers.ptr2 = (byte*)pointers.ptr1 + size_of_a;
+		this->register_allocation(pointers.ptr2, size_of_b);
+
+		return pointers;
+	}
+
+}
+
 
 void core::memory::heap::deallocate(void* pointer) noexcept {
 

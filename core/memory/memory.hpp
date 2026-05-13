@@ -11,9 +11,20 @@
 #define BY_OTHERS  core::memory::management::by_others
 #define BY_IT_SELF core::memory::management::by_self
 
+struct tow_pointers {
+	void* ptr1;
+	void* ptr2;
+};
+
 namespace core {
 
 	namespace memory {
+
+		enum class allocator_type : u8 {
+			heap = 0,
+			pool,
+			arena
+		};
 
 		/*
 			note: use this to tell if object memory is self mananged internally or by some outside system
@@ -58,11 +69,11 @@ namespace core {
 		- note : this used by other memory-allocators 
 		- note : you can use it, but not recommended 
 	*/
-		DLL_API void* allocate(size_t size, core::memory::tag memory_tag = core::memory::tag::unkown) noexcept;
-		DLL_API void  deallocate(void* pointer) noexcept;
+		DLL_API void* allocate(size_t size, core::memory::tag memory_tag = core::memory::tag::unkown) NOEXP;
+		DLL_API void  deallocate(void* pointer) NOEXP;
 
-		DLL_API u64 sizeof_allocated() noexcept;
-		DLL_API u64 sizeof_section(core::memory::tag memory_tag) noexcept;
+		DLL_API u64 sizeof_allocated() NOEXP;
+		DLL_API u64 sizeof_section(core::memory::tag memory_tag) NOEXP;
 		
 	};
 	// namespace memory end
@@ -79,7 +90,7 @@ namespace core {
 
 		// disabled contructor's
 		memory_allocator(memory_allocator const& other) = delete;
-		memory_allocator(memory_allocator&& other) = delete;
+		memory_allocator(memory_allocator &&     other) = delete;
 		memory_allocator& operator = (const memory_allocator& other) = delete;
 
 	public:	
@@ -88,16 +99,19 @@ namespace core {
 		static const u32 max_size_allowed = 512 MB;
 
 		// constructor : destructor
-		 memory_allocator(std::string const& name, core::memory::tag memory_tag) noexcept;
+		 memory_allocator(std::string const& name, core::memory::tag memory_tag) NOEXP;
 		~memory_allocator() = default;
 
 		// basics functions functions
 
-		virtual void* allocate(u32 size)        noexcept;
-		virtual void  deallocate(void* pointer) noexcept;
+		virtual void* allocate(u32 size)        NOEXP;
+		virtual void  deallocate(void* pointer) NOEXP;
 
-		std::string get_name()       noexcept;
-		core::memory::tag get_tag()  noexcept;
+		// used to allocate 2 blocks for memory next to each other
+		virtual tow_pointers allocate_tow(u32 size_of_a , u32 size_of_b) NOEXP;
+
+		std::string       get_name()  NOEXP;
+		core::memory::tag get_tag()   NOEXP;
 
 	}; 
 	// class memory_allocator end

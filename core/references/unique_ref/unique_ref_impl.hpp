@@ -12,12 +12,14 @@
 	static inline auto unique_ref_logger = nullptr;
 #endif
 
+#define UNIQUE_REF_TEMPLATE template<typename type, core::memory::management plan>
+
 /*
 	constructor's
 */
 
 UNIQUE_REF_TEMPLATE
-unique_ref<type, plan>::unique_ref(type* pointer) NOEXP REF_REQUIRE_MANAGEMENT_BY_IT_SELF {
+unique_ref<type, plan>::unique_ref(type* pointer) NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_IT_SELF {
 #ifdef DEBUG
 	if (pointer == nullptr) {
 		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL, "nullptr passed to unique_ref<{}> during construction time !", type_name);
@@ -30,7 +32,7 @@ unique_ref<type, plan>::unique_ref(type* pointer) NOEXP REF_REQUIRE_MANAGEMENT_B
 
 UNIQUE_REF_TEMPLATE 
 unique_ref<type, plan>::unique_ref(type* pointer, core::memory_allocator const& allocator) NOEXP 
-	REF_REQUIRE_MANAGEMENT_BY_OTHERS {
+	REQUIRE_MEMORY_MANAGEMENT_BY_OTHERS {
 
 #ifdef DEBUG
 	if (pointer == nullptr) {
@@ -96,7 +98,7 @@ unique_ref<type,plan>::~unique_ref() NOEXP {
 */
 
 UNIQUE_REF_TEMPLATE 
-unique_ref<type,plan>& unique_ref<type,plan>::operator= (type* pointer) NOEXP REF_REQUIRE_MANAGEMENT_BY_IT_SELF {
+unique_ref<type,plan>& unique_ref<type,plan>::operator= (type* pointer) NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_IT_SELF {
 
 	if (pointer == nullptr) {
 		CORE_WARN_HPP(unique_ref_logger, CORE_LOG_CONFIG_ALL, "nullptr passed to unique_ref<{}> using 'operator =' !", type_name);
@@ -198,7 +200,7 @@ UNIQUE_REF_TEMPLATE unique_ref<type,plan>::operator bool() const NOEXP {
 */
 
 UNIQUE_REF_TEMPLATE
-type* unique_ref<type,plan>::pass_ownership() NOEXP REF_REQUIRE_MANAGEMENT_BY_IT_SELF{
+type* unique_ref<type,plan>::pass_ownership() NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_IT_SELF{
 
 	type* ptr = this->memory;
 	this->memory = nullptr;
