@@ -7,55 +7,61 @@
 #include "core/strings/string.hpp"
 #include "core/references/ref_counter.hpp"
 
+#define UNIQUE_REF_TEMPLATE template<typename type>
 
 /*
 	unique_ref for fully ownership by one entity
 */
 
-template<typename type, core::memory::management plan = core::memory::management::by_others>
-class unique_ref : private memory_management_plan<plan> {
-	requires refcounted_type<type, plan>;
+UNIQUE_REF_TEMPLATE
+class unique_ref {
+
 private:
+	requires (std::is_default_constructible<type>::value);
+	template<typename... parameters> 
+	friend unique_reference<type> unique_reference(core::memory_allocator const& allocator, parameters&&... constructor_parameters) NOEXP;
+
 	static inline const STRING type_name = typeid(type).name();
-	type* memory = nullptr;
+
+	core::memory_allocator* allocator = nullptr;
+ 	type* memory = nullptr;
 
 	// not allowed constructors/operators
 	unique_ref() = delete;
-	unique_ref(unique_ref<type,plan>& other) = delete;
-	unique_ref<type,plan>& operator = (unique_ref<type,plan>& other) = delete;
+	unique_ref(unique_ref<type> const& other) = delete;
+	unique_ref<type>& operator = (unique_ref<type>& other) = delete;
+	unique_ref<type>& operator = (unique_ref<type> const& other) = delete;
+
+	unique_ref(core::memory_allocator* allocator , type* memory_ptr) NOEXP;
 
 public:
+	static const type __dummy__ = type();
 
 	// constructor's
-	unique_ref(type* pointer, core::memory_allocator const& allocator) NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_OTHERS;
-	unique_ref(type* pointer) NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_IT_SELF;
-	unique_ref(unique_ref<type,plan>&& other) NOEXP;
+	template<typename... parameters> 
+	unique_ref(core::memory_allocator const& allocator , parameters&&... constructor_parameters) NOEXP;
+	unique_ref(unique_ref<type> && unique_reference) NOEXP;
+	unique_ref(unique_ref<type> &  unique_reference) NOEXP;
 
 	// destructor
 	~unique_ref( ) NOEXP;
 
 	// operator's
-	unique_ref<type,plan>& operator = (type* pointer) NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_IT_SELF;
-	unique_ref<type,plan>& operator = (unique_ref<type,plan>&& other) NOEXP;
+	unique_ref<type>& operator = (unique_ref<type>&& unique_reference) NOEXP; // move
 
 	type* operator->() NOEXP;
 	type& operator*()  NOEXP;
-	const type& operator*()  const NOEXP;
+	const type& operator*() const NOEXP;
 
 	operator bool() const NOEXP;
 
 	// public function's
-	type* pass_ownership() NOEXP REQUIRE_MEMORY_MANAGEMENT_BY_IT_SELF;
+	pair_tow_pointers<core::memory_allocator, type> pass_ownership() NOEXP;
 
-	static bool move_ownership(unique_ref<type,plan>& ref , unique_ref<type,plan>& new_owner);
+	static bool move_ownership(unique_ref<type>& reference , unique_ref<type>& new_owner);
 
 private :
-
-	// friend factory function 
-	template<typename type, core::memory::management plan, typename... parameters>
-	requires refcounted_type<type, plan>
-	
-	friend unique_ref<type, plan> core::make::unique_ref_(core::memory_allocator const& allocator, parameters&&... constructor_parameters) NOEXP;
+	INLINE void deal_with_current_reference() NOEXP;
 
 }; 
 // class unique_ref end
@@ -65,11 +71,8 @@ namespace core {
 
 	namespace make {
 
-		template<typename type, core::memory::management plan, typename... parameters>
-		requires refcounted_type<type, plan>
-
-		unique_ref<type,plan> unique_ref_(core::memory_allocator const& allocator, parameters&&... constructor_parameters) NOEXP;
-
+		template<typename type, typename... parameters>
+		unique_ref<type> unique_reference(core::memory_allocator const& allocator, parameters&&... constructor_parameters) NOEXP;
 
 	} // namespace make end
 

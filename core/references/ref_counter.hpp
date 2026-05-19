@@ -28,7 +28,18 @@
 #define ADD_WEAK_REF_ATOMIC(WEAK_REF_PTR) WEAK_REF_PTR->ctr->__weak__.fetch_add(1, std::memory_order_acq_rel)
 #define SUB_WEAK_REF_ATOMIC(WEAK_REF_PTR) WEAK_REF_PTR->ctr->__weak__.fetch_sub(1, std::memory_order_acq_rel)
 
+/*
+	macros of errors and warnings
+*/
+#define REF_INVALID        "reference invalid because of {}"
+#define REF_INVALID_CTR    "reference counter-block is invalid"
+#define REF_INVALID_MEMORY "reference memory is invalid"
+#define REF_SELF_ASSIGN    "reference self assignement detected"
+#define REF_IS_DEAD        "attempt to access dead reference"
 
+/*
+	reference counter-block
+*/
 struct counter_block {
 
 private:

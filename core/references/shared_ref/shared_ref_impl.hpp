@@ -3,8 +3,17 @@
 #ifndef CORE_SHARED_REF_IMPL
 #define CORE_SHARED_REF_IMPL
 
-// just to stop syntax-errors :)
 #include "shared_ref.hpp"
+
+#ifdef DEBUG
+	static auto _shared_ref_logger = CORE_GET_LOGGER(REFS_LOGGER);
+#else
+	static auto _shared_ref_logger = nullptr;
+#endif
+
+#define SHARED_REF_TEMPLATE template<typename type>
+#define DERIVED_SHARED_REF_TEMPLATE template<std::derived_from<type> derived_type> 
+
 
 /*
 
@@ -12,37 +21,64 @@
 
 */
 
-template<refcounted_type type>
-shared_ref<type>::shared_ref(type* pointer) NOEXP {
-	this->memory = pointer;
-	if (this->memory) ADD_SHARED_REF_ATOMIC(this);
-	else {
-		CORE_WARN("nullptr memory passed to shared_ref<{}> during construction !" , typeid(type).name);
-	}
-}
+SHARED_REF_TEMPLATE
+shared_ref<type>::shared_ref(counter_block* ctr_ptr, type* memory_ptr) {
 
-template<refcounted_type type>
-shared_ref<type>::shared_ref(shared_ref<type> const& other) NOEXP { // copy
+	if (ctr_ptr && memory_ptr) {
+		this->ctr    = ctr_ptr;
+		this->memory = memory_ptr;
 
-	if (other.memory) {
-		this->memory = other.memory;
 		ADD_SHARED_REF_ATOMIC(this);
 	}
 	else {
-		CORE_WARN("nullptr memory passed to shared_ref<{}> during construction !", typeid(type).name);
+		if(!ctr_ptr) CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		else CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
 	}
 
 }
 
-template<refcounted_type type>
-shared_ref<type>::shared_ref(shared_ref<type>&& other) NOEXP { // move
+SHARED_REF_TEMPLATE
+template<typename... parameters>
+shared_ref<type>::shared_ref(core::memory_allocator const& allocator, parameters&&... constructor_parameters) NOEXP {
 
-	if (other.memory) {
-		this->memory = other.memory;
-		other.memory = nullptr;
+	void* mem = allocator.allocate_tow(sizeof(type) + sizeof(counter_block));
+
+	this->memory = (type*)mem;
+	this->memory = new (this->memory) ( std::forward<parameters>(constructor_parameters)... );
+
+	this->ctr = (counter_block*)(this->memory + 1);
+	this->ctr->allocator = allocator;
+
+	ADD_SHARED_REF_ATOMIC(this);
+}
+
+SHARED_REF_TEMPLATE
+shared_ref<type>::shared_ref(shared_ref<type> const& reference) NOEXP { // copy
+
+	if (reference.memory && reference.ctr) {
+		this->ctr    = reference.ctr;
+		this->memory = reference.memory;
+
+		ADD_SHARED_REF_ATOMIC(this);
 	}
 	else {
-		CORE_WARN("nullptr memory passed to shared_ref<{}> during construction !", typeid(type).name);
+		CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL , REF_INVALID , "shared_ref memory or counter-block is nullptr");
+	}
+
+}
+
+SHARED_REF_TEMPLATE
+shared_ref<type>::shared_ref(shared_ref<type>&& reference) NOEXP { // move
+
+	if (reference.memory && reference.ctr) {
+		this->ctr    = reference.ctr;
+		this->memory = reference.memory;
+
+		reference.ctr    = nullptr;
+		reference.memory = nullptr;
+	}
+	else {
+		CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "shared_ref memory or counter-block is nullptr");
 	}
 
 }
@@ -54,21 +90,37 @@ shared_ref<type>::shared_ref(shared_ref<type>&& other) NOEXP { // move
 */
 
 // note: use this for upcasting "base <-- derived"
-template<refcounted_type  type>
-template<std::derived_from<type> derived_type>
-shared_ref<type>::shared_ref(derived_type* pointer) NOEXP {
+SHARED_REF_TEMPLATE
+DERIVED_SHARED_REF_TEMPLATE
+shared_ref<type>::shared_ref(shared_ref<derived_type> const& reference) NOEXP { // copy
 
-	this->memory = pointer;
-	if (this->memory) ADD_SHARED_REF_ATOMIC(this);
+	if (reference.memory && reference.ctr) {
+		this->memory = reference.memory;
+		this->ctr    = reference.ctr;
+
+		ADD_SHARED_REF_ATOMIC(this);
+	}
+	else {
+		CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "shared_ref<derived> memory or counter-block is nullptr");
+	}
+
 }
 
-// note: use this for upcasting "base <-- derived"
-template<refcounted_type  type>
-template<std::derived_from<type> derived_type>
-shared_ref<type>::shared_ref(shared_ref<derived_type> const& other) NOEXP { // copy
+SHARED_REF_TEMPLATE
+DERIVED_SHARED_REF_TEMPLATE 
+shared_ref<type>::shared_ref(shared_ref<derived_type>&& reference) NOEXP { // move
 
-	this->memory = other.memory;
-	if (this->memory) ADD_SHARED_REF_ATOMIC(this);
+	if (reference.memory && reference.ctr) {
+		this->memory = reference.memory;
+		this->ctr    = reference.ctr;
+
+		reference.memory = nullptr;
+		reference.ctr    = nullptr;
+	}
+	else {
+		CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "shared_ref<derived> memory or counter-block is nullptr");
+	}
+
 }
 
 /*
@@ -76,26 +128,32 @@ shared_ref<type>::shared_ref(shared_ref<derived_type> const& other) NOEXP { // c
 	class shared_ref destructor
 
 */
-template<refcounted_type type>
-shared_ref<type>::~shared_ref() {
-	// todo: implement thread-safe destruction , to avoid object multi-destruction
-	
-	if (this->memory) {
 
-		// if no refernce is left
+SHARED_REF_TEMPLATE
+shared_ref<type>::~shared_ref() {
+
+	if (this->memory && this->ctr) {
+
+		// when no refernce is left
 		if (SUB_SHARED_REF_ATOMIC(this) == 1 && (this->memory->__weak__ == 0)) {
 
 			this->memory->~type();
+
+			this->ctr->allocator->deallocate(this->memory);
+			this->ctr->allocator->deallocate(this->ctr);
+
 			this->memory = nullptr;
+			this->ctr    = nullptr;
 		}
 
 	}
 #ifdef DEBUG
 	else {
-		CORE_WARN("shared_ptr<{}> : memory-block pointer is nullptr during destruction !" , TYPE_NAME(type));
+		CORE_WARN_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL ,REF_INVALID , "memory-block or counter-block is nullptr when destructor is called !");
 	}
 #endif
-} // shared_ref destructor end			
+
+}
 
 
 /*
@@ -107,7 +165,7 @@ shared_ref<type>::~shared_ref() {
 
 // note: use this to do downcasting "base --> derived"
 // note: don't use dynamic_cast_to a lot to avoid preformance costs
-template<refcounted_type type> 
+SHARED_REF_TEMPLATE 
 template<typename family_type> 
 shared_ref<family_type> shared_ref<type>::dynamic_cast_to() {
 
@@ -116,23 +174,32 @@ shared_ref<family_type> shared_ref<type>::dynamic_cast_to() {
 		"shared_ref<type> is not related to {} type !" , TYPE_NAME(family_type)
 	);
 	
-	return shared_ref<family_type>( D_CAST(this->memory, family_type*) );
+	return shared_ref<family_type>( this->ctr , D_CAST(this->memory, family_type*) );
 }
 
 
-// inline heleper function used to deal with already exist reference
-template<refcounted_type type>
-INLINE void shared_ref<type>::deal_with_current_refernce() NOEXP {
+// inline heleper function used to remove and clean current reference 
+// to make sure place is ready for new one .
+SHARED_REF_TEMPLATE
+INLINE void shared_ref<type>::deal_with_current_reference() NOEXP {
 
-	if (this->memory) {
+	if (this->memory && this->ctr) {
 
-		// destruct if no ref is left
-		if (SUB_SHARED_REF_ATOMIC(this) == 1 && (this->memory->__weak__ == 0)) {
-
-			this->memory->~type();
-			this->memory = nullptr;
+		// handel memory-block
+		if (SUB_SHARED_REF_ATOMIC(this) == 1) {
+			this->memory->~type(); // destruct 
+			this->ctr->allocator->deallocate(this->memory); // deallocate
 		}
+
+		// handel counter-block
+		if (this->ctr->__strong__ == 0 && this->ctr->__weak__ == 0) {
+			this->ctr->allocator->deallocate(this->ctr); // destruct
+		}
+
 	}
+	
+	this->ctr    = nullptr;
+	this->memory = nullptr;
 
 }
 
@@ -142,60 +209,168 @@ INLINE void shared_ref<type>::deal_with_current_refernce() NOEXP {
 
 */
 
-// assing operator
-template<refcounted_type type> 
-shared_ref<type>& shared_ref<type>::operator= (shared_ref<type> const& other) NOEXP { 
+// assign operator
+SHARED_REF_TEMPLATE
+shared_ref<type>& shared_ref<type>::operator= (shared_ref<type> const& reference) NOEXP { // copy
 	
-	if (this->memory == other.memory) {
-		CORE_WARN(core::status::get_warning(core::warning::self_assignment));
-	}
-	else {
-		shared_ref<type>::deal_with_current_refernce();
-
-		this->memory = other.memory;
-		if (this->memory) SUB_SHARED_REF_ATOMIC(this);
+	if (this->memory == reference.memory) {
+		CORE_WARN_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_SELF_ASSIGN);
+		return *this;
 	}
 	
-	return *this;
-}
-
-template<refcounted_type type>
-shared_ref<type>& shared_ref<type>::operator= (shared_ref<type>&& other) NOEXP { // move
-
-	if (this->memory == other.memory) {
-		CORE_WARN("{}", core::status::get_warning(core::warning::self_assignment));
-	}
-	else {
+	if(reference.memory && reference.ctr) {
 		shared_ref<type>::deal_with_current_refernce();
 
-		this->memory = other.memory;
-		other.memory = nullptr;
+		this->ctr = reference.ctr;
+		ADD_SHARED_REF_ATOMIC(this);
+
+		this->memory = reference.memory;
+	}
+	else {
+		CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "because memory-block or counter-block is nullptr !");
 	}
 
 	return *this;
 }
 
-template<refcounted_type type>
+SHARED_REF_TEMPLATE
+shared_ref<type>& shared_ref<type>::operator= (shared_ref<type>&& reference) NOEXP { // move
+
+	if (this->memory == reference.memory) {
+		CORE_WARN_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_SELF_ASSIGN);
+		return *this;
+	}
+
+	if (reference.memory && reference.ctr) {
+		shared_ref<type>::deal_with_current_refernce();
+
+		this->ctr = reference.ctr;
+		ADD_SHARED_REF_ATOMIC(this);
+
+		this->memory = reference.memory;
+
+		reference.memory = nullptr;
+		reference.ctr = nullptr;
+	}
+	else {
+		CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "because memory or counter-block is nullptr !");
+	}
+
+	return *this;
+}
+
+SHARED_REF_TEMPLATE
+DERIVED_SHARED_REF_TEMPLATE
+shared_ref<type>& shared_ref<type>::operator=(shared_ref<derived_type> const& reference) NOEXP {
+
+	if (this->memory == reference.memory) {
+		CORE_WARN_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_SELF_ASSIGN);
+		return *this;
+	}
+
+	if (reference.memory && reference.ctr) {
+		shared_ref<type>::deal_with_current_refernce();
+
+		this->ctr    = reference.ctr;
+		ADD_SHARED_REF_ATOMIC(this);
+
+		this->memory = D_CAST(reference.memory, type*);
+	}
+	else {
+		CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "because memory or counter-block is nullptr !");
+	}
+
+	return *this;
+}
+
+SHARED_REF_TEMPLATE
+DERIVED_SHARED_REF_TEMPLATE
+shared_ref<type>& shared_ref<type>::operator=(shared_ref<derived_type>&& reference) NOEXP {
+
+	if (this->memory == reference.memory) {
+		CORE_WARN_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_SELF_ASSIGN);
+		return *this;
+	}
+
+	if (reference.memory && reference.ctr) {
+		shared_ref<type>::deal_with_current_refernce();
+
+		this->ctr    = reference.ctr;
+		ADD_SHARED_REF_ATOMIC(this);
+
+		this->memory = D_CAST(reference.memory , type*);
+
+		reference.memory = nullptr;
+		reference.ctr = nullptr;
+	}
+	else {
+		CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "because memory or counter-block is nullptr !");
+	}
+
+	return *this;
+}
+
+SHARED_REF_TEMPLATE
 type* shared_ref<type>::operator-> () NOEXP {
+
+#ifdef DEBUG
+	if (this->memory) return this->memory;
+	else {
+		CORE_ERROR_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID_MEMORY);
+		return &shared_ref<type>::____dummy____;
+	}
+#else 
 	return this->memory;
+#endif
+
 }
 
-template<refcounted_type type>
+SHARED_REF_TEMPLATE
 const type* shared_ref<type>::operator-> () const NOEXP {
+
+#ifdef DEBUG
+	if (this->memory) return C_CAST(this->memory, const type*);
+	else {
+		CORE_ERROR_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID_MEMORY);
+		return &shared_ref<type>::__dummy__;
+	}
+#else
 	return C_CAST(this->memory, const type*);
+#endif
+
 }
 
-template<refcounted_type type>
-type& shared_ref<type>::operator* () {
+SHARED_REF_TEMPLATE
+type& shared_ref<type>::operator* () NOEXP {
+
+#ifdef DEBUG
+	if (this->memory) return *this->memory;
+	else {
+		CORE_ERROR_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID_MEMORY);
+		return &shared_ref<type>::__dummy__;
+	}
+#else
 	return *this->memory;
+#endif
+
 }
 
-template<refcounted_type type>
-const type& shared_ref<type>::operator* () const {
+SHARED_REF_TEMPLATE
+const type& shared_ref<type>::operator* () const NOEXP {
+
+#ifdef DEBUG
+	if (this->memory) return *this->memory;
+	else {
+		CORE_ERROR_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID_MEMORY);
+		return (const type&)&shared_ref<type>::__dummy__;
+	}
+#else
 	return C_CAST(*this->memory, const type&);
+#endif
+
 }
 
-template<refcounted_type type>
+SHARED_REF_TEMPLATE
 shared_ref<type>::operator bool() const NOEXP {
 	return this->memory != nullptr;
 }
@@ -203,40 +378,41 @@ shared_ref<type>::operator bool() const NOEXP {
 
 // debug-only functions
 #ifdef DEBUG
-template<refcounted_type type> 
+SHARED_REF_TEMPLATE 
 DEBUG_ONLY INLINE u32 shared_ref<type>::get_strong_count() NOEXP {
-	return this->memory->__strong__;
+	return this->ctr->__strong__;
 }
 
-template<refcounted_type type>
+SHARED_REF_TEMPLATE
 DEBUG_ONLY INLINE u32 shared_ref<type>::get_strong_count() const NOEXP {
-	return this->memory->__strong__;
+	return this->ctr->__strong__;
 }
 
-template<refcounted_type type> 
+SHARED_REF_TEMPLATE 
 DEBUG_ONLY INLINE u32 shared_ref<type>::get_weak_count() NOEXP {
-	return this->memory->__weak__;
+	return this->ctr->__weak__;
 }
 
-template<refcounted_type type> 
+SHARED_REF_TEMPLATE 
 DEBUG_ONLY INLINE u32 shared_ref<type>::get_weak_count() const NOEXP {
-	return this->memory->__weak__;
+	return this->ctr->__weak__;
 }
 #endif
 
-template<
-	refcounted_type type,
-	typename...     constructor_parameters
->
-shared_ref<type> core::make::shared_refernce(core::memory_allocator& allocator, constructor_parameters&&... parameters) {
+template<typename type, typename... parameters>
+shared_ref<type> core::make::shared_reference(core::memory_allocator const& allocator, parameters&&... parameters) {
 
 	// allocate memory
-	type* memory = S_CAST(allocator.allocate(), type*);
-
+	type* memory = S_CAST(allocator.allocate_tow(sizeof(type) + sizeof(counter_block)), type*);
+	
 	// construct memory
 	new (memory) type(std::forward<constructor_parameters>(parameters)...);
+	
+	// obtain counter-block pointer
+	counter_block* ctr = (counter_block*)(memory + 1);
+	ctr->allocator = allocator;
 
-	return shared_ref<type>(memory);
+	return shared_ref<type>(ctr, memory);
 }
 
 #endif

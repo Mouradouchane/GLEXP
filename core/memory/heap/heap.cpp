@@ -62,11 +62,11 @@ core::memory::heap::~heap() {
 	core::memory::deallocate(this->free_list);
 
 	this->start = nullptr;
-	this->end = nullptr;
-	this->seek = nullptr;
+	this->end   = nullptr;
+	this->seek  = nullptr;
 
 	this->alloc_list = nullptr;
-	this->free_list = nullptr;
+	this->free_list  = nullptr;
 }
 
 

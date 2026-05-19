@@ -14,6 +14,7 @@
 #endif
 
 #define WEAK_REF_TEMPLATE template<typename type>
+#define WEAK_REF_DERIVED_TEMPLATE template<std::derived_from<type> derived_type>
 
 /*
 			constructor's
@@ -76,12 +77,15 @@ WEAK_REF_TEMPLATE
 weak_ref<type>::~weak_ref( ) NOEXP {
 
 	// if no reference is alive
-	if ((this->ctr->__strong__ == 0) && (SUB_WEAK_REF_ATOMIC(this) == 0) ) {
+	if (this->ctr->__strong__ == 0 && SUB_WEAK_REF_ATOMIC(this) == 1) {
 
 		// deallocate counter-block
 		this->ctr->allocator->deallocate(this->ctr);
 
-		CORE_DEBUG_HPP(weak_ref_logger,CORE_LOG_CONFIG_ALL,"weak_ptr<{}> deallocating reference counter-block ." , type_name);
+		this->ctr    = nullptr;
+		this->memory = nullptr;
+
+		CORE_DEBUG_HPP(weak_ref_logger,CORE_LOG_CONFIG_ALL,"weak_ptr<{}> deallocated counter-block during destruction time" , type_name);
 	}
 
 }
@@ -89,59 +93,59 @@ weak_ref<type>::~weak_ref( ) NOEXP {
 /*
 	upcasting constructor's
 */
-#define WEAK_REF_DERIVED_TEMPLATE template<std::derived_from<type> derived_type>
 
 WEAK_REF_TEMPLATE 
 WEAK_REF_DERIVED_TEMPLATE
 weak_ref<type>::weak_ref(weak_ref<derived_type> const& derived_reference) NOEXP {
 
-	if (derived_reference.ctr != nullptr && derived_reference.memory != nullptr) {
-		// disconnect from current ref
-		if (this->memory) {
-			SUB_WEAK_REF_ATOMIC(this);
-		}
+	if (derived_reference.ctr && derived_reference.memory) {
+		this->deal_with_current_reference();
 
-		// connect to new ref
-		this->ctr    = derived_reference.ctr;
-		this->memory = derived_reference.memory;
-
+		// obtain to new ref
+		this->ctr = derived_reference.ctr;
 		ADD_WEAK_REF_ATOMIC(this);
+
+		this->memory = derived_reference.memory;
 	}
-#ifdef DEBUG
 	else {
-		CORE_WARN_HPP(weak_ref_logger,CORE_LOG_CONFIG_ALL,"nullptr memory passed to weak_ref<{}> during construction time !", type_name);
+		CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory-block or counter-block is nullptr");
 	}
-#endif
+	
 }
 
 WEAK_REF_TEMPLATE 
 WEAK_REF_DERIVED_TEMPLATE
 weak_ref<type>::weak_ref(weak_ref<derived_type>&& derived_reference) NOEXP {
 
-	if (derived_reference.ctr != nullptr && derived_reference.memory != nullptr) {
-		// disconnect from current ref
-		if (this->memory) {
-			SUB_WEAK_REF_ATOMIC(this);
-		}
 
-		// move new ref
-		this->ctr    = derived_reference.ctr;
+	if (derived_reference.ctr && derived_reference.memory) {
+		this->deal_with_current_reference();
+
+		// obtain to new ref
+		this->ctr = derived_reference.ctr;
 		this->memory = derived_reference.memory;
 
-		derived_reference.ctr    = nullptr;
+		derived_reference.ctr = nullptr;
 		derived_reference.memory = nullptr;
 	}
-#ifdef DEBUG
 	else {
-		CORE_WARN_HPP(weak_ref_logger,CORE_LOG_CONFIG_ALL,"nullptr memory passed to weak_ref<{}> during construction time !", type_name);
+		CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "derived memory-block or counter-block is nullptr");
 	}
-#endif
 }
 
 WEAK_REF_TEMPLATE 
 WEAK_REF_DERIVED_TEMPLATE
 weak_ref<type>::weak_ref(shared_ref<derived_type> const& derived_reference) NOEXP {
 
+	if (derived_reference.memory && derived_reference.ctr) {
+		this->ctr    = derived_reference.ctr;
+		ADD_WEAK_REF_ATOMIC(this);
+
+		this->memory = derived_reference.memory;
+	}
+	else {
+		CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "derived memory-block or counter-block is nullptr");
+	}
 }
 
 
@@ -150,21 +154,33 @@ weak_ref<type>::weak_ref(shared_ref<derived_type> const& derived_reference) NOEX
 */ 
 WEAK_REF_TEMPLATE
 WEAK_REF_DERIVED_TEMPLATE
-weak_ref<type>::weak_ref(derived_type* derived_ref_memory) NOEXP {
+weak_ref<type>::weak_ref(counter_block* ctr_ptr, derived_type* derived_memory) NOEXP {
 
-	this->memory = derived_ref_memory;
-	this->ctr    = (counter_block*)(derived_ref_memory + sizeof(type));
-
-	ADD_WEAK_REF_ATOMIC(this);
+	if (derived_memory && ctr_ptr) {
+		this->ctr = ctr_ptr;
+		ADD_WEAK_REF_ATOMIC(this);
+		
+		this->memory = derived_ref_memory;
+	}
+	else {
+		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+	}
 }
 
 WEAK_REF_TEMPLATE
-weak_ref<type>::weak_ref(type* other_ref_memory) NOEXP {
+weak_ref<type>::weak_ref(counter_block* ctr_ptr, type* derived_memory) NOEXP {
 
-	this->memory = other_ref_memory;
-	this->ctr    = (counter_block*)(other_ref_memory + sizeof(type));
+	if (derived_memory && ctr_ptr) {
+		this->ctr = ctr_ptr;
+		ADD_WEAK_REF_ATOMIC(this);
 
-	ADD_WEAK_REF_ATOMIC(this);
+		this->memory = derived_memory;
+	}
+	else {
+		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+	}
 }
 
 /*
@@ -172,74 +188,71 @@ weak_ref<type>::weak_ref(type* other_ref_memory) NOEXP {
 */
 	
 WEAK_REF_TEMPLATE  // copy operator
-weak_ref<type>& weak_ref<type>::operator=(weak_ref<type> const& other_reference) NOEXP {
+weak_ref<type>& weak_ref<type>::operator=(weak_ref<type> const& reference) NOEXP {
 
-	if (this == &other_reference || this->memory == other_reference.memory) {
-		CORE_WARN_HPP(weak_ref_logger,CORE_LOG_CONFIG_ALL,"assign weak_ref<{}> to it self is probablly casued by a bug !" , type_name);
+	if (this->memory == reference.memory) {
+		CORE_WARN_HPP(weak_ref_logger,CORE_LOG_CONFIG_ALL, REF_SELF_ASSIGN);
 		return *this;
 	}
 
-	if (other_reference.memory != nullptr) {
-		if (this->memory) SUB_WEAK_REF_ATOMIC(this);
+	if (reference.memory && reference.ctr) {
+		this->deal_with_current_reference();
 
-		this->ctr    = other_reference.ctr;
-		this->memory = other_reference.memory;
+		this->ctr    = reference.ctr;
 		ADD_WEAK_REF_ATOMIC(this);
+
+		this->memory = reference.memory;
 	}
-#ifdef DEBUG
 	else {
-		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, "nullptr memory passed to weak_ref<{}> during construction time !", type_name);
+		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
 	}
-#endif
+
 }
 
 WEAK_REF_TEMPLATE  // copy operator
-weak_ref<type>& weak_ref<type>::operator=(shared_ref<type> const& other_reference) NOEXP {
+weak_ref<type>& weak_ref<type>::operator=(shared_ref<type> const& reference) NOEXP {
 
-	if (this == &other_reference || this->memory == other_reference.memory) {
-		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, "assign weak_ref<{}> to it self is probablly casued by a bug !", type_name);
+	if (this->memory == reference.memory) {
+		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_SELF_ASSIGN);
 		return *this;
 	}
 
+	if (reference.memory) {
+		this->deal_with_current_reference();
 	
-	if (other_reference.memory != nullptr) {
-		if (this->memory) SUB_WEAK_REF_ATOMIC(this);
-
-		this->ctr    = other_reference.ctr;
-		this->memory = other_reference.memory;
-
+		this->ctr    = reference.ctr;
 		ADD_WEAK_REF_ATOMIC(this);
+
+		this->memory = reference.memory;
 	}
-#ifdef DEBUG
 	else {
-		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, "nullptr memory passed to weak_ref<{}> during construction time !", type_name);
+		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
 	}
-#endif
 }
 
 WEAK_REF_TEMPLATE // move operator
-weak_ref<type>& weak_ref<type>::operator=(weak_ref<type>&& other_reference) NOEXP {
+weak_ref<type>& weak_ref<type>::operator=(weak_ref<type>&& reference) NOEXP {
 	
-	if (this == &other_reference || this->memory == other_reference.memory) {
-		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, "assign weak_ref<{}> to it self is probablly casued by a bug !", type_name);
+	if (this->memory == reference.memory) {
+		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_SELF_ASSIGN);
 		return *this;
 	}
 
-	if (other_reference.memory != nullptr) {
+	if (reference.memory) {
+		this->deal_with_current_reference();
 
-		if (this->memory) SUB_WEAK_REF_ATOMIC(this);
+		this->ctr    = reference.ctr;
+		this->memory = reference.memory;
 
-		this->ctr    = other_reference.ctr;
-		this->memory = other_reference.memory;
-
-		other_reference.ctr    = nullptr;
-		other_reference.memory = nullptr;
+		reference.ctr    = nullptr;
+		reference.memory = nullptr;
 	}
-#ifdef DEBUG
 	else {
-		CORE_WARN_HPP(weak_ref_logger,CORE_LOG_CONFIG_ALL,"nullptr memory passed to weak_ref<{}> during construction time !", type_name);
+		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
 	}
-#endif
 }
 
 WEAK_REF_TEMPLATE 
@@ -247,11 +260,11 @@ type& weak_ref<type>::operator*() NOEXP {
 
 #ifdef DEBUG
 	if (this->memory == nullptr) {
-		CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, "attempt to dereference nullptr weak_ref<{}>", type_name);
+		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_IS_DEAD);
 	}
 #endif
 
-	return (this->memory) ? *this->memory : weak_ref<type>::__dummy__;
+	return (this->memory) ? *this->memory : &weak_ref<type>::__dummy__;
 }
 
 WEAK_REF_TEMPLATE 
@@ -259,11 +272,11 @@ const type& weak_ref<type>::operator*() const NOEXP {
 
 #ifdef DEBUG
 	if (this->memory == nullptr) {
-		CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, "attempt to dereference nullptr weak_ref<{}>", type_name);
+		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_IS_DEAD);
 	}
 #endif
 
-	return (this->memory) ? *this->memory : weak_ref<type>::__dummy__;
+	return (this->memory) ? *this->memory : &weak_ref<type>::__dummy__;
 }
 
 WEAK_REF_TEMPLATE 
@@ -286,7 +299,7 @@ weak_ref<family_type> weak_ref<type>::dynamic_cast_to() {
 		"compile-time-error : weak_ref::dynamic_cast_to family_type is not compatible with type !"
 	);
 
-	return weak_ref<family_type>(D_CAST(this->memory, family_type*));
+	return weak_ref<family_type>(this->ctr , D_CAST(this->memory, family_type*));
 }
 
 
@@ -314,13 +327,29 @@ DEBUG_ONLY INLINE u32 weak_ref<type>::get_weak_count() const NOEXP {
 
 #endif 
 
+WEAK_REF_TEMPLATE
+void weak_ref<type>::deal_with_current_reference() NOEXP {
+
+	if (this->ctr) {
+
+		// handel counter-block
+		if (SUB_WEAK_REF_ATOMIC(this) == 1 && this->ctr->__strong__ == 0) {
+			this->ctr->allocator->deallocate(this->ctr);
+		}
+
+	}
+
+	this->ctr    = nullptr;
+	this->memory = nullptr;
+}
+
+
 namespace core {
 
 	namespace make {
 
-		template<typename type> weak_ref<type> 
-		weak_ref_from_shared(shared_ref<type> const& reference) NOEXP {
-
+		template<typename type> 
+		weak_ref<type> weak_reference(shared_ref<type> const& reference) NOEXP {
 			return weak_ref<type>(reference);
 		}
 

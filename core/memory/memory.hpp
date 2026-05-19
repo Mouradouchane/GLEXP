@@ -11,6 +11,11 @@
 #define BY_OTHERS  core::memory::management::by_others
 #define BY_IT_SELF core::memory::management::by_self
 
+template<typename A, typename B> struct pair_tow_pointers {
+	A* ptr_a;
+	B* ptr_b;
+};
+
 struct tow_pointers {
 	void* ptr1;
 	void* ptr2;
@@ -104,14 +109,14 @@ namespace core {
 
 		// basics functions functions
 
-		virtual void* allocate(u32 size)        NOEXP;
-		virtual void  deallocate(void* pointer) NOEXP;
-
+		virtual void* allocate(u32 size) NOEXP;
 		// used to allocate 2 blocks for memory next to each other
 		virtual tow_pointers allocate_tow(u32 size_of_a , u32 size_of_b) NOEXP;
 
-		std::string       get_name()  NOEXP;
-		core::memory::tag get_tag()   NOEXP;
+		virtual void deallocate(void* pointer) NOEXP;
+
+		std::string       get_name() NOEXP;
+		core::memory::tag get_tag()  NOEXP;
 
 	}; 
 	// class memory_allocator end

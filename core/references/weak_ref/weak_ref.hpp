@@ -13,24 +13,27 @@ template<typename type> class shared_ref;
 	note: this help solve circular dependency problem when --> A refer to B and B to A !! causing memory leak !
 */
 template<typename type> class weak_ref {
-	requires (std::is_default_constructible<type>::value);
 
 private:
+	requires (std::is_default_constructible<type>::value);
 	static inline const STRING type_name = typeid(type).name();
 
-	// note: one block of memory used as tow blocks
-	counter_block* ctr;
-	type*          memory;
-
-	weak_ref() = delete;
 	template<typename type> friend class shared_ref;
+	template<typename type> friend class weak_ref;
+
+	type*          memory;
+	counter_block* ctr;
 
 	// private constructors
+	weak_ref() = delete;
+	weak_ref(counter_block* ctr_ptr, type* ref_memory) NOEXP;
+
 	template<std::derived_from<type> derived_type> 
-	weak_ref(derived_type* derived_ref_memory) NOEXP;
-	weak_ref(type* other_ref_memory) NOEXP;
+	weak_ref(counter_block* ctr_ptr, derived_type* derived_memory) NOEXP;
 
 public:	
+	static const type __dummy__ = type(); // used to check if what you dereferenced is valid
+
 	// constructor's
 	weak_ref(shared_ref<type> const& reference) NOEXP;
 	weak_ref(weak_ref<type>   const& reference) NOEXP;
@@ -49,10 +52,7 @@ public:
 	weak_ref<type>& operator=(shared_ref<type> const& other_reference) NOEXP; // copy
 	weak_ref<type>& operator=(weak_ref<type>   &&     other_reference) NOEXP; // move/assign
 	
-	// note: use this dummy object to check if whats on memory is still alive or not
-	static const type __dummy__ = type();
-
-	      type& operator*() NOEXP;
+	type& operator*() NOEXP;
 	const type& operator*() const NOEXP;
 
 	operator bool() const NOEXP;
@@ -72,6 +72,9 @@ public:
 	DEBUG_ONLY INLINE u32 get_weak_count() const NOEXP;
 #endif 
 
+private: // helper functions
+	INLINE void deal_with_current_reference() NOEXP;
+
 }; // class weak_ref end
 
 
@@ -79,7 +82,8 @@ namespace core {
 
 	namespace make {
 
-		template<typename type> weak_ref<type> weak_ref_from_shared(shared_ref<type> const& reference) NOEXP;
+		template<typename type> 
+		weak_ref<type> weak_reference(shared_ref<type> const& reference) NOEXP;
 
 	}
 
