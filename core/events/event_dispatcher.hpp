@@ -11,16 +11,19 @@
 #include "core/data_structres/arrays/dynamic_array.hpp"
 
 #ifdef DEBUG
-	static auto _ed_hpp_logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
+	static auto _event_dispatcher_hpp_logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
 #else 
-	static auto _ed_hpp_logger_ = nullptr;
+	static auto _event_dispatcher_hpp_logger_ = nullptr;
 #endif
 
-#define _LOGGER_ _ed_hpp_logger_
+#define _LOGGER_ _event_dispatcher_hpp_logger_
 
 namespace core {
 
-	template<typename type> using callback = std::function<void(type const& data)>;
+	/*
+		callback function used to recive event data
+	*/
+	template<typename type> using callback = std::function<void(type const& event_data)>;
 
 	class b_dispatcher {
 		public:
@@ -39,13 +42,13 @@ namespace core {
 			~dispatcher() override;
 
 			// dispatcher public functions
-			u32    subscribe(core::callback<type> const& callback_function) noexcept;
-			bool unsubscribe(u32 index) noexcept override;
+			u32    subscribe(core::callback<type> const& callback_function) NOEXP;
+			bool unsubscribe(u32 index) NOEXP override;
 
-			void trigger(u32 index, type const& data) noexcept;
-			void trigger_all(type const& data) noexcept;
+			void trigger(u32 index, type const& data) NOEXP;
+			void trigger_all(type const& data) NOEXP;
 		
-			void clear() noexcept;
+			void clear() NOEXP;
 
 			// note/todo : maybe later --> queue(data); for multi-threading
 
@@ -80,13 +83,13 @@ dispatcher<type>::~dispatcher() {
 */ 
 
 template<typename type>
-u32 dispatcher<type>::subscribe(callback<type> const& callback_function) noexcept {
+u32 dispatcher<type>::subscribe(callback<type> const& callback_function) NOEXP {
 
 	return this->_listeners_.push(callback_function);
 }
 
 template<typename type> 
-bool dispatcher<type>::unsubscribe(u32 index) noexcept {
+bool dispatcher<type>::unsubscribe(u32 index) NOEXP {
 
 	if (index >= this->_listeners_.size()) {
 	#ifdef DEBUG
@@ -102,7 +105,7 @@ bool dispatcher<type>::unsubscribe(u32 index) noexcept {
 
 // call all listeners 
 template<typename type> 
-void dispatcher<type>::trigger_all(type const& data) noexcept {
+void dispatcher<type>::trigger_all(type const& data) NOEXP {
 
 	for (u32 i = 0; i < this->_listeners_.size(); i++ ) {
 		if (this->_listeners_[i]) {
@@ -115,7 +118,7 @@ void dispatcher<type>::trigger_all(type const& data) noexcept {
 
 // call specific listener
 template<typename type> 
-void dispatcher<type>::trigger(u32 index, type const& data) noexcept {
+void dispatcher<type>::trigger(u32 index, type const& data) NOEXP {
 	
 	if (index >= _listeners_.size()) {
 		CORE_ERROR_D(core::status::get_error(core::error::index_out_range), index);
@@ -134,7 +137,7 @@ void dispatcher<type>::trigger(u32 index, type const& data) noexcept {
 }
 
 template<typename type> 
-void dispatcher<type>::clear() noexcept {
+void dispatcher<type>::clear() NOEXP {
 	this->_listeners_.clear();
 	CORE_INFO_D("all listeners in {} for {} is deleted !" , (void*)this , typeid(type).name());
 }

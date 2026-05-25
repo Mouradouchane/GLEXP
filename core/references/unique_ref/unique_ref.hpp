@@ -4,22 +4,28 @@
 #define CORE_UNIQUE_REF_HPP
 
 #include "core/macros.hpp"
+#include "core/assert.hpp"
 #include "core/strings/string.hpp"
+
 #include "core/references/ref_counter.hpp"
 
-#define UNIQUE_REF_TEMPLATE template<typename type>
 
 /*
+ 
 	unique_ref for fully ownership by one entity
+
 */
+
+#define UNIQUE_REF_TEMPLATE template<typename type>
 
 UNIQUE_REF_TEMPLATE
 class unique_ref {
 
 private:
-	requires (std::is_default_constructible<type>::value);
-	template<typename... parameters> 
-	friend unique_reference<type> unique_reference(core::memory_allocator const& allocator, parameters&&... constructor_parameters) NOEXP;
+	COMPILE_TIME_ASSERT(
+		(!std::is_default_constructible<type>::value) , 
+		"no default constructor found in type used with unique_ref"
+	);
 
 	static inline const STRING type_name = typeid(type).name();
 
@@ -35,7 +41,7 @@ private:
 	unique_ref(core::memory_allocator* allocator , type* memory_ptr) NOEXP;
 
 public:
-	static const type __dummy__ = type();
+	static const type __dummy__();
 
 	// constructor's
 	template<typename... parameters> 
@@ -65,18 +71,6 @@ private :
 
 }; 
 // class unique_ref end
-
-
-namespace core {
-
-	namespace make {
-
-		template<typename type, typename... parameters>
-		unique_ref<type> unique_reference(core::memory_allocator const& allocator, parameters&&... constructor_parameters) NOEXP;
-
-	} // namespace make end
-
-} // namespace core end
 
 
 #include "unique_ref_impl.hpp"

@@ -45,10 +45,12 @@ struct counter_block {
 private:
 	std::atomic<u32> __strong__ = 0u;
 	std::atomic<u32>  __weak__  = 0u;
+
 	core::memory_allocator* allocator = nullptr;
 
 	template<typename type> friend class shared_ref;
 	template<typename type> friend class weak_ref;
+
 };
 
 

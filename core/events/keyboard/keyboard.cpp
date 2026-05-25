@@ -4,48 +4,83 @@
 #define CORE_KEYBOARD_EVENTS_CPP
 
 #include "core/macros.hpp"
+#include "core/assert.hpp"
+
 #include "keyboard.hpp"
 
 #ifdef DEBUG
-	static auto _key_event_logger_ = CORE_GET_LOGGER(EVENT_SYSTEM_LOGGER);
-#else 
-	static auto _key_event_logger_ = nullptr;
+	static auto _key_event_mananger_logger_ = CORE_GET_LOGGER(EVENT_SYSTEM_LOGGER);
+#else
+	static auto _key_event_mananger_logger_ = nullptr;
 #endif
 
-#define _LOGGER_ _key_event_logger_
+#define _LOGGER_ _key_event_mananger_logger_
 
-namespace core {
 
-	namespace keyboard {
-		
-		core::event_manager manager(core::event_manager_category::keyboard_events , "KEYBOARD_EVENTS_MANAGER");
+core::keyboard::keyboard(
+	core::window const& target_window,
+	STRING name,
+	core::memory_allocator const& allocator,
+	u32 size = 32,
+	u32 resize_value = 32
+) NOEXP {
 
-		DLL_API listener_id start_listen(core::callback<key_up> const& callback_function) {
-			return keyboard::manager.start_listen<key_up>(callback_function);
-		}
+	this->window  = target_window.get_internal_object();
 
-		DLL_API listener_id start_listen(core::callback<key_down> const& callback_function){
-			return keyboard::manager.start_listen<key_down>(callback_function);
-		}
+	this->manager = core::event_manager(
+		core::event_manager_category::keyboard_events, 
+		name,
+		size, 
+		resize_value, 
+		(core::memory_allocator*)&allocator
+	);
 
-		DLL_API listener_id start_listen(core::callback<special_key_up> const& callback_function){
-			return keyboard::manager.start_listen<special_key_up>(callback_function);
-		}
+}
 
-		DLL_API listener_id start_listen(core::callback<special_key_down> const& callback_function){
-			return keyboard::manager.start_listen<special_key_down>(callback_function);
-		}
+/*
+	destructor
+*/
+core::keyboard::~keyboard() {
+	this->manager.~event_manager();
+	this->window.window = nullptr;
+}
 
-		DLL_API listener_id start_listen(core::callback<keys_down> const& callback_function){
-			return keyboard::manager.start_listen<keys_down>(callback_function);
-		}
+/*
+	keyboard event-system public functions
+*/
 
-		DLL_API bool stop_listen(listener_id event_listener_id) {
-			return keyboard::manager.stop_listen(event_listener_id);
-		}
+void core::keyboard::poll_events() NOEXP {
 
-	} // namespace keyboard end
+	/*
+		todo: implement this
+	*/
+	COMPILE_TIME_ASSERT(true, "todo: you need to implement core::keyboard::poll_events() functions !");
 
-} // namespace core end
+}
+
+listener_id core::keyboard::start_listen(core::callback<key_up> const& callback_function) {
+	return this->manager.start_listen<key_up>(callback_function);
+}
+
+listener_id core::keyboard::start_listen(core::callback<key_down> const& callback_function){
+	return this->manager.start_listen<key_down>(callback_function);
+}
+
+listener_id core::keyboard::start_listen(core::callback<special_key_up> const& callback_function){
+	return this->manager.start_listen<special_key_up>(callback_function);
+}
+
+listener_id core::keyboard::start_listen(core::callback<special_key_down> const& callback_function){
+	return this->manager.start_listen<special_key_down>(callback_function);
+}
+
+listener_id core::keyboard::start_listen(core::callback<keys_down> const& callback_function){
+	return this->manager.start_listen<keys_down>(callback_function);
+}
+
+bool core::keyboard::stop_listen(listener_id event_listener_id) {
+	return this->manager.stop_listen(event_listener_id);
+}
+
 
 #endif 

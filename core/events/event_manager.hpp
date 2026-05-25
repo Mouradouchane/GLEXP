@@ -71,6 +71,8 @@ namespace core {
 
 
 		// constructor/destructor
+		event_manager() = default;
+
 		event_manager(
 			event_manager_category category, STRING name,
 			u32 size = _default_size_, u32 resize_value = _default_resize_,

@@ -13,9 +13,9 @@ template<typename type> class shared_ref;
 	note: this help solve circular dependency problem when --> A refer to B and B to A !! causing memory leak !
 */
 template<typename type> class weak_ref {
+	// requires std::is_default_constructible<type>::value;
 
 private:
-	requires (std::is_default_constructible<type>::value);
 	static inline const STRING type_name = typeid(type).name();
 
 	template<typename type> friend class shared_ref;
@@ -32,7 +32,7 @@ private:
 	weak_ref(counter_block* ctr_ptr, derived_type* derived_memory) NOEXP;
 
 public:	
-	static const type __dummy__ = type(); // used to check if what you dereferenced is valid
+	static const type __dummy__(); // used to check if what you dereferenced is valid
 
 	// constructor's
 	weak_ref(shared_ref<type> const& reference) NOEXP;
@@ -76,18 +76,6 @@ private: // helper functions
 	INLINE void deal_with_current_reference() NOEXP;
 
 }; // class weak_ref end
-
-
-namespace core {
-
-	namespace make {
-
-		template<typename type> 
-		weak_ref<type> weak_reference(shared_ref<type> const& reference) NOEXP;
-
-	}
-
-}
 
 #include "weak_ref_impl.hpp"
 

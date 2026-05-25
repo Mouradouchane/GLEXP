@@ -27,8 +27,8 @@ UNIQUE_REF_TEMPLATE
 template<typename... parameters>
 unique_ref<type>::unique_ref(core::memory_allocator const& allocator, parameters&&... constructor_parameters) NOEXP {
 
-	this->allocator = allocator;
-	this->memory = (type*)this->allocator->allocate(sizeof(type));
+	this->allocator = (core::memory_allocator*)&allocator;
+	this->memory    = (type*)this->allocator->allocate(sizeof(type));
 
 	this->memory = new (this->memory) type(std::forward<parameters>(constructor_parameters)...);
 }
@@ -114,7 +114,7 @@ type* unique_ref<type>::operator->() NOEXP {
 	}
 #endif
 
-	return (this->memory) ? this->memory : this->__dummy__;
+	return (this->memory) ? this->memory : &this->__dummy__;
 }
 
 UNIQUE_REF_TEMPLATE 
@@ -157,8 +157,8 @@ pair_tow_pointers<core::memory_allocator, type> unique_ref<type>::pass_ownership
 	type* mem = this->memory;
 	core::memory_allocator* alloc = this->allocator;
 
-	this->memory = nullptr;
-	this->alloc  = nullptr;
+	this->memory    = nullptr;
+	this->allocator = nullptr;
 
 	return pair_tow_pointers<core::memory_allocator , type> { mem , alloc };
 }
@@ -177,37 +177,13 @@ bool unique_ref<type>::move_ownership(unique_ref<type>& ref, unique_ref<type>& n
 
 	// pass ownership
 	new_owner.allocator = ref.allocator;
-	new_owner.memory = ref.memory;
+	new_owner.memory    = ref.memory;
 
 	ref.allocator = nullptr;
-	ref.memory = nullptr;
+	ref.memory    = nullptr;
 
 	return true;
 }
-
-
-namespace core {
-	
-namespace make {
-
-	template<typename type, typename... parameters> 
-	unique_ref<type> unique_reference(
-		core::memory_allocator const& allocator, parameters&&... constructor_parameters
-	) NOEXP {
-
-		// allocate memory
-		type* pointer = (type*)allocator.allocate(sizeof(type));
-
-		// construct memory
-		pointer = new (pointer) type( std::forward<parameters>(constructor_parameters)... );
-
-		return unique_ref<type>(allocator , pointer);
-	}
-
-
-} // namespace make end
-
-} // namespace core end
 
 
 #endif

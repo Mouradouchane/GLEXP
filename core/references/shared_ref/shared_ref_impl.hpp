@@ -22,32 +22,37 @@
 */
 
 SHARED_REF_TEMPLATE
-shared_ref<type>::shared_ref(counter_block* ctr_ptr, type* memory_ptr) {
+shared_ref<type>::shared_ref(core::memory_allocator& allocator_, counter_block* ctr_ptr, type* memory_ptr) {
 
 	if (ctr_ptr && memory_ptr) {
 		this->ctr    = ctr_ptr;
+		this->ctr->allocator = (core::memory_allocator*)&allocator_;
 		this->memory = memory_ptr;
 
 		ADD_SHARED_REF_ATOMIC(this);
 	}
 	else {
-		if(!ctr_ptr) CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
-		else CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		if (!ctr_ptr) {
+			CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		}
+		else {
+			CORE_FATAL_HPP(_shared_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		}
 	}
 
 }
 
 SHARED_REF_TEMPLATE
 template<typename... parameters>
-shared_ref<type>::shared_ref(core::memory_allocator const& allocator, parameters&&... constructor_parameters) NOEXP {
+shared_ref<type>::shared_ref(core::memory_allocator& _allocator_, parameters&&... constructor_parameters) NOEXP {
 
-	void* mem = allocator.allocate_tow(sizeof(type) + sizeof(counter_block));
+	tow_pointers ptrs = _allocator_.allocate_tow(sizeof(type) , sizeof(counter_block));
 
-	this->memory = (type*)mem;
-	this->memory = new (this->memory) ( std::forward<parameters>(constructor_parameters)... );
+	this->memory = (type*)ptrs.ptr1;
+	new (this->memory) type( std::forward<parameters>(constructor_parameters)... );
 
-	this->ctr = (counter_block*)(this->memory + 1);
-	this->ctr->allocator = allocator;
+	this->ctr = (counter_block*)ptrs.ptr2;
+	this->ctr->allocator = (core::memory_allocator*)&_allocator_;
 
 	ADD_SHARED_REF_ATOMIC(this);
 }
@@ -135,7 +140,7 @@ shared_ref<type>::~shared_ref() {
 	if (this->memory && this->ctr) {
 
 		// when no refernce is left
-		if (SUB_SHARED_REF_ATOMIC(this) == 1 && (this->memory->__weak__ == 0)) {
+		if (SUB_SHARED_REF_ATOMIC(this) == 1 && (this->ctr->__weak__ == 0)) {
 
 			this->memory->~type();
 
@@ -170,8 +175,8 @@ template<typename family_type>
 shared_ref<family_type> shared_ref<type>::dynamic_cast_to() {
 
 	COMPILE_TIME_ASSERT(
-		!std::is_base_of_v<type, family_type> && !std::is_base_of_v<family_type, type> ,
-		"shared_ref<type> is not related to {} type !" , TYPE_NAME(family_type)
+		(!std::is_base_of_v<type, family_type> && !std::is_base_of_v<family_type, type>) ,
+		"shared_ref<type> is not related !"
 	);
 	
 	return shared_ref<family_type>( this->ctr , D_CAST(this->memory, family_type*) );
@@ -378,41 +383,26 @@ shared_ref<type>::operator bool() const NOEXP {
 
 // debug-only functions
 #ifdef DEBUG
-SHARED_REF_TEMPLATE 
-DEBUG_ONLY INLINE u32 shared_ref<type>::get_strong_count() NOEXP {
-	return this->ctr->__strong__;
-}
+	SHARED_REF_TEMPLATE 
+	DEBUG_ONLY INLINE u32 shared_ref<type>::get_strong_count() NOEXP {
+		return this->ctr->__strong__;
+	}
 
-SHARED_REF_TEMPLATE
-DEBUG_ONLY INLINE u32 shared_ref<type>::get_strong_count() const NOEXP {
-	return this->ctr->__strong__;
-}
+	SHARED_REF_TEMPLATE
+	DEBUG_ONLY INLINE u32 shared_ref<type>::get_strong_count() const NOEXP {
+		return this->ctr->__strong__;
+	}
 
-SHARED_REF_TEMPLATE 
-DEBUG_ONLY INLINE u32 shared_ref<type>::get_weak_count() NOEXP {
-	return this->ctr->__weak__;
-}
+	SHARED_REF_TEMPLATE 
+	DEBUG_ONLY INLINE u32 shared_ref<type>::get_weak_count() NOEXP {
+		return this->ctr->__weak__;
+	}
 
-SHARED_REF_TEMPLATE 
-DEBUG_ONLY INLINE u32 shared_ref<type>::get_weak_count() const NOEXP {
-	return this->ctr->__weak__;
-}
+	SHARED_REF_TEMPLATE 
+	DEBUG_ONLY INLINE u32 shared_ref<type>::get_weak_count() const NOEXP {
+		return this->ctr->__weak__;
+	}
 #endif
 
-template<typename type, typename... parameters>
-shared_ref<type> core::make::shared_reference(core::memory_allocator const& allocator, parameters&&... parameters) {
-
-	// allocate memory
-	type* memory = S_CAST(allocator.allocate_tow(sizeof(type) + sizeof(counter_block)), type*);
-	
-	// construct memory
-	new (memory) type(std::forward<constructor_parameters>(parameters)...);
-	
-	// obtain counter-block pointer
-	counter_block* ctr = (counter_block*)(memory + 1);
-	ctr->allocator = allocator;
-
-	return shared_ref<type>(ctr, memory);
-}
 
 #endif

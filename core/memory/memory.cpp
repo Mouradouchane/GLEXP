@@ -28,6 +28,8 @@
 
 #include "memory.hpp"
 
+#include "core/references/references.hpp"
+
 #ifdef DEBUG
 	static auto _mem_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
 #else 
@@ -173,7 +175,7 @@ namespace core {
 core::memory_allocator::memory_allocator(std::string const& name, core::memory::tag memory_tag) noexcept 
 	: _name_(name), _tag_(memory_tag) 
 {
-	CORE_DEBUG_D(" constructed()");
+	CORE_DEBUG_D("new memory_allocator {} created  for {}" , name , (u16)memory_tag);
 }
 
 void* core::memory_allocator::allocate(u32 size) noexcept {
@@ -188,6 +190,13 @@ void* core::memory_allocator::allocate(u32 size) noexcept {
 void core::memory_allocator::deallocate(void* pointer) noexcept {
 	core::memory::deallocate(pointer);
 }
+
+struct xt { 
+public:
+	int x, y, z; 
+	xt() = default;
+	xt(int a, int b, int c) { x = a; y = b; z = c; }
+};
 
 std::string core::memory_allocator::get_name() noexcept {
 	return this->_name_;

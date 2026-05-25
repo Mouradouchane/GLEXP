@@ -9,15 +9,16 @@
 #include "core/references/ref_counter.hpp"
 
 /*
-	* shared_ref is "intrusive" and "strong" refernce-counter.
+	 shared_ref is "intrusive" and "strong" refernce-counter.
 	- used to manage the life-time and access of shared memory.
 	- memory life-time get managed automatically depened on how many ref's still alive pointing at the memory.
 */
-template<typename type> class shared_ref {
 
+template<typename type> 
+class shared_ref {
+	// requires std::is_default_constructible<type>::value 
+	
 private:
-	requires (std::is_default_constructible<type>::value);
-
 	template<typename type> friend class weak_ref;
 	template<typename type> friend class shared_ref;
 
@@ -28,14 +29,14 @@ private:
 	
 	// private constructors
 	shared_ref( ) = delete;
-	shared_ref(counter_block* ctr_ptr, type* memory_ptr);
+	shared_ref(core::memory_allocator& allocator_, counter_block* ctr_ptr, type* memory_ptr);
 
 public:
-	static const type __dummy__ = type(); // used to check if what you dereferenced is valid
+	static const type __dummy__(); // used to check if what you dereferenced is valid
 
 	// constructor's
 	template<typename... parameters> 
-	shared_ref(core::memory_allocator const& allocator , parameters&&... constructor_parameters) NOEXP;
+	shared_ref(core::memory_allocator& allocator , parameters&&... constructor_parameters) NOEXP;
 
 	shared_ref(shared_ref<type> const& reference) NOEXP; // copy
 	shared_ref(shared_ref<type> &&     reference) NOEXP; // move
@@ -86,24 +87,6 @@ private: // private helper function
 
 }; 
 // class shared_ref end
-
-
-/*
-
-	few function for shared refernces
-
-*/
-namespace core {
-
-	namespace make {
-
-		// this for type and 
-		template<typename type, typename... parameters> 
-		shared_ref<type> shared_reference(core::memory_allocator const& allocator, parameters&&... parameters);
-
-	} // namespace make end
-
-} // namespace core end
 
 
 // shared_ref template implementation is here

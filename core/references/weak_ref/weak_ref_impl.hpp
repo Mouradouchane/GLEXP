@@ -3,9 +3,10 @@
 #ifndef CORE_WEAK_REF_IMPL_HPP
 #define CORE_WEAK_REF_IMPL_HPP
 
-#include "weak_ref.hpp"
 #include "core/status/status.hpp"
 #include "core/logger/logger.hpp"
+
+#include "weak_ref.hpp"
 
 #ifdef DEBUG
 	static auto weak_ref_logger = CORE_GET_LOGGER(REFS_LOGGER);
@@ -85,7 +86,7 @@ weak_ref<type>::~weak_ref( ) NOEXP {
 		this->ctr    = nullptr;
 		this->memory = nullptr;
 
-		CORE_DEBUG_HPP(weak_ref_logger,CORE_LOG_CONFIG_ALL,"weak_ptr<{}> deallocated counter-block during destruction time" , type_name);
+		CORE_DEBUG_HPP(weak_ref_logger,CORE_LOG_CONFIG_ALL,"weak_ptr<{}> deallocated counter-block during destruction time , 'end of life-time'" , type_name);
 	}
 
 }
@@ -117,7 +118,6 @@ WEAK_REF_TEMPLATE
 WEAK_REF_DERIVED_TEMPLATE
 weak_ref<type>::weak_ref(weak_ref<derived_type>&& derived_reference) NOEXP {
 
-
 	if (derived_reference.ctr && derived_reference.memory) {
 		this->deal_with_current_reference();
 
@@ -131,6 +131,7 @@ weak_ref<type>::weak_ref(weak_ref<derived_type>&& derived_reference) NOEXP {
 	else {
 		CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "derived memory-block or counter-block is nullptr");
 	}
+
 }
 
 WEAK_REF_TEMPLATE 
@@ -160,11 +161,15 @@ weak_ref<type>::weak_ref(counter_block* ctr_ptr, derived_type* derived_memory) N
 		this->ctr = ctr_ptr;
 		ADD_WEAK_REF_ATOMIC(this);
 		
-		this->memory = derived_ref_memory;
+		this->memory = derived_memory;
 	}
 	else {
-		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
-		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		if (!ctr_ptr) {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		}
+		else {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		}
 	}
 }
 
@@ -178,8 +183,12 @@ weak_ref<type>::weak_ref(counter_block* ctr_ptr, type* derived_memory) NOEXP {
 		this->memory = derived_memory;
 	}
 	else {
-		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
-		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		if (!ctr_ptr) {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		}
+		else {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		}
 	}
 }
 
@@ -204,8 +213,12 @@ weak_ref<type>& weak_ref<type>::operator=(weak_ref<type> const& reference) NOEXP
 		this->memory = reference.memory;
 	}
 	else {
-		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
-		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		if (!reference.ctr) {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		}
+		else {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		}
 	}
 
 }
@@ -227,8 +240,12 @@ weak_ref<type>& weak_ref<type>::operator=(shared_ref<type> const& reference) NOE
 		this->memory = reference.memory;
 	}
 	else {
-		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
-		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		if (!reference.ctr) {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		}
+		else {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		}
 	}
 }
 
@@ -250,8 +267,12 @@ weak_ref<type>& weak_ref<type>::operator=(weak_ref<type>&& reference) NOEXP {
 		reference.memory = nullptr;
 	}
 	else {
-		if (!ctr_ptr) CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
-		else CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		if (!reference.ctr) {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "counter-block is nullptr");
+		}
+		else {
+			CORE_FATAL_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_INVALID, "memory is nullptr");
+		}
 	}
 }
 
@@ -259,29 +280,29 @@ WEAK_REF_TEMPLATE
 type& weak_ref<type>::operator*() NOEXP {
 
 #ifdef DEBUG
-	if (this->memory == nullptr) {
+	if (this->memory == nullptr || this->ctr->__strong__ == 0) {
 		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_IS_DEAD);
 	}
 #endif
 
-	return (this->memory) ? *this->memory : &weak_ref<type>::__dummy__;
+	return (this->ctr->__strong__) ? *this->memory : &weak_ref<type>::__dummy__;
 }
 
 WEAK_REF_TEMPLATE 
 const type& weak_ref<type>::operator*() const NOEXP {
 
 #ifdef DEBUG
-	if (this->memory == nullptr) {
+	if (this->memory == nullptr || this->ctr->__strong__ == 0) {
 		CORE_WARN_HPP(weak_ref_logger, CORE_LOG_CONFIG_ALL, REF_IS_DEAD);
 	}
 #endif
 
-	return (this->memory) ? *this->memory : &weak_ref<type>::__dummy__;
+	return (this->ctr->__strong__) ? *this->memory : &weak_ref<type>::__dummy__;
 }
 
 WEAK_REF_TEMPLATE 
 weak_ref<type>::operator bool() const NOEXP {
-	return (this->memory != nullptr);
+	return (this->ctr->__strong__ && this->memory != nullptr);
 }
 
 /*
@@ -295,7 +316,7 @@ template<typename family_type>
 weak_ref<family_type> weak_ref<type>::dynamic_cast_to() {
 
 	COMPILE_TIME_ASSERT(
-		!std::is_base_of_v<type family_type> && !std::is_base_of_v<family_type type>,
+		(!std::is_base_of_v<type ,family_type>),
 		"compile-time-error : weak_ref::dynamic_cast_to family_type is not compatible with type !"
 	);
 
@@ -342,20 +363,6 @@ void weak_ref<type>::deal_with_current_reference() NOEXP {
 	this->ctr    = nullptr;
 	this->memory = nullptr;
 }
-
-
-namespace core {
-
-	namespace make {
-
-		template<typename type> 
-		weak_ref<type> weak_reference(shared_ref<type> const& reference) NOEXP {
-			return weak_ref<type>(reference);
-		}
-
-	} // namespace make end
-
-} // namespace core end
 
 
 #endif
