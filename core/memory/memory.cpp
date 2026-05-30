@@ -1,7 +1,7 @@
 #pragma once 
 
-#ifndef CORE_MEMORY_CPP
-#define CORE_MEMORY_CPP
+#ifndef CORE_MEMORY_ALLOCATOR_CPP
+#define CORE_MEMORY_ALLOCATOR_CPP
 
 #include "core/macros.hpp"
 
@@ -22,6 +22,8 @@
 #include <sstream>
 #include <map>
 
+#include <algorithm>
+
 #include "core/assert.hpp"
 #include "core/status/status.hpp"
 #include "core/logger/logger.hpp"
@@ -31,12 +33,12 @@
 #include "core/references/references.hpp"
 
 #ifdef DEBUG
-	static auto _mem_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
+	static auto _core_mem_alloc_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
 #else 
-	static auto _mem_logger_ = nullptr;
+	static auto _core_mem_alloc_logger_ = nullptr;
 #endif
 
-#define _LOGGER_ _mem_logger_
+#define _LOGGER_ _core_mem_alloc_logger_ 
 
 typedef struct alloc_info {
 	size_t count;
@@ -49,6 +51,9 @@ static std::array<u64, 32> sections_sizes = { 0u };
 
 namespace core {
 
+	/*
+		globabl memory allocator
+	*/
 	namespace memory {
 
 		// global memory-allocator variables
@@ -56,7 +61,7 @@ namespace core {
 		static std::map < ptr, alloc_info > allocations_list = {};
 		// =========================================
 
-		DLL_API u64 sizeof_section(core::memory::tag tag) noexcept {
+		DLL_API u64 sizeof_section(core::memory::tag tag) NOEXP {
 			u8 _section = (u8)tag;
 
 			if (_section < sections_sizes.size()) {
@@ -65,11 +70,11 @@ namespace core {
 			else return NULL;
 		}
 
-		DLL_API u64 sizeof_allocated() noexcept {
+		DLL_API u64 sizeof_allocated() NOEXP {
 			return allocated_size;
 		}
 
-		DLL_API void* allocate(size_t count, core::memory::tag tag) noexcept {
+		DLL_API void* allocate(size_t count, core::memory::tag tag) NOEXP {
 			CORE_STACK_TRACE();
 
 			CORE_FATAL_IF(count < 1, CORE_LOG_CONFIG_D , "{}" , "allocate zero count allocation not allowed !");
@@ -101,7 +106,7 @@ namespace core {
 			return pointer;
 		}
 
-		DLL_API void deallocate(void* pointer) noexcept {
+		DLL_API void deallocate(void* pointer) NOEXP {
 			CORE_STACK_TRACE();
 
 			CORE_FATAL_IF(pointer == nullptr, CORE_LOG_CONFIG_ALL , "{}", "attempt to deallocate null-pointer !");
@@ -172,37 +177,142 @@ namespace core {
 	core::memory_allocator defintion
 */
 
-core::memory_allocator::memory_allocator(std::string const& name, core::memory::tag memory_tag) noexcept 
-	: _name_(name), _tag_(memory_tag) 
+core::memory_allocator::memory_allocator(
+	std::string const& name, core::memory::config const& allocator_configs
+) NOEXP
+	: _name_(name), _tag_(allocator_configs.allocator_tag)
 {
-	CORE_DEBUG_D("new memory_allocator {} created  for {}" , name , (u16)memory_tag);
-}
 
-void* core::memory_allocator::allocate(u32 size) noexcept {
 	CORE_FATAL_IF(
-		size >= core::memory_allocator::max_size_allowed , 
-		CORE_LOG_CONFIG_ALL, "size={} size to big 'unsupported' !" , size
+		(allocator_configs.allocator_size < min_size_allowed) || (allocator_configs.allocator_size > max_size_allowed),
+		CORE_LOG_CONFIG_ALL, NOT_ALLOWED_ALLOCATOR_SIZE , allocator_configs.allocator_size , min_size_allowed , max_size_allowed
 	);
-	
-	return core::memory::allocate(size, this->_tag_);
+
+	CORE_FATAL_IF(
+		allocator_configs.max_allocation < 1, CORE_LOG_CONFIG_ALL, NOT_ALLOWED_ALLOCATION_LIST , 
+		allocator_configs.max_allocation , 1, allocator_configs.allocator_size
+	);
+
+	// allocate memory + update variables
+	this->max_allowed_allocations = allocator_configs.max_allocation;
+	this->_size_ = allocator_configs.allocator_size;
+
+	this->start  = (byte*)core::memory::allocate(this->_size_, allocator_configs.allocator_tag);
+	this->end    = (byte*)(this->start + this->_size_);
+	this->seek   = this->start;
+
+	// init alloc lists
+	this->alloc_list_size = (this->max_allowed_allocations + u32(this->max_allowed_allocations / 2u));
+
+	this->alloc_list = (registry_pair*)core::memory::allocate(sizeof(registry_pair) * this->alloc_list_size);
+	this->free_list  = (registry_pair*)core::memory::allocate(sizeof(registry_pair) * this->max_allowed_allocations);
+
+	init_registry_list(this->alloc_list, this->alloc_list_size);
+	init_registry_list(this->free_list, this->max_allowed_allocations);
+
+	CORE_DEBUG(0,"new memory_allocator created name={} , category={} , size={}kb .", name, (u16)this->_tag_ , this->_size_);
 }
 
-void core::memory_allocator::deallocate(void* pointer) noexcept {
+/*
+	destructor
+*/
+core::memory_allocator::~memory_allocator() NOEXP {
+
+	core::memory::deallocate(this->start);
+
+	/*
+	
+		todo[import]: calc how many allocation still in alloc_list, all of them is "memory-leaks"
+
+	*/ 
+
+
+	// =================================================
+
+	core::memory::deallocate(this->alloc_list);
+	core::memory::deallocate(this->free_list);
+
+	this->start = nullptr;
+	this->end   = nullptr;
+	this->seek  = nullptr;
+
+	this->alloc_list = nullptr;
+	this->free_list  = nullptr;
+}
+
+template<typename type>
+type* core::memory_allocator::allocate(u32 size) NOEXP {
+	
+	/*
+		todo: change these crash_if's
+	*/
+	CORE_FATAL_IF(size < 1, CORE_LOG_CONFIG_ALL, ZERO_SIZE_ALLOCATION);
+	
+	CORE_FATAL_IF(size > this->_size_, CORE_LOG_CONFIG_ALL, TO_BIG_ALLOCATION, size , this->_size_);
+	
+	CORE_FATAL_IF(
+		this->registered >= this->max_allowed_allocations, CORE_LOG_CONFIG_ALL,
+		MEMORY_ALLOCATOR_IS_FULL , this->_name_ , this->registered , this->max_allowed_allocations
+	);
+
+	type* pointer   = nullptr;
+	u32  _available = (this->end >= this->seek) ? u32(this->end - this->seek) : 0u;
+
+	if ((this->seek < this->end) && (size <= _available)) {
+		// allocate from seek
+		pointer = (type*)this->seek;
+
+		// update variables
+		this->seek += size;
+
+		// register the allocation
+		this->register_allocation(pointer, size);
+
+		return pointer;
+	}
+	else {
+
+		u32 index = this->max_allowed_allocations;
+
+		// search for empty spot
+		this->find_free_location(index, size);
+
+		if (index < this->max_allowed_allocations) {
+			allocate_from_free_list(&pointer, size, index);
+			return pointer;
+		}
+
+		/*
+			else : try to merge empty spots if possible
+				   and see if there's any spot for allocation
+		*/
+		this->merge_free_areas();
+
+		// search again after the merge process
+		this->find_free_location(index, size);
+
+		// if no place found : crash -> "no memory left"
+		CRASH_IF(
+			index >= this->max_allowed_allocations,
+			"memory_heap.allocate: no memory left or found for allocation !"
+		);
+
+		allocate_from_free_list(&pointer, size, index);
+		return pointer;
+	}
+
+
+}
+
+void core::memory_allocator::deallocate(void* pointer) NOEXP {
 	core::memory::deallocate(pointer);
 }
 
-struct xt { 
-public:
-	int x, y, z; 
-	xt() = default;
-	xt(int a, int b, int c) { x = a; y = b; z = c; }
-};
-
-std::string core::memory_allocator::get_name() noexcept {
+std::string core::memory_allocator::get_name() NOEXP {
 	return this->_name_;
 }
 
-core::memory::tag core::memory_allocator::get_tag() noexcept {
+core::memory::tag core::memory_allocator::get_tag() NOEXP {
 	return this->_tag_;
 }
 

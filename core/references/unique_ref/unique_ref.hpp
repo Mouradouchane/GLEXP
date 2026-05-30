@@ -62,7 +62,7 @@ public:
 	operator bool() const NOEXP;
 
 	// public function's
-	pair_tow_pointers<core::memory_allocator, type> pass_ownership() NOEXP;
+	duo_pointers<core::memory_allocator, type> pass_ownership() NOEXP;
 
 	static bool move_ownership(unique_ref<type>& reference , unique_ref<type>& new_owner);
 

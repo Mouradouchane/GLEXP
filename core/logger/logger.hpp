@@ -101,6 +101,7 @@ namespace core {
 #define GUI_LOGGER              "GUI_SYSTEM"
 #define REFS_LOGGER             "REF_COUNTERS"
 #define DATA_STRUCTER_LOGGER	"DATA_STRUCTER"
+#define UNIT_TESTER_LOGGER      "TESTER"
 
 /*
 	get/set logger macros
@@ -193,7 +194,7 @@ namespace core {
 #define CORE_FATAL_F(FORMAT, ...) CORE_FATAL(CORE_LOG_CONFIG_F , FORMAT , ##__VA_ARGS__);
 
 #define CORE_FATAL_IF(TRUE_EXPRESSION , CONFIG , FORMAT , ...) \
-		if(TRUE_EXPRESSION) { \
+		if((TRUE_EXPRESSION)) { \
 			CORE_FATAL(CONFIG , FORMAT , ##__VA_ARGS__);\
 		}
 

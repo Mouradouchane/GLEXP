@@ -11,14 +11,9 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-#include "core/STRINGs/STRING.hpp"
+#include "core/strings/string.hpp"
 #include "core/memory/memory.hpp"
 
-
-struct registry_pair {
-	void* pointer  = nullptr;
-	u32   count    = NULL;
-};
 
 namespace core {
 

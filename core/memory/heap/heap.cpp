@@ -24,35 +24,6 @@ core::memory::heap::heap(string const& heap_name, core::memory::tag memory_tag, 
 	: core::memory_allocator(heap_name , memory_tag)
 {
 
-	// TODO: change to logger
-	// few checks first
-	CORE_FATAL_IF(heap_size < 1, CORE_LOG_CONFIG_ALL, "{}", "memory_heap: zero count memory_heap not allowed !");
-
-	CORE_FATAL_IF( 
-		(heap_size < min_size_allowed) || (heap_size > max_size_allowed), CORE_LOG_CONFIG_ALL ,
-		"{}", "memory_heap: memory_heap count not allowed !"
-	);
-
-	CORE_FATAL_IF(max_allocation < 1, CORE_LOG_CONFIG_ALL, "{}", "memory_heap: max allowed allocations cannot be 0 !");
-	
-	// note: maybe this need to be a logger warning
-	CORE_FATAL_IF(heap_size < max_allocation, CORE_LOG_CONFIG_ALL, "{}", "memory_heap: max allowed allocations larger than the actuall global_memory !");
-
-	// init memory_heap variables
-	this->max_allowed_allocations = max_allocation;
-	this->_size_ = _size_;
-	this->start = (byte*)core::memory::allocate(_size_, memory_tag);
-	this->end = (byte*)(this->start + this->_size_);
-	this->seek = this->start;
-
-	// init allocate/deallocate lists
-	this->alloc_list_size = (this->max_allowed_allocations + u32(this->max_allowed_allocations / 2u));
-
-	this->alloc_list = (registry_pair*)core::memory::allocate(sizeof(registry_pair) * this->alloc_list_size);
-	this->free_list = (registry_pair*)core::memory::allocate(sizeof(registry_pair) * this->max_allowed_allocations);
-
-	init_registry_list(this->alloc_list, this->alloc_list_size);
-	init_registry_list(this->free_list, this->max_allowed_allocations);
 }
 
 // TODO: call elements destructor's if possible
@@ -230,58 +201,6 @@ void core::memory::heap::merge_free_areas() {
 */
 
 void* core::memory::heap::allocate(u32 size__) noexcept {
-
-	/*
-		todo: change these crash_if's
-	*/
-	CRASH_IF(size__ < 1, "memory_heap.allocate: 0 count allocation not allowed !");
-	CRASH_IF(size__ > this->_size_, "memory_heap.allocate: count of allocation asked for bigger than the memory_heap !");
-	CRASH_IF(this->registered >= this->max_allowed_allocations, "memory_heap.allocate: max allowed allocations is reached !");
-
-	void* pointer = nullptr;
-	u32  _available = (this->end >= this->seek) ? u32(this->end - this->seek) : 0u;
-
-	if ((this->seek < this->end) && (size__ <= _available)) {
-		// allocate from seek
-		pointer = this->seek;
-
-		// update variables
-		this->seek += size__;
-
-		// register the allocation
-		this->register_allocation(pointer, size__);
-
-		return pointer;
-	}
-	else {
-		DEBUG_BREAK;
-		u32 index = this->max_allowed_allocations;
-
-		// search for empty spot
-		this->find_free_location(index, size__);
-
-		if (index < this->max_allowed_allocations) {
-			allocate_from_free_list(&pointer, size__, index);
-			return pointer;
-		}
-		/*
-			else : try to merge empty spots is possible
-					and see if there's any spot for allocation
-		*/
-		this->merge_free_areas();
-
-		// search again after the merge process
-		this->find_free_location(index, size__);
-
-		// if no place found : crash -> "no global_memory left"
-		CRASH_IF(
-			index >= this->max_allowed_allocations,
-			"memory_heap.allocate: no memory left or found for allocation !"
-		);
-
-		allocate_from_free_list(&pointer, size__, index);
-		return pointer;
-	}
 
 }
 

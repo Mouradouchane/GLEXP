@@ -139,4 +139,6 @@
 #define GB   *1073741824u
 // ===================================================
 
+
+#define PTR_TO_STRING(PTR) core::pointer_to_hex_string((void*)(PTR))
 #endif // MACROS_HPP

@@ -152,7 +152,7 @@ unique_ref<type>::operator bool() const NOEXP {
 */
 
 UNIQUE_REF_TEMPLATE
-pair_tow_pointers<core::memory_allocator, type> unique_ref<type>::pass_ownership() NOEXP {
+duo_pointers<core::memory_allocator, type> unique_ref<type>::pass_ownership() NOEXP {
 
 	type* mem = this->memory;
 	core::memory_allocator* alloc = this->allocator;

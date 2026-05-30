@@ -13,6 +13,7 @@
 #include "core/status/status.hpp"
 #include "core/memory/memory.hpp"
 
+
 #ifdef DEBUG
 	static auto _dssa_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
 #else 
@@ -32,7 +33,7 @@
 	#define DEBUG_ARRAY_DESTUCTED(ARRAY , TYPE) \
 		CORE_TRACE( \
 			"{} array<{}>[{}] destructed() | memory section '{}' !", \
-			(void*)ARRAY, typeid(TYPE).name() , ARRAY->size_ , \
+			PTR_TO_STRING(ARRAY), typeid(TYPE).name() , ARRAY->size_ , \
 			(ARRAY->allocator ? core::memory::tag_to_string(ARRAY->allocator->get_tag()) : "none") \
 		);
 
@@ -174,7 +175,9 @@ namespace core {
 			array_to_move.size_     = 0;
 			array_to_move.count_    = 0;
 
-			CORE_INFO("array<{}> -> moved array ownership from {} to {}", typeid(type).name(), (void*)&array_to_move , (void*)this);
+			CORE_INFO("array<{}> -> moved array ownership from {} to {}", typeid(type).name(), 
+				PTR_TO_STRING(&array_to_move), PTR_TO_STRING(this)
+			);
 		}
 
 		/*
@@ -216,13 +219,13 @@ namespace core {
 
 			if (index >= this->count_) {
 				#ifdef UNIT_TEST
-					CORE_FATAL(
+					CORE_FATAL_F(
 						"core::array<>[ ] -> index {} is out of array range {} , this will cause crash in runtime !",
 						index , this->count_
 					);
 					return *(this->begin_ + this->count_);
 				#else 
-					CRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
+					CORE_FATAL_F( core::status::get_error(core::error::index_out_range) , index, this->count_);
 				#endif
 			}
 
@@ -281,7 +284,9 @@ namespace core {
 			array_to_move.size_     = 0;
 			array_to_move.count_    = 0;
 
-			CORE_INFO("core::array<{}> -> moved array ownership from {} to {}", typeid(type).name(), (void*)&array_to_move , (void*)this);
+			CORE_INFO("core::array<{}> -> moved array ownership from {} to {}", typeid(type).name(), 
+				PTR_TO_STRING(&array_to_move) , PTR_TO_STRING(this)
+			);
 			return *this;
 		}
 
@@ -292,13 +297,13 @@ namespace core {
 
 			if (index >= this->count_) {
 				#ifdef UNIT_TEST
-					CORE_FATAL(
+					CORE_FATAL_F(
 						"core::array<>::get() -> index {} is out of array range {} , this will cause crash in runtime !",
 						index , this->count_
 					);
 					return *(this->begin_ + this->count_);
 				#else 
-					CRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
+					CORE_FATAL_F( core::status::get_error(core::error::index_out_range) , index, this->count_);
 				#endif
 			}
 
@@ -309,13 +314,13 @@ namespace core {
 			
 			if (index >= this->count_) {
 				#ifdef UNIT_TEST
-					CORE_FATAL(
+					CORE_FATAL_F(
 						"core::array::set() -> index {} is out of array range {} , this will cause crash in runtime !",
 						index , this->count_
 					);
 					return ;
 				#else 
-					CRASH_IF(true , core::status::get_error(core::error::index_out_range) , index, this->count_);
+					CORE_FATAL_F( core::status::get_error(core::error::index_out_range) , index, this->count_);
 				#endif
 			}
 			else *(this->begin_ + index) = new_element;
@@ -374,13 +379,16 @@ namespace core {
 			if ( (&source) == (&destination) ) {
 
 				#ifdef UNIT_TEST
-					CORE_FATAL(
+					CORE_FATAL_F(
 						"core::array<>::copy({} , {}) -> copying element to it self , will cause crash in runtime !", 
-						(void*)&source, (void*)&destination
+						PTR_TO_STRING(&source) , PTR_TO_STRING(&destination)
 					);
 					return;
 				#else 
-					CRASH_IF(true, core::status::get_error(core::error::source_equal_destination) , (void*)&source, (void*)&destination);
+					CORE_FATAL_F(
+						core::status::get_error(core::error::source_equal_destination) , 
+						PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
+					);
 				#endif
 
 			}
@@ -393,13 +401,15 @@ namespace core {
 				// note: source > destination is counted as a bug
 				if (source.size_ > destination.size_) {
 					#ifdef UNIT_TEST
-						CORE_FATAL(
+						CORE_FATAL_F(
 							"core::array<>::copy({} , {}) -> source is bigger than destination , this will cause crash in runtime !" , 
-							(void*)&source, (void*)&destination
+							PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
 						);
 						return;
 					#else
-						CRASH_IF(true, core::status::get_error(core::error::source_bigger_than_destination), (void*)&source, (void*)&destination);
+						CORE_FATAL_F(core::status::get_error(core::error::source_bigger_than_destination), 
+							PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
+						);
 					#endif
 				}
 				
@@ -417,11 +427,11 @@ namespace core {
 			}
 			else {
 				#ifdef UNIT_TEST 
-					CORE_FATAL(
+					CORE_FATAL_F(
 						"core::array<>::copy() -> 'source array' pointer is nullptr this will cause crash in runtime !" 
 					);
 				#else 
-					CRASH_IF(true, core::status::get_error(core::error::nullptr_memory));
+					CORE_FATAL_F( core::status::get_error(core::error::nullptr_memory));
 				#endif
 			}
 
@@ -432,13 +442,15 @@ namespace core {
 			if ( (&source) == (&destination) ) {
 
 				#ifdef UNIT_TEST
-					CORE_FATAL(
+					CORE_FATAL_F(
 						"core::array<>::move({} , {}) -> moving element to it self this will cause crash in runtime !", 
-						(void*)&source, (void*)&destination
+						PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
 					);
 					return;
 				#else 
-					CRASH_IF(true, core::status::get_error(core::error::source_equal_destination) , (void*)&source, (void*)&destination);
+					CORE_FATAL_F(core::status::get_error(core::error::source_equal_destination) , 
+						PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
+					);
 				#endif
 
 			}
@@ -467,12 +479,12 @@ namespace core {
 
 			if (_array.begin_ == nullptr) {
 				#ifdef UNIT_TEST 
-					CORE_FATAL(
+					CORE_FATAL_F(
 						"core::array<>::fill() -> 'source array' memory is nullptr , will cause crash in runtime !" 
 					);
 					return;
 				#else 
-					CRASH_IF(true, core::status::get_error(core::error::nullptr_memory));
+					CORE_FATAL_F( core::status::get_error(core::error::nullptr_memory));
 				#endif
 			}
 
@@ -565,7 +577,7 @@ namespace core {
 			}
 
 			// update array variables
-			_array.end_ = _array.begin_ + _array.count_;
+			_array.end_ = (_array.begin_ + _array.count_);
 		}
 
 	}; // class array end

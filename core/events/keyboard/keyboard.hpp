@@ -60,10 +60,10 @@ namespace core {
 			core::memory_allocator const& allocator,
 			u32 size = 32, 
 			u32 resize_value = 32
-		);
+		) NOEXP;
 
 		// destructor
-		~keyboard();
+		~keyboard() NOEXP;
 
 		// public functions
 		void poll_events() NOEXP;

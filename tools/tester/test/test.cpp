@@ -9,6 +9,9 @@
 #include "tools/tester/log/log.hpp"
 #include "test.hpp"
 
+static auto tester_test_logger = CORE_GET_LOGGER(UNIT_TESTER_LOGGER);
+#define _LOGGER_ tester_test_logger
+
 /*
 	class test constructor
 */
@@ -62,8 +65,8 @@ test_result test::run_test( ) {
 	this->last_exec_time   = u64(duration.count());
 
 	if (this->last_exec_time == 0) {
-		core::logger::warn("0ns time-execution detected in test: " + this->name + " ID: " + std::to_string(this->id));
-		core::logger::warn("reasons :\ntest function could be optimitzed by the compiler !\ntest function could be way faster than steady_clock !");
+		CORE_WARN(0,"0ns time-execution detected in test: " + this->name + " ID: " + std::to_string(this->id));
+		CORE_WARN(0,"reasons :\ntest function could be optimitzed by the compiler !\ntest function could be way faster than steady_clock !");
 	}
 
 	return test_result{

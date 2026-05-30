@@ -21,8 +21,8 @@ core::keyboard::keyboard(
 	core::window const& target_window,
 	STRING name,
 	core::memory_allocator const& allocator,
-	u32 size = 32,
-	u32 resize_value = 32
+	u32 size,
+	u32 resize_value
 ) NOEXP {
 
 	this->window  = target_window.get_internal_object();
@@ -40,7 +40,7 @@ core::keyboard::keyboard(
 /*
 	destructor
 */
-core::keyboard::~keyboard() {
+core::keyboard::~keyboard() NOEXP {
 	this->manager.~event_manager();
 	this->window.window = nullptr;
 }
@@ -54,31 +54,30 @@ void core::keyboard::poll_events() NOEXP {
 	/*
 		todo: implement this
 	*/
-	COMPILE_TIME_ASSERT(true, "todo: you need to implement core::keyboard::poll_events() functions !");
 
 }
 
-listener_id core::keyboard::start_listen(core::callback<key_up> const& callback_function) {
+listener_id core::keyboard::start_listen(core::callback<key_up> const& callback_function) NOEXP {
 	return this->manager.start_listen<key_up>(callback_function);
 }
 
-listener_id core::keyboard::start_listen(core::callback<key_down> const& callback_function){
+listener_id core::keyboard::start_listen(core::callback<key_down> const& callback_function) NOEXP {
 	return this->manager.start_listen<key_down>(callback_function);
 }
 
-listener_id core::keyboard::start_listen(core::callback<special_key_up> const& callback_function){
+listener_id core::keyboard::start_listen(core::callback<special_key_up> const& callback_function) NOEXP {
 	return this->manager.start_listen<special_key_up>(callback_function);
 }
 
-listener_id core::keyboard::start_listen(core::callback<special_key_down> const& callback_function){
+listener_id core::keyboard::start_listen(core::callback<special_key_down> const& callback_function) NOEXP {
 	return this->manager.start_listen<special_key_down>(callback_function);
 }
 
-listener_id core::keyboard::start_listen(core::callback<keys_down> const& callback_function){
+listener_id core::keyboard::start_listen(core::callback<keys_down> const& callback_function) NOEXP {
 	return this->manager.start_listen<keys_down>(callback_function);
 }
 
-bool core::keyboard::stop_listen(listener_id event_listener_id) {
+bool core::keyboard::stop_listen(listener_id event_listener_id) NOEXP {
 	return this->manager.stop_listen(event_listener_id);
 }
 

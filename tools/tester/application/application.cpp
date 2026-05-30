@@ -17,8 +17,9 @@
 #include "tools/tester/string/string_utility.hpp"
 
 #include "core/status/status.hpp"
-#include "core/event_system/event.hpp"
-
+#include "core/events/keyboard/keyboard.hpp"
+#include "core/references/references.hpp"
+#include "core/window/window.hpp"
 
 // include tests
 #include "tools/tester/unit_tests/arrays/array_tests.hpp"
@@ -42,18 +43,19 @@ namespace tester {
 	std::map<u64, group> groups;
 	std::map<u64, test>  tests;
 
-	void add_group(group& _group) {
+	void add_group(group const& _group) {
 		tester::groups.insert({ _group.get_id() , _group });
 	}
 
-	void add_test(test& _test) {
+	void add_test(test const& _test) {
 		tester::tests.insert({ _test.get_id() , _test });
 	}
 
 	void init() { 
 
 		core::logger::init("tester_logger" , core::logger::verbosity_level::trace);
-		core::event_system::init();
+		
+		
 
 		/*
 			note: add your unit-tests here
@@ -132,7 +134,7 @@ namespace tester {
 
 		if (command == "clear_results") {
 			results_history = "";
-			core::logger::warn("all current tests results removed from history !");
+			CORE_WARN(0,"all current tests results removed from history !");
 			return;
 		}
 
@@ -213,15 +215,15 @@ static inline void exec_all_function() {
 	for (auto& pair : tester::tests) {
 		pair.second.run_test();
 	}
-	core::logger::info("Ungrouped Tests Finished !");
+	CORE_INFO("Ungrouped Tests Finished !");
 
 	tester::logger::print_tests_results(tester::tests , tester::results_history, tester::old_tests);
 
 	// execute all groups
 	for (auto& pair : tester::groups) {
-		core::logger::info("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
+		CORE_INFO("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
 		pair.second.run_all_tests();
-		core::logger::info("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
+		CORE_INFO("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
 
 		tester::logger::print_group_results(pair.second, tester::results_history, tester::old_tests);
 	}
@@ -231,9 +233,9 @@ static inline void exec_all_function() {
 static inline void exec_tests_function(std::string& command , std::vector<std::string>* command_toknes) {
 
 	if (command_toknes->size() <= 1) {
-		core::logger::error("no argument found with command exec_test");
-		core::logger::info("exec_test id1 id2 ....");
-		core::logger::info("exec_test *");
+		CORE_ERROR(0,"no argument found with command exec_test");
+		CORE_INFO("exec_test id1 id2 ....");
+		CORE_INFO("exec_test *");
 
 		return;
 	}
@@ -241,11 +243,11 @@ static inline void exec_tests_function(std::string& command , std::vector<std::s
 	// execute all ungrouped tests
 	if ((*command_toknes)[1] == "*") {
 
-		core::logger::info("Start All The Ungrouped Tests ...");
+		CORE_INFO("Start All The Ungrouped Tests ...");
 		for (auto& pair : tester::tests) {
 			pair.second.run_test();
 		}
-		core::logger::info("Ungrouped Tests Finished !");
+		CORE_INFO("Ungrouped Tests Finished !");
 
 		tester::logger::print_tests_results(tester::tests , tester::results_history , tester::old_tests);
 
@@ -263,12 +265,12 @@ static inline void exec_tests_function(std::string& command , std::vector<std::s
 		auto pair = tester::tests.find(id);
 
 		if (pair == tester::tests.end()) {
-			core::logger::error("Test with ID " + std::to_string(id) + " Not Found !");
+			CORE_ERROR(0,"Test with ID " + std::to_string(id) + " Not Found !");
 		}
 		else {
 			test& _test = pair->second;
 
-			core::logger::info("Test " + _test.get_test_name() + " with ID:" + std::to_string(_test.get_id()) + " Found !");
+			CORE_INFO("Test " + _test.get_test_name() + " with ID:" + std::to_string(_test.get_id()) + " Found !");
 			_test.run_test();
 
 			tester::logger::print_test_result(_test , tester::results_history, tester::old_tests);
@@ -282,9 +284,9 @@ static inline void exec_tests_function(std::string& command , std::vector<std::s
 static inline void exec_groups_function(std::string& command, std::vector<std::string>* command_toknes) {
 
 	if (command_toknes->size() <= 1) {
-		core::logger::error("no argument found with command exec_group");
-		core::logger::info("exec_group id1 id2 ....");
-		core::logger::info("exec_group *");
+		CORE_ERROR(0,"no argument found with command exec_group");
+		CORE_INFO("exec_group id1 id2 ....");
+		CORE_INFO("exec_group *");
 
 		return;
 	}
@@ -293,9 +295,9 @@ static inline void exec_groups_function(std::string& command, std::vector<std::s
 	if ((*command_toknes)[1] == "*") {
 
 		for (auto& pair : tester::groups) {
-			core::logger::info("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
+			CORE_INFO("Group " + pair.second.get_name() + " with ID:" + std::to_string(pair.second.get_id()) + " Found !");
 			pair.second.run_all_tests();
-			core::logger::info("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
+			CORE_INFO("Group " + pair.second.get_name() + " Finished in " + std::to_string(pair.second.get_exec_time()) + "ns !");
 
 			tester::logger::print_group_results(pair.second , tester::results_history, tester::old_tests);
 		}
@@ -313,12 +315,12 @@ static inline void exec_groups_function(std::string& command, std::vector<std::s
 		auto pair = tester::groups.find(id);
 
 		if (pair == tester::groups.end()) {
-			core::logger::error("Group with ID " + std::to_string(id) + " Not Found !");
+			CORE_ERROR(0,"Group with ID " + std::to_string(id) + " Not Found !");
 		}
 		else {
-			core::logger::info("Group " + pair->second.get_name() + " with ID:" + std::to_string(id) + " Found !");
+			CORE_INFO("Group " + pair->second.get_name() + " with ID:" + std::to_string(id) + " Found !");
 			pair->second.run_all_tests();
-			core::logger::info("Group " + pair->second.get_name() + " Finished in " + std::to_string(pair->second.get_exec_time()) + "ns !");
+			CORE_INFO("Group " + pair->second.get_name() + " Finished in " + std::to_string(pair->second.get_exec_time()) + "ns !");
 
 			tester::logger::print_group_results(pair->second , tester::results_history, tester::old_tests);
 		}

@@ -15,6 +15,9 @@
 #include "tools/tester/string/string_utility.hpp"
 #include "log.hpp"
 
+static auto _tester_log_lgr_ = CORE_GET_DEFAULT_LOGGER();
+#define _LOGGER_ _tester_log_lgr_ 
+
 using namespace tabulate;
 namespace fs = std::filesystem;
 
@@ -41,17 +44,17 @@ namespace tester {
 
 		// if folder found
 		if (!std::filesystem::exists(logs_folder_path) || !std::filesystem::is_directory(logs_folder_path)) {
-			core::logger::warn("tester_logs folder not found !");
+			CORE_WARN(0,"tester_logs folder not found !");
 
 			// try to create folder for the logs
 			if (!std::filesystem::create_directory(logs_folder_path)) {
-				core::logger::error("failed to create tester_logs folder !");
-				core::logger::error("failed to save tests results into .log file !");
+				CORE_ERROR(0,"failed to create tester_logs folder !");
+				CORE_ERROR(0,"failed to save tests results into .log file !");
 				return false;
 			}
 		}
 
-		core::logger::info("tester results folder found !");
+		CORE_INFO("tester results folder found !");
 
 		// setup output file
 		std::string file_name = ""; generate_file_name(file_name);
@@ -61,14 +64,14 @@ namespace tester {
 
 		// try to write to log_file
 		if (log_file.is_open()) {
-			core::logger::info("writing results to " + file_name + " file.");
+			CORE_INFO("writing results to " + file_name + " file.");
 			log_file << results_as_str;
 			log_file.close();
 			return true;
 		}
 		else { // failed to write or open log_file
-			core::logger::error("failed to open file or create " + file_name + " file !");
-			core::logger::error("failed to save tests results into .log file !");
+			CORE_ERROR(0,"failed to open file or create " + file_name + " file !");
+			CORE_ERROR(0,"failed to save tests results into .log file !");
 			return false;
 		}
 
@@ -80,11 +83,11 @@ namespace tester {
 		fs::path tester_path = "./" + results_path;
 
 		if (!fs::is_directory(tester_path)) {
-			core::logger::warn("tester_logs folder not found !");
+			CORE_WARN(0,"tester_logs folder not found !");
 			return;
 		}
 
-		core::logger::info("searching for log files ...");
+		CORE_INFO("searching for log files ...");
 		std::vector<std::string> log_files_list;
 		for (fs::directory_entry const& entry : fs::directory_iterator(tester_path)) {
 
@@ -99,7 +102,7 @@ namespace tester {
 		}
 
 		if (log_files_list.size() == 0) {
-			core::logger::warn("no log file found !");
+			CORE_WARN(0,"no log file found !");
 			return;
 		}
 
@@ -109,7 +112,7 @@ namespace tester {
 			std::ifstream log_file(file_name);
 			if (log_file.is_open()) {
 				std::string str_line;
-				core::logger::info("loading old results from file " + file_name);
+				CORE_INFO("loading old results from file " + file_name);
 
 				// load log file data
 				while (std::getline(log_file, str_line)) {
@@ -126,7 +129,7 @@ namespace tester {
 						u64 test_time = string_to_u64(*(values->begin() + 1));
 						std::string name = *(values->begin());
 
-						auto& old_test_itr = output_map.find(*(values->begin()));
+						auto old_test_itr = output_map.find(*(values->begin()));
 
 						// if aleary in the map
 						if ((old_test_itr != output_map.end())) {
@@ -143,14 +146,14 @@ namespace tester {
 
 					}
 
-					(values != nullptr) ? delete values : 0;
+					if(values) delete values;
 				}
 
 			}
-			else core::logger::error("failed to open file " + file_name);
+			else CORE_ERROR(0,"failed to open file " + file_name);
 
 			log_file.close();
-			core::logger::info("loading results from file " + file_name + " is done .");
+			CORE_INFO("loading results from file " + file_name + " is done .");
 		}
 
 	}
@@ -225,7 +228,7 @@ namespace tester {
 
 		test_result result = _test.get_test_result();
 
-		auto& old_test = old_results.find(_test.get_test_name());
+		auto  old_test = old_results.find(_test.get_test_name());
 		u64   old_time = (old_test == old_results.end()) ? 0u : old_test->second.exec_time;
 
 		tabulate::Table table;
@@ -248,7 +251,7 @@ namespace tester {
 
 		// save test if better time-record
 		if (old_time > result.last_exec_time && result.success) {
-			core::logger::info("new time-record for test " + _test.get_test_name() + ", from " + std::to_string(old_time) + "ns to " + std::to_string(result.last_exec_time) + "ns good job .");
+			CORE_INFO("new time-record for test " + _test.get_test_name() + ", from " + std::to_string(old_time) + "ns to " + std::to_string(result.last_exec_time) + "ns good job .");
 			old_test->second.success = result.success;
 			old_test->second.exec_time = result.last_exec_time;
 		}
@@ -272,7 +275,7 @@ namespace tester {
 			test const& _test = pair.second;
 			test_result _test_result = _test.get_test_result();
 
-			auto& old_test = old_results.find(_test.get_test_name());
+			auto  old_test = old_results.find(_test.get_test_name());
 			u64   old_time = (old_test == old_results.end()) ? 0u : old_test->second.exec_time;
 
 			// setup row
@@ -286,7 +289,7 @@ namespace tester {
 
 			// save test if better time-record
 			if (old_time > _test_result.last_exec_time && _test_result.success) {
-				core::logger::info("new time-record for test " + _test.get_test_name() + ", from " + std::to_string(old_time) + "ns to " + std::to_string(_test_result.last_exec_time) + "ns good job .");
+				CORE_INFO("new time-record for test " + _test.get_test_name() + ", from " + std::to_string(old_time) + "ns to " + std::to_string(_test_result.last_exec_time) + "ns good job .");
 				old_test->second.success = _test_result.success;
 				old_test->second.exec_time = _test_result.last_exec_time;
 			}
@@ -321,7 +324,7 @@ namespace tester {
 		for (size_t i = 0; i < size; i++) {
 			test_result result = tests[i].get_test_result();
 
-			auto& old_test = old_results.find(tests[i].get_test_name());
+			auto  old_test = old_results.find(tests[i].get_test_name());
 			u64   old_time = (old_test == old_results.end()) ? 0u : old_test->second.exec_time;
 
 			table.add_row(
@@ -334,7 +337,7 @@ namespace tester {
 
 			// save test if better time-record
 			if (old_time > result.last_exec_time && result.success) {
-				core::logger::info("new time-record for test " + tests[i].get_test_name() + ", from " + std::to_string(old_time) + "ns to " + std::to_string(result.last_exec_time) + "ns good job .");
+				CORE_INFO("new time-record for test " + tests[i].get_test_name() + ", from " + std::to_string(old_time) + "ns to " + std::to_string(result.last_exec_time) + "ns good job .");
 				old_test->second.success = result.success;
 				old_test->second.exec_time = result.last_exec_time;
 			}
