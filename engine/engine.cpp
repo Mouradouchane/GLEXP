@@ -29,15 +29,18 @@
 
 #include "engine.hpp"
 
-// engine variables
+// engine internal variables
 namespace engine {
-	bool         running = true;
-	std::string  title   = "GLEXP";
-	GLFWwindow*  window  = nullptr;
+
+	bool running = true;
+	bool is_init = falase;
+
+	// todo: add more variables/configs
 }
 
 static core::error init_glfw() {
 
+	// todo: remove core status 
 	if ( !glfwInit() ) return core::error::failed_to_init_glfw;
 
 	// get primary monitor information
@@ -90,19 +93,11 @@ static core::error create_window() {
 
 namespace engine {
 
-core::error init() {
+engine::status init() {
 
 	core::logger::init("glexp_engine", core::logger::verbosity_level::trace);
 
-#if 0
-	CORE_INFO ("test info  -> {}", 1);
-	CORE_WARN ("test warn  -> {}", 1);
-	CORE_DEBUG("test debug -> {}", 1);
-	CORE_TRACE("test trace -> file:{} , line:{}", __FILE__ , __LINE__ );
-	CORE_ERROR("test error -> file:{} , line:{}", __FILE__ , __LINE__);
-	CORE_FATAL("test fatal -> file:{} , line:{}", __FILE__ , __LINE__);
-#endif
-
+	// todo: change crash_if to core_fatal_if
 	CRASH_IF_ERROR(init_glfw() , "failed to init glfw");
 
 	// if loading configs from ini failed "it's fine" , we have default configs 
