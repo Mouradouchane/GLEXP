@@ -3,7 +3,7 @@
 #ifndef CORE_MEMORY_ALLOCATOR_CPP
 #define CORE_MEMORY_ALLOCATOR_CPP
 
-#include "memory.hpp"
+#include "dynamic_allocator.hpp"
 
 
 

@@ -74,7 +74,7 @@ namespace core {
 			return allocated_size;
 		}
 
-		DLL_API void* allocate(size_t count, core::memory::tag tag) NOEXP {
+		DLL_API void* allocate(size_t count, core::memory_tag tag) NOEXP {
 			CORE_STACK_TRACE();
 
 			CORE_FATAL_IF(count < 1, CORE_LOG_CONFIG_D , "{}" , "allocate zero count allocation not allowed !");

@@ -28,10 +28,6 @@ struct tow_pointers {
 	void* ptr2;
 };
 
-struct registry_pair {
-	void* pointer = nullptr;
-	u32   count   = NULL;
-};
 
 namespace core {
 
@@ -40,35 +36,6 @@ namespace core {
 	*/
 	namespace memory {
 
-		enum class allocator_type : u8 {
-			heap = 0,
-			pool,
-			arena
-		};
-
-		/*
-			note : this tag used to "flag" each memory-allocator for what used for
-		*/
-		enum class tag : u8 {
-			unkown = 0,
-			general,
-			event_system,
-			work_system,
-			assets,
-			gui,
-			graphics,
-			physics,
-			collision,
-			animations,
-			ai,
-			audio,
-			stdcpp,
-			core,
-			files,
-		#ifdef DEBUG
-			dev,
-		#endif
-		};
 
 		DLL_API std::string tag_to_string(core::memory::tag _tag_);
 

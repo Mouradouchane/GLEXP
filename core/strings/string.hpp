@@ -5,7 +5,7 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-#include "core/memory/memory.hpp"
+#include "core/memory/dynamic_allocator/dynamic_allocator.hpp"
 
 #include <string>
 
@@ -14,12 +14,15 @@
 			but latter we could move to core::c_string or core::o_string .
 */
 typedef std::string string;
-#define STRING std::string
+
+#ifndef STRING
+	#define STRING std::string
+#endif
 
 namespace core {
 	
 	struct c_string {
-		core::memory_allocator* allocator = nullptr;
+		core::dynamic_allocator* allocator = nullptr;
 
 		char* start   = nullptr;
 		char* end     = nullptr;
@@ -29,7 +32,7 @@ namespace core {
 	DLL_API_CLASS o_string {
 
 	private	:
-		core::memory_allocator* allocator_ = nullptr;
+		core::dynamic_allocator* allocator_ = nullptr;
 
 		char* start_  = nullptr;
 		u32   size_   = 0;
@@ -38,12 +41,12 @@ namespace core {
 	public : 
 		// constructor's
 		o_string() = default;
-		o_string(const char* _string , core::memory_allocator* memory_allocator = nullptr);
-		o_string(const char* _string , u32 count , core::memory_allocator* memory_allocator = nullptr);
-		o_string(u32 o_string_size , core::memory_allocator* memory_allocator = nullptr);
+		o_string(const char* _string , core::dynamic_allocator* memory_allocator = nullptr);
+		o_string(const char* _string , u32 count , core::dynamic_allocator* memory_allocator = nullptr);
+		o_string(u32 o_string_size , core::dynamic_allocator* memory_allocator = nullptr);
 
 		// copy 
-		o_string(o_string const& copy_string , core::memory_allocator* memory_allocator = nullptr);
+		o_string(o_string const& copy_string , core::dynamic_allocator* memory_allocator = nullptr);
 		// move 
 		o_string(o_string&& move_string);
 
