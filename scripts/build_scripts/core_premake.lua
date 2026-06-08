@@ -15,29 +15,31 @@ local core = {
 	lib = {
 		filename = "core.lib",
 		release_path = utility.s_paths.release .. "/core/",
-		debug_path  = utility.s_paths.debug .. "/core/",
+		debug_path   = utility.s_paths.debug .. "/core/",
 	},
 	
 	dll = {
-		filename      = "core_d.dll",
+		filename     = "core_d.dll",
 		lib_filename = "core_d.lib",
 		release_path = utility.s_paths.release .. "/core/",
-		debug_path  = utility.s_paths.debug .. "/core/",
+		debug_path   = utility.s_paths.debug .. "/core/",
 	},
 	
 }
 
 if _OS == "windows" then
 	core.dll.release_post_script = "copy " .. path.translate(core.dll.release_path  .. core.dll.filename .. " " .. utility.s_paths.build) 
-	core.dll.debug_post_script  = "copy " .. path.translate(core.dll.debug_path  .. core.dll.filename .. " " .. utility.s_paths.build)
+	core.dll.debug_post_script   = "copy " .. path.translate(core.dll.debug_path  .. core.dll.filename .. " " .. utility.s_paths.build)
 else 
 	core.dll.release_post_script = "copy " .. (core.dll.release_path  .. core.dll.filename .. " " .. utility.s_paths.build) 
-	core.dll.debug_post_script  = "copy " .. (core.dll.debug_path  .. core.dll.filename .. " " .. utility.s_paths.build)
+	core.dll.debug_post_script   = "copy " .. (core.dll.debug_path  .. core.dll.filename .. " " .. utility.s_paths.build)
 end
 
 local link_with = {
-    spdlog_debug  = utility.s_paths.libs .. "/spdlog/spdlogd.lib" ,
-    spdlog_release = utility.s_paths.libs .. "/spdlog/spdlog.lib" 
+    spdlog_debug    = utility.s_paths.libs .. "/spdlog/spdlogd.lib" ,
+    spdlog_release  = utility.s_paths.libs .. "/spdlog/spdlog.lib" ,
+	mialloc_debug   = utility.s_paths.libs .. "/mimalloc/mimalloc.lib" ,
+	mialloc_release = utility.s_paths.libs .. "/mimalloc/mimalloc.lib"
 }
 
 -- function run( )
@@ -88,6 +90,7 @@ filter("configurations:release")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_release )
+	links( link_with.mialloc_release )
 
 	targetname(core.name)
 
@@ -114,6 +117,7 @@ filter("configurations:dll release")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_release )
+	links( link_with.mialloc_release )
 
 	targetname(core.name .. "_d")
 	
@@ -148,6 +152,7 @@ filter("configurations:debug")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_debug )
+	links( link_with.mialloc_debug )
 
 	debugdir(core.lib.debug_path)
 	defines("DEBUG")
@@ -174,6 +179,7 @@ filter("configurations:dll debug")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_debug )
+	links( link_with.mialloc_debug )
 
 	-- post script to copy dll to build folder 
 	postbuildcommands({

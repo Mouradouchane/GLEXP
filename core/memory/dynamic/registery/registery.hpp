@@ -30,22 +30,19 @@ namespace core {
 		*/
 		DLL_API_CLASS registry {
 		private:
-
 			core::memory::allocation* list = nullptr; // registry memory
-			u32 size     = 0; // register size in byte
-			u32 count    = 0; // allocations count
+			u32 size     = 0; // size in byte
+			u32 count    = 0; // elements count
+			u32 capacity = 0; // elements max capacity
 
-			u32 capacity = 0; // register max capacity
-			u32 capacity_bits = 0; // base log2 value for hashing purposes
-
-			// total size in bytes of current allocations
+			// total size of all current allocations in bytes
 			u32 allocations_size = 0; 
 		
 		public:
 			static const u32 default_register_size = 1024; 
 		
-			// constructor 
-			registry() NOEXP;     // note: capacity must be power of 2 for hasing purposes
+			// constructor
+			registry() NOEXP;
 			registry(u32 register_capacity = default_register_size) NOEXP;
 
 			// destructor
@@ -53,8 +50,8 @@ namespace core {
 
 			// registry public functions
 
-			// return size+1 if failed to insert
-			u32  insert(void* ptr, u32 size , core::memory::tag tag_) NOEXP;
+			// return registry-end if failed to insert
+			u32 insert(void* ptr, u32 size , core::memory::tag tag_) NOEXP;
 
 			bool remove(void* ptr) NOEXP;
 
@@ -62,7 +59,7 @@ namespace core {
 			core::memory::allocation cut(void* ptr) NOEXP;
 
 			// return capacity if ptr not found
-			i64 exist(void* ptr) NOEXP;
+			u32 exist(void* ptr) NOEXP;
 
 			INLINE u32 get_size() NOEXP;
 			INLINE u32 get_capacity() NOEXP;
@@ -73,7 +70,7 @@ namespace core {
 		private: // helper function
 
 			// high-performance fibonacci hash function for raw pointers
-			u32  hash_pointer(void* ptr) NOEXP;
+			u32 hash_pointer(void* ptr) NOEXP;
 			INLINE u32 search(u32 start_index = 0, void* ptr = nullptr) NOEXP;
 		};
 		// struct registry end

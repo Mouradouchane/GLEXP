@@ -15,7 +15,7 @@ typedef uint32_t* ptr32;
 typedef uint64_t* ptr64;
 
 template<typename first_ptr_type, typename second_ptr_type> struct duo_pointers {
-	first_ptr_type* first_ptr;
+	first_ptr_type*  first_ptr;
 	second_ptr_type* second_ptr;
 };
 

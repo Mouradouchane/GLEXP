@@ -5,7 +5,8 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-#include "core/memory/dynamic_allocator/dynamic_allocator.hpp"
+
+#include "core/memory/dynamic/dynamic_allocator.hpp"
 
 #include <string>
 
