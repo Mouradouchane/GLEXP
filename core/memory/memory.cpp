@@ -34,18 +34,18 @@ DLL_API const string& core::to_string(core::memory_tag section, u8 tag) NOEXP {
 	return string("todo: implement to_string for sections with u8 tags !");
 }
 
-DLL_API void* core::memory::allocate(memory_request const& request) NOEXP {
+DLL_API void* core::memory::allocate(g_memory_request const& request) NOEXP {
 
 #ifdef DEBUG
 	// allocate memory
-	void* ptr = mi_malloc_aligned(request.size + 1, request.alignement);
+	void* ptr = mi_malloc(request.size + 1);
 	// mark it 
 	if (ptr) {
 		u8* tptr = ((u8*)ptr + request.size);
 		*tptr = (u8)request.tag;
 
 		// update list
-		sections_sizes[(u8)request.tag] += request.size + request.alignement;
+		sections_sizes[(u8)request.tag] += request.size;
 		total_size += request.size;
 		return ptr;
 	}
@@ -55,24 +55,24 @@ DLL_API void* core::memory::allocate(memory_request const& request) NOEXP {
 	}
 
 #else
-	void* ptr = mi_malloc_aligned(request.size, request.alignement); *
-		if (ptr) total_size += request.size;
+	void* ptr = mi_malloc(request.size);
+	total_size += request.size;
 
 	return ptr;
 #endif
 
 }
 
-DLL_API tow_pointers core::memory::allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP {
+DLL_API tow_pointers core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP {
 
 #ifdef DEBUG
 
 	// allocate memory
-	void* ptr1 = mi_malloc_aligned(request_1.size + 1, request_1.alignement);
-	void* ptr2 = mi_malloc_aligned(request_2.size + 1, request_2.alignement);
+	void* ptr1 = mi_malloc(request_1.size + 1);
+	void* ptr2 = mi_malloc(request_2.size + 1);
 
-	// mark it 
-	if (ptr1 && ptr2) {
+	// try mark the memory with tag
+	if ((ptr1 && ptr2) && request_1.tag < SECTIONS_SIZE && request_2.tag < SECTIONS_SIZE) {
 		u8* tptr1 = ((u8*)ptr1 + request_1.size);
 		*tptr1 = (u8)request_1.tag;
 
@@ -96,11 +96,11 @@ DLL_API tow_pointers core::memory::allocate_tow(memory_request const& request_1,
 
 #else
 	tow_pointers tptr{
-		mi_malloc_aligned(request_1.size, request_1.alignement) ,
-		mi_malloc_aligned(request_2.size, request_2.alignement)
+		mi_malloc(request_1.size) ,
+		mi_malloc(request_2.size)
 	};
 
-	if (tptr.first_ptr && tptr.second_ptr) total_size += request_1.size + request_2.size;
+	total_size += request_1.size + request_2.size;
 
 	return tptr;
 #endif
@@ -120,13 +120,12 @@ DLL_API void core::memory::deallocate(void* pointer) NOEXP {
 }
 
 
-DLL_API u64 core::memory::current_memory_usage() NOEXP {
+DLL_API u64 core::memory::total_memory_usage() NOEXP {
 	return total_size;
 }
 
-DLL_API u64 core::memory::current_memory_usage(core::memory_tag section_tag) NOEXP {
-	u8 tg = (u8)section_tag;
-	return (tg < SECTIONS_SIZE) ? sections_sizes[tg] : 0;
+DLL_API u64 core::memory::current_memory_usage(u8 section_tag) NOEXP {
+	return (section_tag < SECTIONS_SIZE) ? sections_sizes[ section_tag ] : 0;
 }
 
 DLL_API u64 peak_memory_usage() NOEXP {
@@ -136,7 +135,7 @@ DLL_API u64 peak_memory_usage() NOEXP {
 	if (mi_stats_get(&global_memory_stats)) {
 		return global_memory_stats.malloc_requested.peak;
 	}
-	else return (u64)-1;
+	else return 0;
 
 }
 

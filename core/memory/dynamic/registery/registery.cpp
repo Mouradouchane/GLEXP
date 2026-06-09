@@ -3,9 +3,9 @@
 #ifndef CORE_MEMORY_REGISTRE_CPP
 #define CORE_MEMORY_REGISTRE_CPP
 
-#include "registery.hpp"
-#include "core/memory/global_allocator/global_allocator.hpp"
 #include "core/logger/logger.hpp"
+
+#include "registery.hpp"
 
 #ifdef DEBUG
 	static auto _core_registry_alloc_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
@@ -31,22 +31,43 @@ namespace core {
 
 		registry::registry() NOEXP {
 
-			this->capacity = next_power_of_two(registry::default_register_size | 1);
+			this->capacity = registry::default_register_capacity;
+			this->size = sizeof(core::memory_allocation) * this->capacity;
 
-			this->size = sizeof(core::memory::allocation) * this->capacity;
-			this->list = (core::memory::allocation*)core::memory::allocate(this->size, core::memory::tag::memory);
+			this->list = (core::memory_allocation*) core::memory::allocate(
+				core::g_memory_request {
+					this->size, 
+					(u8)core::memory_tag::registry
+				}
+			);
 
-			CORE_INFO("new registry created with capacity={} .", this->capacity);
+			this->allocations_count = 0;
+			this->allocations_size  = 0;
+
+			if (this->list) {
+				CORE_DEBUG(0,"new registry created with capacity={} .", this->capacity);
+			}
+
 		}
 
 		registry::registry(u32 register_capacity) NOEXP {
 
-			this->capacity = next_power_of_two(register_capacity | 1);
+			this->capacity = (register_capacity) ? register_capacity : registry::default_register_capacity;
+			this->size = sizeof(core::memory_allocation) * this->capacity;
 
-			this->size = sizeof(core::memory::allocation) * this->capacity;
-			this->list = (core::memory::allocation*)core::memory::allocate(this->size, core::memory::tag::memory);
+			this->list = (core::memory_allocation*)core::memory::allocate(
+				core::g_memory_request {
+					this->size,
+					(u8)core::memory_tag::registry
+				}
+			);
 
-			CORE_INFO("new registry created with capacity={} .", this->capacity);
+			this->allocations_count = 0;
+			this->allocations_size  = 0;
+			
+			if (this->list) {
+				CORE_DEBUG(0, "new registry created with capacity={} .", this->capacity);
+			}
 		}
 
 		/*
@@ -55,12 +76,12 @@ namespace core {
 
 		registry::~registry() NOEXP {
 
+			// [WARNNING] : any allocations left registred in register will be lost !
 			core::memory::deallocate(this->list);
 
 			this->size = 0;
-			this->count = 0;
 
-			CORE_INFO("registry with capacity={} desturcted !", this->capacity);
+			CORE_DEBUG(0,"registry with capacity={} desturcted !", this->capacity);
 			this->capacity = 0;
 
 		}
@@ -70,35 +91,35 @@ namespace core {
 			registry public functions
 		*/
 
-		u32 registry::insert(void* ptr, u32 size, core::memory::tag tag_) NOEXP {
+		u32 registry::insert(void* ptr, u32 size, u8 tag) NOEXP {
 
-			if (this->count < (this->capacity - 1)) {
+			if (this->allocations_count < this->capacity) {
 
-				// hash then search for empty place
+				// hash then search for empty place to insert new allocation
 				u32 index = this->hash_pointer(ptr);
 				u32 i = this->search(index, nullptr);
 
 				if (i < this->capacity) {
 				#ifdef DEBUG
-					this->list[i] = allocation{ ptr , size , tag_ };
+					this->list[i] = core::memory_allocation{ ptr , size , tag };
 				#else 
-					this->list[i] = allocation{ ptr , size };
+					this->list[i] = memory_allocation{ ptr , size };
 				#endif
 
-					this->count += 1;
-					this->allocations_size += size;
+					this->allocations_count += 1;
+					this->allocations_size  += size;
 
 					return i;
 				}
-				else { // no place found
-					CORE_ERROR(CORE_LOG_CONFIG_ALL, REGISTRY_FAILED_TO_INSERT, core::pointer_to_hex_string(ptr), size);
-					return this->count;
+				else { // failed to find empty place in registry 
+					CORE_FATAL(CORE_LOG_CONFIG_ALL, REGISTRY_FAILED_TO_INSERT, core::pointer_to_hex_string(ptr), size);
+					return this->capacity;
 				}
 
 			}
 			else {
 				CORE_WARN(CORE_LOG_CONFIG_ALL, REGISTRY_IS_FULL);
-				return this->count;
+				return this->capacity;
 			}
 
 		}
@@ -111,14 +132,14 @@ namespace core {
 			u32 i = this->search(index, ptr);
 
 			if (i < this->capacity) {
-				this->count -= 1;
-				this->allocations_size -= this->list[i].size;
+				this->allocations_count -= 1;
+				this->allocations_size  -= this->list[i].size;
 
 				this->list[i].clear();
 
 				return true;
 			}
-			else { // no place found
+			else { // ptr not found
 				CORE_WARN(CORE_LOG_CONFIG_ALL, REGISTRY_PTR_NOT_FOUND, core::pointer_to_hex_string(ptr));
 				return false;
 			}
@@ -126,25 +147,25 @@ namespace core {
 		}
 
 
-		core::memory::allocation registry::cut(void* ptr) NOEXP {
+		core::memory_allocation registry::cut(void* ptr) NOEXP {
 
 			// hash then search for ptr
 			u32 index = this->hash_pointer(ptr);
 			u32 i = this->search(index, ptr);
 
 			if (i < this->capacity) {
-				core::memory::allocation alloc = this->list[i];
+				core::memory_allocation alloc = this->list[i];
 
-				this->count -= 1;
-				this->allocations_size -= this->list[i].size;
+				this->allocations_count -= 1;
+				this->allocations_size  -= this->list[i].size;
 
 				this->list[i].clear();
 
 				return alloc;
 			}
-			else {
+			else { // ptr not found
 				CORE_WARN(CORE_LOG_CONFIG_ALL, REGISTRY_PTR_NOT_FOUND, core::pointer_to_hex_string(ptr));
-				return core::memory::allocation{ 0 };
+				return core::memory_allocation{ 0 };
 			}
 
 		}
@@ -162,7 +183,7 @@ namespace core {
 		}
 
 		INLINE u32 registry::get_allocations_count() NOEXP {
-			return this->count;
+			return this->allocations_count;
 		}
 
 		INLINE u32 registry::get_allocations_size()  NOEXP {
@@ -174,19 +195,10 @@ namespace core {
 			registry helper functions
 		*/
 
+		// todo: get some good hashing function later -> https://github.com/cyan4973/xxhash
 		u32 registry::hash_pointer(void* ptr) NOEXP {
 
-			u64 iptr = (u64)ptr;
-
-			// 1. Shift RIGHT to discard the always-zero lower alignment bits
-			iptr = iptr >> 3;
-
-			// 2. Mix with a prime factor to destroy predictable address patterns 
-			//    and prevent massive collision clusters.
-			u64 mix = iptr * 11400714819323198485ULL;
-
-			// 3. Cleanly wrap the index within your exact registry length range
-			return u32(mix % this->capacity);
+			return u32((u64)ptr % this->capacity);
 		}
 
 		u32 registry::search(u32 start_index = 0, void* ptr = nullptr) NOEXP {
@@ -209,34 +221,21 @@ namespace core {
 		}
 
 
-		INLINE void allocation::clear() NOEXP {
-
-#ifdef DEBUG
-			this->ptr = nullptr;
-			this->size = 0;
-			this->tag_ = tag::unkown;
-#else 
-			this->ptr = nullptr;
-			this->size = 0;
-#endif
-
-		}
-
-		static INLINE u32 next_power_of_two(u32 value) NOEXP {
-			value--;
-			value |= value >> 1;
-			value |= value >> 2;
-			value |= value >> 4;
-			value |= value >> 8;
-			value |= value >> 16;
-			value++;
-
-			return value;
-		}
-
-
 	} // namespace memory end
 
+
+	INLINE void core::memory_allocation::clear() NOEXP {
+
+	#ifdef DEBUG
+		this->ptr  = nullptr;
+		this->size = 0;
+		this->tag  = (u8)core::memory_tag::unkown;
+	#else 
+		this->ptr  = nullptr;
+		this->size = 0;
+	#endif
+
+	}
 
 } // namesapce core end
 

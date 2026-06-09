@@ -7,8 +7,8 @@
 
 #include "core/strings/string.hpp"
 
-#include "libs/mimalloc/mimalloc.h"
 #include "core/memory/memory.hpp"
+#include "core/memory/dynamic/block/block.hpp"
 
 #define MAX_SECTIONS 255
 
@@ -16,10 +16,10 @@ namespace core {
 
 	DLL_API_CLASS dynamic_allocator {
 	private:
-		mi_arena_id_t _arena_id_;
-		mi_heap_t*    _heap_;
+		core::memory_block* blocks = nullptr;
+		u32                 blocks_count = 0;
 
-		bool _multi_threaded_;
+		bool _multi_threaded_ = false;
 
 	#ifdef DEBUG // debug-only variables
 		string _name_;
@@ -62,19 +62,22 @@ namespace core {
 		const string&    name() NOEXP;
 		core::memory_tag tag()  NOEXP;
 	#else 
-		const string&    name() NOEXP;
-		core::memory_tag tag()  NOEXP;
+		INLINE const string&    name() NOEXP;
+		INLINE core::memory_tag tag()  NOEXP;
 	#endif
 
-	private: // not allowed contructor's
+	private: 
+
+		// not allowed contructor's
 		dynamic_allocator() = delete;
-		dynamic_allocator(dynamic_allocator &  other)      = delete;
-		dynamic_allocator(dynamic_allocator && other)      = delete;
-		dynamic_allocator(dynamic_allocator const& other)  = delete;
+		dynamic_allocator(dynamic_allocator &      other) = delete;
+		dynamic_allocator(dynamic_allocator &&     other) = delete;
+		dynamic_allocator(dynamic_allocator const& other) = delete;
 
 		// not allowed operator's
-		dynamic_allocator& operator = (const dynamic_allocator&  other)      = delete;
-		dynamic_allocator& operator = (const dynamic_allocator&& other)      = delete;
+		dynamic_allocator& operator = (const dynamic_allocator        other) = delete;
+		dynamic_allocator& operator = (const dynamic_allocator &      other) = delete;
+		dynamic_allocator& operator = (const dynamic_allocator &&     other) = delete;
 		dynamic_allocator& operator = (const dynamic_allocator const& other) = delete;
 
 	};
