@@ -3,7 +3,7 @@
 #ifndef CORE_MEMORY_BLOCK_HPP
 #define CORE_MEMORY_BLOCK_HPP
 
-#include <atomic>
+#include <atomic> // for scoped locks
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
@@ -11,30 +11,35 @@
 #include "core/memory/memory.hpp"
 #include "core/memory/dynamic/registery/registery.hpp"
 
+#define MEMORY_BLOCK_IS_REGISTRY_FULL "memory_block registry is full max {} allocation !"
+#define MEMORY_BLOCK_OUT_OF_MEMORY    "memory_block is out of memory , failed to allocate {}bytes ."
+#define MEMORY_BLOCK_NOT_ALLOWED_SIZE "memory block with size={}byte is not allowed because -> min_allowed_size={}, max_allowed_size={} ."
+#define MEMORY_BLOCK_INVALID_POINTER  "invalid pointer {} passed to memory_block ! pointer is not in memory block range |{} , {}| ."
 
 namespace core {
 
 	DLL_API_CLASS memory_block {
 	private:
-		std::atomic<bool> lock = false;
+		std::atomic<bool> lock;
 
 		byte* start = nullptr; // block start
 		byte* end   = nullptr; // block end
 		byte* seek  = nullptr; // current free spot
 		u64   block_size  = 0; // block memory size in bytes
-		
+
 	#ifdef DEBUG
-		u8    tag = 0; // block tag 
+		u8    block_tag = 0;
 	#endif
 
 		/*
 			note: registry keep track of allocations count and toal size .
 			      use registry functions get these information
 		*/
-		core::memory::registry active_list; // list of the current active/alive allocations in block
-		core::memory::registry free_list;   // list of the current free/avalible areas in block
+		core::memory_registry active_list; // list of the current active/alive allocations in block
+		core::memory_registry free_list;   // list of the current free/avalible areas in block
 	
 	public:
+
 		static const u64 min_allowed_size =  128 KB;
 		static const u64 max_allowed_size = 1024 MB;
 
@@ -44,46 +49,35 @@ namespace core {
 
 		// memory_block public functions
 
-	#ifdef DEBUG
-		void* allocate(u32 size, u8 tag) NOEXP;
-	#else 
-		void* allocate(u32 size, u8 tag = 0) NOEXP;
-	#endif
-
 		void* allocate(core::memory_request const& request) NOEXP;
+		void* allocate(u32 size, u32 alignement = 0, u8 tag = 0) NOEXP;
 
-		void  deallocate(void* pointer) NOEXP;
+		bool  deallocate(void* pointer) NOEXP;
+
+		bool is_busy() NOEXP;
 
 		u32 size() NOEXP;
-		u32 free_memory()  NOEXP;
+		u32 free_memory() NOEXP;
 		u32 allocated_memory() NOEXP;
-
 
 	private: // private helper functions
 
+
+		INLINE void handle_registry(
+			void** ptr, core::i_memory_allocation const& allocation , core::memory_request const& request
+		) NOEXP;
+
+	
 		/*
-			- this function try to merge free spots in block
-			- this help to avoid "memory fragmentation" and "help providing larger spots" of memory
-
-			WARNING: this is a expansive operation and locks the entier block
-		*/
-		INLINE void merge_free_areas() NOEXP;
-
-		INLINE void allocate_from_free_list(void** pointer, u32 count, u32 index) NOEXP;
-
-		// this function search the free_list looking for empty spot
-		INLINE void find_free_location(u32& index_output, u32 size_) NOEXP;
-
-		// sort from bigger to smaller
-		INLINE void sort_by_pointer(core::memory_allocation* list, u32 length) NOEXP;
-
-
-		// not allowed contructor's
+			not allowed contructor's
+		*/ 
 		memory_block(memory_block & other)      = delete;
 		memory_block(memory_block && other)     = delete;
 		memory_block(memory_block const& other) = delete;
 
-		// not allowed operator's
+		/*
+			not allowed operator's
+		*/ 
 		memory_block& operator = (const memory_block & other)      = delete;
 		memory_block& operator = (const memory_block && other)     = delete;
 		memory_block& operator = (const memory_block const& other) = delete;

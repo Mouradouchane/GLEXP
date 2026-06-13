@@ -3,24 +3,19 @@
 #ifndef CORE_GLOBAL_MEMORY_ALLOCATOR_HPP
 #define CORE_GLOBAL_MEMORY_ALLOCATOR_HPP
 
-#include "core/memory/memory_macros.hpp"
-#include "core/memory/memory_enums.hpp"
+#include "core/macros.hpp"
+#include "core/types.hpp"
+
+/*
+#include "core/memory/memory.hpp"
 
 namespace core {
 
-	// struct used to request memory from allocator
-	struct memory_request {
-		u64 size;             // memory size
-		u32 alignement;       // memory alignement
-		core::memory_tag tag; // memory tag "debug-only"
-	};
-
-	/*
 		core::memory have global allocator it's just a wrapper used by other allocators like: pool, arena , ...
-	*/
+	
 	namespace memory {
 
-		DLL_API void* allocate(memory_request const& request) NOEXP;
+		DLL_API void* allocate(core::memory_request const& request) NOEXP;
 
 		// note: this function preforme tow allocation in one call but !
 		//       both allocations not guarnted to be next each other in memory :)
@@ -41,5 +36,6 @@ namespace core {
 
 } // namespace core end
 
+*/
 
 #endif

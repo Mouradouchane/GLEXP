@@ -139,4 +139,18 @@ DLL_API u64 peak_memory_usage() NOEXP {
 
 }
 
+
+INLINE void core::memory_allocation::clear() NOEXP {
+
+#ifdef DEBUG
+	this->ptr = nullptr;
+	this->size = 0;
+	this->tag = (u8)core::memory_tag::unkown;
+#else 
+	this->ptr = nullptr;
+	this->size = 0;
+#endif
+
+}
+
 #endif

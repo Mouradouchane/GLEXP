@@ -243,65 +243,6 @@ core::memory_allocator::~memory_allocator() NOEXP {
 template<typename type>
 type* core::memory_allocator::allocate(u32 size) NOEXP {
 	
-	/*
-		todo: change these crash_if's
-	*/
-	CORE_FATAL_IF(size < 1, CORE_LOG_CONFIG_ALL, ZERO_SIZE_ALLOCATION);
-	
-	CORE_FATAL_IF(size > this->_size_, CORE_LOG_CONFIG_ALL, TO_BIG_ALLOCATION, size , this->_size_);
-	
-	CORE_FATAL_IF(
-		this->registered >= this->max_allowed_allocations, CORE_LOG_CONFIG_ALL,
-		MEMORY_ALLOCATOR_IS_FULL , this->_name_ , this->registered , this->max_allowed_allocations
-	);
-
-	type* pointer   = nullptr;
-	u32  _available = (this->end >= this->seek) ? u32(this->end - this->seek) : 0u;
-
-	if ((this->seek < this->end) && (size <= _available)) {
-		// allocate from seek
-		pointer = (type*)this->seek;
-
-		// update variables
-		this->seek += size;
-
-		// register the allocation
-		this->register_allocation(pointer, size);
-
-		return pointer;
-	}
-	else {
-
-		u32 index = this->max_allowed_allocations;
-
-		// search for empty spot
-		this->find_free_location(index, size);
-
-		if (index < this->max_allowed_allocations) {
-			allocate_from_free_list(&pointer, size, index);
-			return pointer;
-		}
-
-		/*
-			else : try to merge empty spots if possible
-				   and see if there's any spot for allocation
-		*/
-		this->merge_free_areas();
-
-		// search again after the merge process
-		this->find_free_location(index, size);
-
-		// if no place found : crash -> "no memory left"
-		CRASH_IF(
-			index >= this->max_allowed_allocations,
-			"memory_heap.allocate: no memory left or found for allocation !"
-		);
-
-		allocate_from_free_list(&pointer, size, index);
-		return pointer;
-	}
-
-
 }
 
 void core::memory_allocator::deallocate(void* pointer) NOEXP {

@@ -3,34 +3,47 @@
 #ifndef CORE_MEMORY_POOL_HPP
 #define CORE_MEMORY_POOL_HPP
 
-/*
-	global_memory memory_pool : 
-	- fixed count allocation 
-	- fixed count memory_pool global_memory pages
-	- first fit allocation
-*/
-
 #include "core/macros.hpp"
+#include "core/types.hpp"
+
 #include "core/memory/memory.hpp"
 
 namespace core {
 
-	namespace memory {
+	typedef u32 pool_index;
 
-		// todo: implement memory_pool allocator
-		DLL_API_CLASS pool : protected core::memory_allocator {
+	/*
+		memory pool is fixed size allocator , also fast for allocate/deallocate memory
+	*/
 
-		public:
-			 pool();
-			~pool();
+	DLL_API_CLASS memory_pool {
+	private:
+		byte* start = nullptr;
+		byte* end   = nullptr;
+		byte* seek  = nullptr; 
 
-			void* allocate(u32 count)       noexcept override;
-			void  deallocate(void* pointer) noexcept override;
+		u32 pool_size  = 0; // size of pool in bytes
 
-		}; // class memory::pool end
+		u32 allocations_count = 0;
+		u32 allocations_size  = 0;
+		
+		u8 pool_tag = 0;
 
-	} // namespace memory end
+	public:
+		// constructor's
+		 memory_pool(u16 element_size , u32 elements_count , u8 usage_tag);
 
+		// destructor
+		~memory_pool();
+
+		// pool public functions
+		pool_index allocate() NOEXP;
+		void deallocate(pool_index index) NOEXP;
+
+		INLINE void* get(pool_index) NOEXP;
+
+	}; // class memory_pool end
+	
 } // namespace core end
 
 

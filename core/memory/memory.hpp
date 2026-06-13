@@ -24,7 +24,6 @@
 #define FAILED_TO_CREATE_ALLOCATOR  "failed to create memory-allocator : name={} , size={} ."
 #define ALLOCATOR_SIZE_NOT_ALLOWED  "requested size {}byte for allocator name={} is not allowed : min_allowed={} , max_allowed={} ."
 #define ALLOCATOR_FAILED_TO_GET_INFO "memory allocator {} failed to obtain info about his internal memory !"
-#define MEMORY_BLOCK_NOT_ALLOWED_SIZE "memory block with size={}byte is not allowed because -> min_allowed_size={}, max_allowed_size={} ."
 
 namespace core {
 
@@ -32,17 +31,14 @@ namespace core {
 	enum class allocator_tag  : u8;
 	enum class allocator_type : u8;
 
-	struct g_memory_request {
-		u64 size;       // memory size
-		u8  tag;        // memory tag for "debug-only"
-	};
+	struct   memory_request;
+	struct g_memory_request;
 
-	struct memory_request {
-		u64 size;       // memory size
-		u32 alignement; // memory alignement
-		u8  tag;        // memory tag for "debug-only"
-	};
+	struct   memory_allocation;
+	struct i_memory_allocation;
 
+	struct   free_memory;
+	struct i_free_memory;
 	/*
 		core::memory have global allocator it's just a wrapper used by other allocators like: pool, arena , ...
 	*/
@@ -64,7 +60,10 @@ namespace core {
 	}
 	// namespace memory end
 
-	// convert memory tags to strings 
+
+	/*
+		to_string functions to convert memory tags to strings
+	*/ 
 	DLL_API const std::string& to_string(core::memory_tag tag) NOEXP;
 	DLL_API const std::string& to_string(core::memory_tag section , u8 tag) NOEXP;
 
@@ -87,6 +86,55 @@ namespace core {
 		gui_system,
 	};
 
+	/*
+		few memory types
+	*/
+	
+	// used by memory allocator
+	struct g_memory_request {
+		u64 size; // could be higher than 4GB
+		u8  tag;  // "debug-only"
+	};
+
+	// used for dynamic allocator
+	struct memory_request {
+		u32 size;      // max size below 4GB
+		u32 alignement; 
+		u8  tag; // "debug-only"
+	};
+	
+	// used by block allocator
+	struct memory_allocation {
+		void* ptr;
+		u32   size;
+			
+	#ifdef DEBUG
+		u8    tag; // "debug-only"
+	#endif
+
+		// helper function
+		INLINE void clear() NOEXP;
+	};
+
+	// used by registry and allocator
+	struct i_memory_allocation {
+		void* ptr;
+		u32   size;
+		u32	  index;
+	};
+
+	// used by free list and allocator
+	struct free_memory {
+		void* ptr;
+		u32   size;
+	};
+
+	// used by registry and allocator
+	struct i_free_memory {
+		void* ptr;
+		u32   size;
+		u32	  index;
+	};
 
 	/*
 		"debug-only" , used to flag the allocation used for what
