@@ -3,8 +3,9 @@
 #ifndef CORE_MEMORY_REGISTRE_CPP
 #define CORE_MEMORY_REGISTRE_CPP
 
-#include "core/logger/logger.hpp"
+#include <vector>
 
+#include "core/logger/logger.hpp"
 #include "registery.hpp"
 
 #ifdef DEBUG
@@ -182,18 +183,92 @@ INLINE u32 memory_registry::get_allocations_size()  NOEXP {
 	return this->allocations_size;
 }
 
+// note: this could be a disaster on preformance level because it O(N)
+core::i_memory_allocation memory_registry::get_allocation(u32 target_size) NOEXP {
 
-INLINE void memory_registry::merge_free_areas() NOEXP {
+	for (u32 i = 0; i < this->capacity; i++) {
 
-	// copy free list
+		if (this->list[i].size >= target_size) {
+			return core::i_memory_allocation { 
+				this->list[i].ptr,
+				this->list[i].size,
+				i
+			};
+		}
 
-	// sort list by address
+	}
 
-	// create new list
+	return core::i_memory_allocation{ 0 };
+}
 
-	// merge contigues allocations + insert in new list
+core::i_memory_allocation memory_registry::get_biggest_allocation(u32 target_size) NOEXP {
 
-	// sort new list by size
+	core::memory_allocation allocation = this->list[this->biggest_allocation];
+
+	if (allocation.size >= target_size) {
+		return core::i_memory_allocation{ allocation.ptr , allocation.size , this->biggest_allocation };
+	}
+	
+	return core::i_memory_allocation{ 0 };
+}
+
+
+void memory_registry::merge_free_areas() NOEXP {
+
+	// copy list
+	std::vector<core::memory_allocation> c_list(this->list , this->list + this->capacity);
+
+	// sort allocations by address
+	std::sort(
+		c_list.begin(), c_list.end(), 
+		[&](core::memory_allocation const& A , core::memory_allocation const& B) -> bool {
+			return (A.ptr < B.ptr);
+		}
+	);
+
+	// start the merge process
+	for (u32 i = 0; i < (c_list.size() - 1); i++) {
+		
+		// if tow allocations contigues in list
+		if (c_list[i + 1].ptr == ((byte*)c_list[i].ptr + c_list[i].size)) {
+			// merge both of them
+			c_list[i + 1].ptr   = c_list[i].ptr;
+			c_list[i + 1].size += c_list[i].size;
+
+			// empty current allocation
+			c_list[i] = core::memory_allocation{ 0 };
+		}
+
+	}
+
+	// empty registry list
+	std::memset(this->list, 0, this->size);
+
+	core::i_memory_allocation new_biggest = { 0 };
+
+	// insert back the new once
+	for (u32 i = 0; i < c_list.size(); i++) {
+
+		if (c_list[i].ptr) {
+			u32 index = this->search( this->hash_pointer(c_list[i].ptr) , nullptr);
+
+			if (index < this->capacity) {
+				// direct insert
+				this->list[i] = c_list[i];
+
+				// keep track of the biggest allocation
+				if (this->list[i].size > new_biggest.size) {
+					new_biggest = core::i_memory_allocation {
+						this->list[i].ptr,
+						this->list[i].size,
+						i
+					};
+				}
+			}
+
+		}
+
+	}
 
 }
 
@@ -208,7 +283,7 @@ u32 memory_registry::hash_pointer(void* ptr) NOEXP {
 	return u32((u64)ptr % this->capacity);
 }
 
-u32 memory_registry::search(u32 start_index = 0, void* ptr = nullptr) NOEXP {
+u32 memory_registry::search(u32 start_index, void* ptr) NOEXP {
 
 	u32 i = start_index;
 

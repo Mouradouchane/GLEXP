@@ -7,8 +7,9 @@
 
 #include "core/macros.hpp"
 #include "core/logger/logger.hpp"
-#include "core/memory/memory.hpp"
-#include "core/data_structres/arrays/dynamic_array.hpp"
+#include "core/strings/string.hpp"
+#include "core/memory/dynamic/dynamic_allocator.hpp"
+#include "core/containers/arrays/dynamic_array.hpp"
 
 #ifdef DEBUG
 	static auto _event_dispatcher_hpp_logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );
@@ -17,6 +18,12 @@
 #endif
 
 #define _LOGGER_ _event_dispatcher_hpp_logger_
+
+/*
+	few macros for dispatcher errors/warnings 
+*/
+#define CORE_DISPATCHER_INDEX_OUT_OF_RANGE "out of range index {} passed to dispatcher {} !"
+#define CORE_LISTENER_NOT_FOUND "listener {} is not found in dispatcher {} !"
 
 namespace core {
 
@@ -36,9 +43,12 @@ namespace core {
 		private:
 			core::dynamic_array< core::callback<type> > _listeners_ = core::dynamic_array < core::callback<type>>(8,8,nullptr);
 
+			// todo: add support for name
+			DEBUG_ONLY string dispatcher_name = "unkown";
+
 		public:
 			// constructor/destructor
-			 dispatcher(u32 count, u32 resize_value , core::memory_allocator* allocator = nullptr);
+			 dispatcher(u32 count, u32 resize_value , core::dynamic_allocator* allocator = nullptr);
 			~dispatcher() override;
 
 			// dispatcher public functions
@@ -66,7 +76,7 @@ namespace core {
 
 // constructor 
 template<typename type> 
-dispatcher<type>::dispatcher(u32 count, u32 resize_value, core::memory_allocator* allocator) {
+dispatcher<type>::dispatcher(u32 count, u32 resize_value, core::dynamic_allocator* allocator) {
 
 	this->_listeners_ = core::dynamic_array<core::callback<type>>(count, resize_value, allocator);
 	CORE_DEBUG_D("dispatcher constructed <{}>",typeid(type).name());
@@ -88,13 +98,13 @@ u32 dispatcher<type>::subscribe(callback<type> const& callback_function) NOEXP {
 	return this->_listeners_.push(callback_function);
 }
 
+
 template<typename type> 
 bool dispatcher<type>::unsubscribe(u32 index) NOEXP {
 
 	if (index >= this->_listeners_.size()) {
 	#ifdef DEBUG
-		STRING error_msg = core::status::get_error(core::error::index_out_range);
-		CORE_ERROR_D(error_msg, index , this->_listeners_.size());
+		CORE_ERROR_F(CORE_DISPATCHER_INDEX_OUT_OF_RANGE , index, this->dispatcher_name);
 	#endif
 		return false;
 	}
@@ -121,7 +131,7 @@ template<typename type>
 void dispatcher<type>::trigger(u32 index, type const& data) NOEXP {
 	
 	if (index >= _listeners_.size()) {
-		CORE_ERROR_D(core::status::get_error(core::error::index_out_range), index);
+		CORE_ERROR_D(CORE_DISPATCHER_INDEX_OUT_OF_RANGE, index , this->dispatcher_name);
 		return;
 	}
 
@@ -129,17 +139,14 @@ void dispatcher<type>::trigger(u32 index, type const& data) NOEXP {
 		this->_listeners_[index](data);
 		return;
 	}
-	else {
-		CORE_FATAL_D(core::status::get_error(core::error::listener_not_found) , index);
-		CORE_CRASH();
-	}
-
+	
+	CORE_WARN_F(CORE_LISTENER_NOT_FOUND, index , this->dispatcher_name);
 }
 
 template<typename type> 
 void dispatcher<type>::clear() NOEXP {
 	this->_listeners_.clear();
-	CORE_INFO_D("all listeners in {} for {} is deleted !" , (void*)this , typeid(type).name());
+	CORE_DEBUG_D("all listeners in dispatcher {} is deleted !" , this->dispatcher_name);
 }
 
 } // namespace core end

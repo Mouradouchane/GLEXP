@@ -9,13 +9,15 @@
 #include "core/memory/memory.hpp"
 
 // few errors/warnings for registry
-#define ZERO_SIZE_REGISTRY "zero size registry is not allowed , auto adjust to default size ."
+#define REGISTRY_ZERO_SIZE_NOT_ALLOWED "zero size registry is not allowed , auto adjust to default size ."
 #define REGISTRY_FAILED_TO_INSERT "registry failed to insert ({},{}) !"
 #define REGISTRY_IS_FULL        "registery is full , failed to insert ."
 #define REGISTRY_PTR_NOT_FOUND  "registry: pointer {} not found in registry ."
 
 namespace core {
-
+	
+	DLL_API_CLASS memory_block;
+	
 	/*
 		registry hash-table for storing allocation's or deallocation's
 		note: this registry store allocations + thier sizes and also stroe total size of all current allocations
@@ -63,23 +65,24 @@ namespace core {
 		INLINE u32 get_allocations_size()  NOEXP; // total size of all allocation in register
 		INLINE u32 get_allocations_count() NOEXP; // how many allocation in register
 
-		// search for ready to use allocation
+		
 		core::i_memory_allocation get_allocation(u32 target_size) NOEXP; // o(n)
 		core::i_memory_allocation get_biggest_allocation(u32 target_size) NOEXP; // O(1)
+
+	private: // helper function
 
 		/*
 			- this function try to merge contigues allocations
 			- this help with "fragmentation" and "provides larger areas" of memory
 			- WARNING: this is a expansive operation and locks the entier block !
 		*/
-		INLINE void merge_free_areas() NOEXP;
-
-	private: // helper function
+		void merge_free_areas() NOEXP;
 
 		u32 hash_pointer(void* ptr) NOEXP;
 
 		INLINE u32 search(u32 start_index = 0, void* ptr = nullptr) NOEXP;
 
+		friend class core::memory_block;
 	};
 	// class memory_registry end
 

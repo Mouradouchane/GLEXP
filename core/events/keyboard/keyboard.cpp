@@ -1,3 +1,4 @@
+#if 0
 #pragma once 
 
 #ifndef CORE_KEYBOARD_EVENTS_CPP 
@@ -20,7 +21,7 @@
 core::keyboard::keyboard(
 	core::window const& target_window,
 	STRING name,
-	core::memory_allocator const& allocator,
+	core::dynamic_allocator const& allocator,
 	u32 size,
 	u32 resize_value
 ) NOEXP {
@@ -28,11 +29,13 @@ core::keyboard::keyboard(
 	this->window  = target_window.get_internal_object();
 
 	this->manager = core::event_manager(
-		core::event_manager_category::keyboard_events, 
-		name,
-		size, 
-		resize_value, 
-		(core::memory_allocator*)&allocator
+		core::event_manager_category {
+			.category = core::event_manager_category::keyboard_events, 
+			.name = name,
+			.size = size,
+			.resize = resize_value, 
+			.allocator = allocator
+		}
 	);
 
 }
@@ -81,5 +84,5 @@ bool core::keyboard::stop_listen(listener_id event_listener_id) NOEXP {
 	return this->manager.stop_listen(event_listener_id);
 }
 
-
+#endif
 #endif 

@@ -7,24 +7,24 @@
 
 namespace core {
 
-	namespace memory {
+	DLL_API_CLASS memory_arena {
+	private:
 
-		// todo: implement memory::arena allocator
-		DLL_API_CLASS arena : protected core::memory_allocator {
+	public :
+		// constructor/destructor
+		 memory_arena(core::g_memory_request const& arean_parameters);
+		~memory_arena();
 
-		public :
-			 arena();
-			~arena();
+		// public functions
+		void* allocate(u32 size , u8 tag) NOEXP;
+		void  deallocate(void* pointer)   NOEXP;
 
-			virtual void* allocate(u32 count)        noexcept final;
-			virtual void  deallocate(void* pointer)  noexcept final;
+		DEBUG_ONLY std::string arena_name() NOEXP;
+		DEBUG_ONLY u8          arean_tag()  NOEXP;
+		DEBUG_ONLY u32         arena_size() NOEXP;
 
-			virtual std::string allocator_name()      noexcept final;
-			virtual core::memory::tag allocator_tag() noexcept final;
-
-		}; // class arena end
+	}; // class memory_arena end
 		
-	} // namespace memory end
 
 } // namespace core end
 

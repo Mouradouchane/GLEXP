@@ -25,6 +25,8 @@
 #define ALLOCATOR_SIZE_NOT_ALLOWED  "requested size {}byte for allocator name={} is not allowed : min_allowed={} , max_allowed={} ."
 #define ALLOCATOR_FAILED_TO_GET_INFO "memory allocator {} failed to obtain info about his internal memory !"
 
+
+
 namespace core {
 
 	enum class memory_tag     : u8;
@@ -39,6 +41,7 @@ namespace core {
 
 	struct   free_memory;
 	struct i_free_memory;
+
 	/*
 		core::memory have global allocator it's just a wrapper used by other allocators like: pool, arena , ...
 	*/
@@ -60,31 +63,6 @@ namespace core {
 	}
 	// namespace memory end
 
-
-	/*
-		to_string functions to convert memory tags to strings
-	*/ 
-	DLL_API const std::string& to_string(core::memory_tag tag) NOEXP;
-	DLL_API const std::string& to_string(core::memory_tag section , u8 tag) NOEXP;
-
-
-	/*
-		"debug-only" , used to flag allocator used for what .
-	*/
-	enum class allocator_tag : u8 {
-		unkown = 0,
-
-		memory_system,
-		assets_system,
-		entity_system,
-		events_system,
-		physics_system,
-		graphics_system,
-		collision_system,
-		animation_system,
-		work_system,
-		gui_system,
-	};
 
 	/*
 		few memory types
@@ -137,6 +115,28 @@ namespace core {
 	};
 
 	/*
+		"debug-only" , used to flag allocator used for what .
+	*/
+	enum class allocator_tag : u8 {
+		unkown = 0,
+
+		memory_system,
+		assets_system,
+		entity_system,
+		events_system,
+		physics_system,
+		graphics_system,
+		collision_system,
+		animation_system,
+		work_system,
+		gui_system,
+
+	#ifdef DEBUG
+		debug_system
+	#endif
+	};
+
+	/*
 		"debug-only" , used to flag the allocation used for what
 	*/
 	enum class memory_tag : u8 {
@@ -165,9 +165,9 @@ namespace core {
 		timer,
 		debugger,
 
-		#ifdef DEBUG
-			dev,
-		#endif
+	#ifdef DEBUG
+		dev,
+	#endif
 	};
 
 
@@ -179,6 +179,12 @@ namespace core {
 		arena_allocator
 	};
 
+
+	/*
+		to_string functions to convert memory tags to strings
+	*/
+	DLL_API string to_string(core::memory_tag    tag) NOEXP;
+	DLL_API string to_string(core::allocator_tag tag) NOEXP;
 
 } // namespace core end
 

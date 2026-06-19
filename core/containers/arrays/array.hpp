@@ -10,38 +10,16 @@
 
 #include "core/types.hpp"
 #include "core/assert.hpp"
-#include "core/status/status.hpp"
-#include "core/memory/memory.hpp"
+#include "core/memory/dynamic/dynamic_allocator.hpp"
 
 
 #ifdef DEBUG
-	static auto _dssa_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
+	static auto _dssa_logger_ = CORE_GET_LOGGER(DATA_STRUCTER_LOGGER);
 #else 
 	static auto _dssa_logger_ = nullptr;
 #endif
 
 #define _LOGGER_ _dssa_logger_
-
-#ifdef DEBUG
-	#define DEBUG_ARRAY_CONSTUCTED(ARRAY , TYPE) \
-		CORE_TRACE( \
-			"array<{}>[{}] constructed() | memory section '{}' !", \
-			typeid(TYPE).name() , ARRAY->size_ , \
-			(ARRAY->allocator ? core::memory::tag_to_string(ARRAY->allocator->get_tag()) : "none") \
-		);
-
-	#define DEBUG_ARRAY_DESTUCTED(ARRAY , TYPE) \
-		CORE_TRACE( \
-			"{} array<{}>[{}] destructed() | memory section '{}' !", \
-			PTR_TO_STRING(ARRAY), typeid(TYPE).name() , ARRAY->size_ , \
-			(ARRAY->allocator ? core::memory::tag_to_string(ARRAY->allocator->get_tag()) : "none") \
-		);
-
-#else 
-	#define DEBUG_ARRAY_CONSTUCTED()
-	#define DEBUG_ARRAY_DESTUCTED()
-
-#endif
 
 namespace core {
 
@@ -51,21 +29,21 @@ namespace core {
 	template<typename type> class array {
 
 	protected:
-		core::memory_allocator* allocator;
+		core::dynamic_allocator* allocator;
 		u32   size_  = 0;
 		u32   count_ = 0;
 		type* begin_ = nullptr;
 		type* end_   = nullptr;
 
 	public:
-		// extra variables for personal use <3
+		// extra variables for personal use :)
 		u32 a, b, c, d;
 
 		/*
 			constructor's
 		*/
-		array(u32 elements_count , core::memory_allocator* _allocator = nullptr)
-			:allocator(_allocator) 
+		array(u32 elements_count , core::dynamic_allocator const& _allocator)
+			:allocator(&_allocator) 
 		{
 			this->count_ = (elements_count) ? elements_count : 1;
 			this->size_  = (this->count_ * sizeof(type));
@@ -85,10 +63,10 @@ namespace core {
 				new (ptr) type();
 			}
 			
-			DEBUG_ARRAY_CONSTUCTED(this , type);
+			CORE_DEBUG(0, "new core::array< {} >[{}] created .", type_info(type).name , this->count_);
 		}
 		
-		array(const type* elements, u32 elements_count, core::memory_allocator* _allocator = nullptr)
+		array(const type* elements, u32 elements_count, core::dynamic_allocator* _allocator = nullptr)
 			:allocator(_allocator)
 		{
 
@@ -115,15 +93,19 @@ namespace core {
 				}
 			}
 
-			DEBUG_ARRAY_CONSTUCTED(this , type);
+			CORE_DEBUG(0, "new core::array< {} >[{}] created .", type_info(type).name, this->count_);
 		}
 
 		// copy constructor
-		array(core::array<type> const& other_array, core::memory_allocator* _allocator = nullptr) 
+		array(core::array<type> const& other_array, core::dynamic_allocator* _allocator = nullptr) 
 			: allocator(_allocator)
 		{
 			if (this == &other_array) {
-				CORE_WARN_D(core::status::get_warning(core::warning::self_assignment));
+				CORE_WARN_D(
+					CORE_SELF_ASSIGN_BUG , 
+					core::pointer_to_hex_string(&other_array) , 
+					core::pointer_to_hex_string(this)
+				);
 				return;
 			}
 
@@ -140,7 +122,7 @@ namespace core {
 
 			this->end_ = this->begin_ + this->count_;
 
-			// todo: multi-threaded copying !
+			// todo: add multi-thread copying for large data !
 			if constexpr(std::is_trivially_copyable<type>::value) {
 				// copy elements if copyable 
 				std::memcpy(this->begin_ , other_array.begin_ , this->size_);
@@ -151,13 +133,17 @@ namespace core {
 				}
 			}
 
-			DEBUG_ARRAY_CONSTUCTED(this , type);
+			CORE_DEBUG(0, "new core::array< {} >[{}] created .", type_info(type).name, this->count_);
 		}
 		
 		// move constructor 
 		array(core::array<type>&& array_to_move) noexcept {
 			if (this == &array_to_move) {
-				CORE_WARN_D(core::status::get_warning(core::warning::self_assignment));
+				CORE_WARN_D(
+					CORE_SELF_ASSIGN_BUG , 
+					core::pointer_to_hex_string(&array_to_move),
+					core::pointer_to_hex_string(this)
+				);
 				return;
 			}
 
@@ -175,9 +161,7 @@ namespace core {
 			array_to_move.size_     = 0;
 			array_to_move.count_    = 0;
 
-			CORE_INFO("array<{}> -> moved array ownership from {} to {}", typeid(type).name(), 
-				PTR_TO_STRING(&array_to_move), PTR_TO_STRING(this)
-			);
+			CORE_DEBUG(0, "moved ownership to new core::array< {} >[{}] .", type_info(type).name, this->count_);
 		}
 
 		/*
@@ -209,7 +193,7 @@ namespace core {
 
 			}
 
-			DEBUG_ARRAY_DESTUCTED(this , type);
+			CORE_DEBUG(0, "core::array< {} >[{}] destructed .", type_info(type).name, this->count_);
 		}
 
 		/*
@@ -225,7 +209,7 @@ namespace core {
 					);
 					return *(this->begin_ + this->count_);
 				#else 
-					CORE_FATAL_F( core::status::get_error(core::error::index_out_range) , index, this->count_);
+					CORE_FATAL_F( CORE_INDEX_OUT_OF_RANGE , index, "core::array");
 				#endif
 			}
 
@@ -236,7 +220,11 @@ namespace core {
 		// note: operator=  discard old elements
 		core::array<type>& operator = (core::array<type> const& array_to_copy) {
 			if (this == &array_to_copy) {
-				CORE_WARN_D( core::status::get_warning(core::warning::self_assignment) );
+				CORE_WARN_D(
+					CORE_SELF_ASSIGN_BUG,
+					core::pointer_to_hex_string(&array_to_copy),
+					core::pointer_to_hex_string(this)
+				);
 				return *this;
 			}
 
@@ -248,7 +236,11 @@ namespace core {
 		// note: operator=  discard old elements
 		core::array<type>& operator = (core::array<type>&& array_to_move) {
 			if (this == &array_to_move) {
-				CORE_WARN_D( core::status::get_warning(core::warning::self_assignment) );
+				CORE_WARN_D(
+					CORE_SELF_ASSIGN_BUG,
+					core::pointer_to_hex_string(&array_to_move),
+					core::pointer_to_hex_string(this)
+				);
 				return *this;
 			}
 
@@ -303,7 +295,7 @@ namespace core {
 					);
 					return *(this->begin_ + this->count_);
 				#else 
-					CORE_FATAL_F( core::status::get_error(core::error::index_out_range) , index, this->count_);
+					CORE_FATAL_F( CORE_INDEX_OUT_OF_RANGE , index, "core::array");
 				#endif
 			}
 
@@ -320,7 +312,7 @@ namespace core {
 					);
 					return ;
 				#else 
-					CORE_FATAL_F( core::status::get_error(core::error::index_out_range) , index, this->count_);
+					CORE_FATAL_F( CORE_INDEX_OUT_OF_RANGE , index, "core::array");
 				#endif
 			}
 			else *(this->begin_ + index) = new_element;
@@ -378,17 +370,20 @@ namespace core {
 
 			if ( (&source) == (&destination) ) {
 
-				#ifdef UNIT_TEST
-					CORE_FATAL_F(
-						"core::array<>::copy({} , {}) -> copying element to it self , will cause crash in runtime !", 
+				#if defined(UNIT_TEST) || defined(DEBUG)
+					CORE_WARN_F(
+						CORE_SELF_ASSIGN_BUG ", will cause crash in runtime !",
 						PTR_TO_STRING(&source) , PTR_TO_STRING(&destination)
 					);
+
+					DEBUG_BREAK;
 					return;
 				#else 
 					CORE_FATAL_F(
-						core::status::get_error(core::error::source_equal_destination) , 
+						CORE_SELF_ASSIGN_BUG , 
 						PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
 					);
+					return;
 				#endif
 
 			}
@@ -400,14 +395,17 @@ namespace core {
 				
 				// note: source > destination is counted as a bug
 				if (source.size_ > destination.size_) {
-					#ifdef UNIT_TEST
-						CORE_FATAL_F(
-							"core::array<>::copy({} , {}) -> source is bigger than destination , this will cause crash in runtime !" , 
+					#if defined(UNIT_TEST) || defined(DEBUG)
+						CORE_WARN_F(
+							CORE_SRC_BIGGER_THAN_DEST CORE_WARNING_RUNTIME_CRASH ,
 							PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
 						);
+
+						DEBUG_BREAK;
 						return;
 					#else
-						CORE_FATAL_F(core::status::get_error(core::error::source_bigger_than_destination), 
+						CORE_FATAL_F(
+							CORE_SRC_BIGGER_THAN_DEST,
 							PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
 						);
 					#endif
@@ -426,12 +424,13 @@ namespace core {
 				}
 			}
 			else {
-				#ifdef UNIT_TEST 
-					CORE_FATAL_F(
-						"core::array<>::copy() -> 'source array' pointer is nullptr this will cause crash in runtime !" 
+				#if defined(UNIT_TEST) || defined(DEBUG)
+					CORE_WARN_F(
+						CORE_NULLPTR_BUG CORE_WARNING_RUNTIME_CRASH , "core::array"
 					);
+					DEBUG_BREAK;
 				#else 
-					CORE_FATAL_F( core::status::get_error(core::error::nullptr_memory));
+					CORE_FATAL_F(CORE_NULLPTR_BUG , "core::array");
 				#endif
 			}
 
@@ -441,18 +440,20 @@ namespace core {
 			
 			if ( (&source) == (&destination) ) {
 
-				#ifdef UNIT_TEST
-					CORE_FATAL_F(
-						"core::array<>::move({} , {}) -> moving element to it self this will cause crash in runtime !", 
+				#if defined(UNIT_TEST) || defined(DEBUG)
+					CORE_WARN_F(
+						CORE_SELF_ASSIGN_BUG CORE_WARNING_RUNTIME_CRASH, 
 						PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
 					);
-					return;
+					DEBUG_BREAK;
 				#else 
-					CORE_FATAL_F(core::status::get_error(core::error::source_equal_destination) , 
+					CORE_FATAL_F(
+						CORE_SELF_ASSIGN_BUG ,
 						PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
 					);
 				#endif
 
+				return;
 			}
 
 			if (destination.begin_) {
@@ -478,14 +479,14 @@ namespace core {
 		static void fill(core::array<type>& _array, type const& fill_value) noexcept {
 
 			if (_array.begin_ == nullptr) {
-				#ifdef UNIT_TEST 
-					CORE_FATAL_F(
-						"core::array<>::fill() -> 'source array' memory is nullptr , will cause crash in runtime !" 
-					);
-					return;
+				#if defined(UNIT_TEST) || defined(DEBUG)
+					CORE_WARN_F(CORE_NULLPTR_BUG CORE_WARNING_RUNTIME_CRASH , "core::array");
+					DEBUG_BREAK;
 				#else 
-					CORE_FATAL_F( core::status::get_error(core::error::nullptr_memory));
+					CORE_FATAL_F(CORE_NULLPTR_BUG , "core::array");
 				#endif
+				
+				return;
 			}
 
 			std::fill(_array.begin_ , _array.end_ , fill_value);

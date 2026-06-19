@@ -7,10 +7,6 @@
 
 namespace core {
 
-	namespace memory {
-	
-
-	} // namespace memory end
 
 } // namespace core end
 

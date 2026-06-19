@@ -4,6 +4,7 @@
 #define CORE_MEMORY_ALLOCATOR_CPP
 
 #include "core/logger/logger.hpp"
+
 #include "dynamic_allocator.hpp"
 
 #ifdef DEBUG
@@ -20,16 +21,13 @@ static enum stats_type : u8 {
     current,
 };
 
-static INLINE u64 internal_get_stats(string const& _heap_name_, mi_heap_t* _heap_, stats_type target_stats) NOEXP;
-
-
 namespace core {
 
 /*
 	constructor's
 */
 
-dynamic_allocator::dynamic_allocator(core::allocator_parameters const& parameters) NOEXP {
+dynamic_allocator::dynamic_allocator(core::g_memory_request const& request) NOEXP {
 
 }
 
@@ -47,17 +45,17 @@ dynamic_allocator::~dynamic_allocator() NOEXP {
 */
 
 void* dynamic_allocator::allocate(core::memory_request const& request) NOEXP {
- 
+    return nullptr;
 }
 
 void* dynamic_allocator::allocate(u32 size , u8 tag) NOEXP {
- 
+    return nullptr;
 }
 
 tow_pointers dynamic_allocator::allocate_tow(
     core::memory_request const& request_1, core::memory_request const& request_2
 ) NOEXP {
-
+    return tow_pointers{ 0 };
 }
 
 void dynamic_allocator::deallocate(void* pointer) NOEXP {
@@ -73,46 +71,41 @@ u64 dynamic_allocator::current_memory_usage(u8 section_tag) NOEXP {
 }
 
 u64 dynamic_allocator::total_memory() NOEXP {
-
+    return 0;
 }
 
 u64 dynamic_allocator::current_memory_usage() NOEXP {
-
+    return 0;
 }
 
 u64 dynamic_allocator::peak_memory_usage() NOEXP {
-
+    return 0;
 }
 
 
 #ifdef DEBUG
 
-    const string& dynamic_allocator::name() NOEXP {
-        return this->_name_;
+    string const& dynamic_allocator::get_name() NOEXP {
+        return this->_allocator_name_;
     }
 
-    core::memory_tag dynamic_allocator::tag()  NOEXP {
-        return this->_tag_;
+    core::memory_tag dynamic_allocator::get_tag()  NOEXP {
+        return this->_allocator_tag_;
     }
 
 #else 
 
-    INLINE const string& dynamic_allocator::name() NOEXP {
+    INLINE string dynamic_allocator::get_name() NOEXP {
         return "";
     }
 
-    INLINE core::memory_tag dynamic_allocator::tag() NOEXP {
+    INLINE core::memory_tag dynamic_allocator::get_tag() NOEXP {
         return core::memory_tag::unkown;
     }
 
 #endif
 
 } // namespace core end
-
-
-static INLINE u64 internal_get_stats(string const& _heap_name_, mi_heap_t* _heap_, stats_type target_stats) NOEXP {
-    
-}
 
 
 #endif

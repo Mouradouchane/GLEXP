@@ -7,7 +7,6 @@
 #include <string>
 
 #include "core/macros.hpp"
-#include "core/status/status.hpp"
 #include "core/logger/logger.hpp"
 
 /*
@@ -22,13 +21,6 @@
 
 #ifdef DEBUG
 
-	#define CORE_ASSERT_ERR(ERROR_ENUM , FORMAT , ...) \
-			if(ERROR_ENUM != core::error::none) {\
-				CORE_FATAL_F(FORMAT , ##__VA_ARGS__); \
-				CORE_TRACE("error:{}", #ERROR_ENUM); \
-				CORE_CRASH(); \
-			}
-
 	#define CORE_ASSERT(TRUE_CONDITION , FORMAT , ...) \
 				if(TRUE_CONDITION) {\
 					CORE_FATAL_F(FORMAT , ##__VA_ARGS__); \
@@ -36,25 +28,17 @@
 					CORE_CRASH(); \
 				}
 
-	#define CRASH_IF(TRUE_CONDITION , FORMAT , ...) if(TRUE_CONDITION) { \
+	#define CRASH_IF(TRUE_CONDITION , FORMAT , ...) \
+				if(TRUE_CONDITION) { \
 					CORE_FATAL_F(FORMAT , ##__VA_ARGS__); \
 					CORE_TRACE("condition:{}", #TRUE_CONDITION); \
 					CORE_CRASH(); \
 				}
 
-	#define CRASH_IF_ERROR(ERROR_ENUM , FORMAT , ...) \
-			if(ERROR_ENUM != core::error::none) {\
-				CORE_FATAL_F(FORMAT , ##__VA_ARGS__); \
-				CORE_TRACE("error:{}", #ERROR_ENUM); \
-				CORE_CRASH(); \
-			}
-
 #else
 
 	#define  CRASH_IF(TRUE_CONDITION    , FORMAT , ...) if(TRUE_CONDITION) CORE_CRASH();
-	#define  CRASH_IF_ERROR(ERROR_ENUM  , FORMAT , ...) if(ERROR_ENUM != core::error::none) CORE_CRASH();
 	#define  CORE_ASSERT(TRUE_CONDITION , FORMAT , ...) if(TRUE_CONDITION) CORE_CRASH();
-	#define  CORE_ASSERT_ERR(ERROR_ENUM , FORMAT , ...) if(ERROR_ENUM != core::error::none) CORE_CRASH();
 
 #endif 
 

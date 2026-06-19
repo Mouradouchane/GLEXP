@@ -63,4 +63,17 @@ struct listener_id {
 typedef u32 h_key32;
 typedef u64 h_key64;
 
+
+// indexes 
+typedef u8  index8;
+typedef u16 index16;
+typedef u32 index32;
+typedef u64 index64;
+
+// id's
+typedef u8  id8;
+typedef u16 id16;
+typedef u32 id32;
+typedef u64 id64;
+
 #endif

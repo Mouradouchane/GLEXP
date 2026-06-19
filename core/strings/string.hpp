@@ -6,22 +6,27 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
-#include "core/memory/dynamic/dynamic_allocator.hpp"
-
 #include <string>
 
 /*
 	note: currently we using std::string under wrapper !
 			but latter we could move to core::c_string or core::o_string .
 */
-typedef std::string string;
+
+#ifndef CORE_TYPE_STRING_DEFINED
+#define CORE_TYPE_STRING_DEFINED
+	typedef std::string string;
+#endif
 
 #ifndef STRING
 	#define STRING std::string
 #endif
 
 namespace core {
-	
+
+	DLL_API string pointer_to_hex_string(void* pointer) NOEXP;
+
+	/*
 	struct c_string {
 		core::dynamic_allocator* allocator = nullptr;
 
@@ -75,8 +80,9 @@ namespace core {
 
 	}; 
 	// class o_string end
+	
+	*/
 
-	DLL_API STRING pointer_to_hex_string(void* pointer);
 
 } // namespace core end
 

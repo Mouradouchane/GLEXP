@@ -5,10 +5,11 @@
 
 #include <array>
 
-#include "core/strings/string.hpp"
-
-#include "core/memory/memory.hpp"
+#include "core/macros.hpp"
+#include "core/types.hpp"
 #include "core/memory/dynamic/block/block.hpp"
+
+#include "core/strings/string.hpp"
 
 #define MAX_SECTIONS 255
 
@@ -21,9 +22,10 @@ namespace core {
 
 		bool _multi_threaded_ = false;
 
-	#ifdef DEBUG // debug-only variables
-		string _name_;
-		core::memory_tag _tag_;
+	// debug-only variables
+	#ifdef DEBUG
+		string           _allocator_name_;
+		core::memory_tag _allocator_tag_; // what this allocator used for
 
 		// used to keep track of memory for "debugging purposes"
 		std::array<u32, MAX_SECTIONS> sections_sizes = { 0u };
@@ -31,11 +33,11 @@ namespace core {
 
 	public:
 		// min/max allowed size for dynamic_allocator
-		static const u64 min_size_allowed = 128  KB;
-		static const u64 max_size_allowed = 1024 MB;
+		static const u64 min_size_allowed =   64 KB;
+		static const u64 max_size_allowed =  512 MB;
 		
 		// constructor
-		dynamic_allocator( core::allocator_parameters const& parameters ) NOEXP;
+		dynamic_allocator( core::g_memory_request const& request ) NOEXP;
 
 		// destructor
 		~dynamic_allocator() NOEXP;
@@ -59,24 +61,27 @@ namespace core {
 		u64 peak_memory_usage() NOEXP;
 
 	#ifdef DEBUG
-		const string&    name() NOEXP;
-		core::memory_tag tag()  NOEXP;
-	#else 
-		INLINE const string&    name() NOEXP;
+
+		string const&    get_name() NOEXP;
+		core::memory_tag get_tag()  NOEXP;
+
+	#else
+
+		INLINE string const&    name() NOEXP;
 		INLINE core::memory_tag tag()  NOEXP;
+
 	#endif
+
 
 	private: 
 
 		// not allowed contructor's
 		dynamic_allocator() = delete;
-		dynamic_allocator(dynamic_allocator &      other) = delete;
 		dynamic_allocator(dynamic_allocator &&     other) = delete;
 		dynamic_allocator(dynamic_allocator const& other) = delete;
 
 		// not allowed operator's
 		dynamic_allocator& operator = (const dynamic_allocator        other) = delete;
-		dynamic_allocator& operator = (const dynamic_allocator &      other) = delete;
 		dynamic_allocator& operator = (const dynamic_allocator &&     other) = delete;
 		dynamic_allocator& operator = (const dynamic_allocator const& other) = delete;
 

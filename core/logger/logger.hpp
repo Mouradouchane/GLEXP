@@ -99,7 +99,7 @@ namespace core {
 #define WORK_SYSTEM_LOGGER		"WORK_SYSTEM"
 #define MEMORY_ALLOCATOR_LOGGER "MEMORY_SYSTEM"
 #define GUI_LOGGER              "GUI_SYSTEM"
-#define REFS_LOGGER             "REF_COUNTERS"
+#define REFS_LOGGER             "REF_COUNTERS"  
 #define DATA_STRUCTER_LOGGER	"DATA_STRUCTER"
 #define UNIT_TESTER_LOGGER      "TESTER"
 

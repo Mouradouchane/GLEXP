@@ -1,7 +1,19 @@
 #pragma once 
 
-#ifndef MACROS_HPP
-#define MACROS_HPP
+#ifndef CORE_MACROS_HPP
+#define CORE_MACROS_HPP
+
+/*
+	few macros for errors/warnings 
+*/
+#define CORE_BUG "[Bug]"
+
+#define CORE_SELF_ASSIGN_BUG      CORE_BUG "attempt to assign {} to it self {} !"
+#define CORE_INDEX_OUT_OF_RANGE   CORE_BUG "index {} passed to {} is out of range !"
+#define CORE_SRC_BIGGER_THAN_DEST CORE_BUG "source {} bigger than destination {} !"
+#define CORE_NULLPTR_BUG          CORE_BUG "nullptr passed to {} !"
+
+#define CORE_WARNING_RUNTIME_CRASH " 'note: this will cause a crash during the runtime' "
 
 /*
 	NOTE: if youre not using visual studio or windows 
@@ -15,6 +27,15 @@
 #endif
 
 /*
+	quality of life macros
+*/
+#define NEED_IMPL	0
+#define NOEXP		noexcept
+#define INLINE		inline
+#define DEBUG_ONLY
+#define DONT_USE
+
+/*
 	function definition macros
 */
 #ifdef _MSC_VER
@@ -25,13 +46,6 @@
 
 #define FUNCTION_DEFINITION __FUNCTION__ 
 
-/*
-	quality of life macros
-*/ 
-#define NEED_IMPL	0
-#define NOEXP		noexcept
-#define INLINE		inline
-#define DEBUG_ONLY
 
 // current arch x64 or x32 maybe other arch later 
 #if defined(_WIN64) || defined(WIN64) || defined(__x86_64__) || defined(_____LP64_____)
@@ -96,6 +110,7 @@
 		#define DLL_API_INTERFACE class
 	#endif
 #endif
+
 
 /*
 	inline macros

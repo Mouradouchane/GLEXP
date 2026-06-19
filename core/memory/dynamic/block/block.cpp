@@ -3,8 +3,9 @@
 #ifndef CORE_MEMORY_BLOCK_CPP
 #define CORE_MEMORY_BLOCK_CPP
 
-
 #include "core/logger/logger.hpp"
+#include "core/locks/scope_lock/scope_lock.hpp"
+
 #include "block.hpp"
 
 #ifdef DEBUG
@@ -14,7 +15,6 @@
 #endif
 
 #define _LOGGER_  _core_memory_block_alloc_logger_
-
 
 namespace core {
 	
@@ -57,7 +57,6 @@ core::memory_block::memory_block(u32 size , u32 max_allowed_allocations, u8 memo
 	this->active_list = core::memory_registry(max_allowed_allocations);
 	this->free_list   = core::memory_registry(max_allowed_allocations);
 
-
 	CORE_DEBUG(0, "new memory_block is created for {} usage , with size {}byte .", this->block_tag , this->block_size);
 }
 
@@ -67,13 +66,16 @@ core::memory_block::memory_block(u32 size , u32 max_allowed_allocations, u8 memo
 
 memory_block::~memory_block() NOEXP {
 	
+	// lock memory block
+	id32 id = this->lock.wait_for_lock();
+
 	if (this->start) {
 		u32 active_memory      = this->active_list.get_allocations_size();
 		u32 active_allocations = this->active_list.get_allocations_count();
 
 	#ifdef DEBUG // detected memory leaks
 		if (active_memory || active_allocations) {
-			CORE_WARN(CORE_LOG_CONFIG_ALL, "{} memory-leak detected total size {}byte !", active_allocations, active_memory);
+			CORE_WARN(CORE_LOG_CONFIG_ALL, "{} memory-leak detected with total size of {}byte !", active_allocations, active_memory);
 			DEBUG_BREAK;
 		}
 	#endif
@@ -87,6 +89,8 @@ memory_block::~memory_block() NOEXP {
 	}
 
 	CORE_DEBUG(0, "memory_block is destructed , {} usage , size {}bytes .", this->block_tag, this->block_size);
+
+	this->lock.release(id);
 }
 
 /*
@@ -94,9 +98,13 @@ memory_block::~memory_block() NOEXP {
 */
 
 // todo: add support for memory alignement
-// todo: add support for scope lock
 void* core::memory_block::allocate(core::memory_request const& request) NOEXP {
 	
+	// if memory block is busy at the moment
+	if (this->lock.is_locked()) return nullptr;
+
+	core::atomic_scope_lock scope_lock(this->lock);
+
 	void* pointer = nullptr;
 
 	u32 current_free_memory = (this->seek < this->end) ? u32(this->end - this->seek) : 0u;
@@ -129,32 +137,25 @@ void* core::memory_block::allocate(core::memory_request const& request) NOEXP {
 	this->handle_registry(&pointer, allocation , request);
 
 	if (pointer) return pointer;
-
-	// 3- try to look allocate from free_list "the slowest"
-	allocation = this->free_list.get_allocation(request.size);
-	this->handle_registry(&pointer, allocation , request);
-
-	if (pointer) return pointer;
-
-	// failed to find place for allocation .
-	// memory_block either to fragmented or full
-
-	// todo: put this in different thread
-	this->free_list.merge_free_areas();
+	
+	// 3- failed to find empty place for allocation because block is either fragmeneted or full .
+	// todo[IMPORTANT]: put this in different thread ---> pass it to the work_system .
+	this->process_free_list();
 
 	return nullptr;
-	
 }
 
-void* core::memory_block::allocate(u32 size, u32 alignement = 0, u8 tag = 0) NOEXP {
+void* core::memory_block::allocate(u32 size, u32 alignement, u8 tag) NOEXP {
 	return this->allocate(core::memory_request{ size, alignement , tag });
 }
 
 bool core::memory_block::deallocate(void* pointer) NOEXP {
+	// wait for lock
+	core::atomic_scope_lock scope_lock(this->lock);
 
 	if (pointer < this->start && pointer > this->end) {
 		CORE_WARN(
-			CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_INVALID_POINTER , 
+			CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_OUT_OF_RANGE_POINTER , 
 			core::pointer_to_hex_string(pointer),
 			core::pointer_to_hex_string(this->start),
 			core::pointer_to_hex_string(this->end)
@@ -180,7 +181,7 @@ bool core::memory_block::deallocate(void* pointer) NOEXP {
 	else {
 
 		CORE_WARN(
-			CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_INVALID_POINTER,
+			CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_OUT_OF_RANGE_POINTER,
 			core::pointer_to_hex_string(pointer),
 			core::pointer_to_hex_string(this->start),
 			core::pointer_to_hex_string(this->end)
@@ -192,7 +193,7 @@ bool core::memory_block::deallocate(void* pointer) NOEXP {
 }
 
 bool core::memory_block::is_busy() NOEXP {
-	// todo: implement lock for MT
+	return this->lock.is_locked();
 }
 
 
@@ -201,10 +202,16 @@ u32 core::memory_block::size() NOEXP {
 }
 
 u32 core::memory_block::free_memory() NOEXP {
+	// wait for lock
+	core::atomic_scope_lock scope_lock(this->lock);
+
 	return this->free_list.get_allocations_size();
 }
 
 u32 core::memory_block::allocated_memory() NOEXP {
+	// wait for lock
+	core::atomic_scope_lock scope_lock(this->lock);
+
 	return this->active_list.get_allocations_size();
 }
 
@@ -237,6 +244,12 @@ INLINE void core::memory_block::handle_registry(
 
 }
 
+void core::memory_block::process_free_list() NOEXP {
+	// wait for lock
+	core::atomic_scope_lock scope_lock(this->lock);
+	
+	this->free_list.merge_free_areas();
+}
 
 } // namespace core end
 

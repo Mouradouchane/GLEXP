@@ -1,3 +1,4 @@
+#if 0
 #pragma once 
 
 #ifndef CORE_KEYBOARD_EVENTS_HPP
@@ -10,6 +11,7 @@
 #include "core/events/event_dispatcher.hpp"
 #include "core/events/event_manager.hpp"
 
+#include "core/memory/dynamic/dynamic_allocator.hpp"
 #include "core/window/window.hpp"
 
 namespace core {
@@ -56,8 +58,8 @@ namespace core {
 		// constructor
 		keyboard(
 			core::window const& target_window, 
-			STRING name, 
-			core::memory_allocator const& allocator,
+			string name, 
+			core::dynamic_allocator const& allocator,
 			u32 size = 32, 
 			u32 resize_value = 32
 		) NOEXP;
@@ -80,4 +82,5 @@ namespace core {
 
 } // namespace core end
 
+#endif
 #endif

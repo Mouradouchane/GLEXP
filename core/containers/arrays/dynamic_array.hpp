@@ -28,21 +28,21 @@ namespace core {
 		/*
 			constructor's
 		*/
-		dynamic_array(u32 elements_count, u32 resize_value_, core::memory_allocator* _allocator = nullptr) 
+		dynamic_array(u32 elements_count, u32 resize_value_, core::dynamic_allocator const& _allocator) 
 			:core::array<type>(elements_count , _allocator)
 		{
 			this->resize_value = resize_value_ ? resize_value_ : CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 		}
 
 		// note : this copy elements !
-		dynamic_array(const type* elements, u32 elements_count, u32 resize_value_, core::memory_allocator* _allocator = nullptr) 
+		dynamic_array(const type* elements, u32 elements_count, u32 resize_value_, core::dynamic_allocator const& _allocator) 
 			:core::array<type>(elements, elements_count , _allocator)
 		{
 			this->resize_value = resize_value_ ? resize_value_ : CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE;
 		}
 
 		// note : this copy everything
-		dynamic_array(core::dynamic_array<type> const& other_array, core::memory_allocator* _allocator = nullptr)
+		dynamic_array(core::dynamic_array<type> const& other_array, core::dynamic_allocator const& _allocator)
 			:core::array<type>(other_array , _allocator)
 		{
 			this->push_index   = other_array.push_index;

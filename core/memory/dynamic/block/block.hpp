@@ -10,17 +10,18 @@
 
 #include "core/memory/memory.hpp"
 #include "core/memory/dynamic/registery/registery.hpp"
+#include "core/locks/atomic_lock/atomic_lock.hpp"
 
 #define MEMORY_BLOCK_IS_REGISTRY_FULL "memory_block registry is full max {} allocation !"
 #define MEMORY_BLOCK_OUT_OF_MEMORY    "memory_block is out of memory , failed to allocate {}bytes ."
 #define MEMORY_BLOCK_NOT_ALLOWED_SIZE "memory block with size={}byte is not allowed because -> min_allowed_size={}, max_allowed_size={} ."
-#define MEMORY_BLOCK_INVALID_POINTER  "invalid pointer {} passed to memory_block ! pointer is not in memory block range |{} , {}| ."
+#define MEMORY_BLOCK_OUT_OF_RANGE_POINTER "pointer {} passed to memory_block is out of range , start={} , end={} !"
 
 namespace core {
 
 	DLL_API_CLASS memory_block {
 	private:
-		std::atomic<bool> lock;
+		core::atomic_lock lock;
 
 		byte* start = nullptr; // block start
 		byte* end   = nullptr; // block end
@@ -28,7 +29,8 @@ namespace core {
 		u64   block_size  = 0; // block memory size in bytes
 
 	#ifdef DEBUG
-		u8    block_tag = 0;
+		id16  block_id  = 0;
+		u8    block_tag = 0; // memory_block usage
 	#endif
 
 		/*
@@ -62,25 +64,25 @@ namespace core {
 
 	private: // private helper functions
 
+		// this function trigger's merge_free_areas function in free_list .
+		// note: this locks the entier block for that process !
+		void process_free_list() NOEXP;
 
 		INLINE void handle_registry(
 			void** ptr, core::i_memory_allocation const& allocation , core::memory_request const& request
 		) NOEXP;
 
-	
 		/*
 			not allowed contructor's
 		*/ 
-		memory_block(memory_block & other)      = delete;
-		memory_block(memory_block && other)     = delete;
-		memory_block(memory_block const& other) = delete;
+		memory_block(core::memory_block && other)     = delete;
+		memory_block(core::memory_block const& other) = delete;
 
 		/*
 			not allowed operator's
 		*/ 
-		memory_block& operator = (const memory_block & other)      = delete;
-		memory_block& operator = (const memory_block && other)     = delete;
-		memory_block& operator = (const memory_block const& other) = delete;
+		core::memory_block& operator = (const core::memory_block && other)     = delete;
+		core::memory_block& operator = (const core::memory_block const& other) = delete;
 
 	};
 	// class memory_block end 

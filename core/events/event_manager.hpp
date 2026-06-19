@@ -7,8 +7,9 @@
 
 #include "core/macros.hpp"
 #include "core/strings/string.hpp"
-#include "core/events/event_dispatcher.hpp"
+#include "core/memory/dynamic/dynamic_allocator.hpp"
 
+#include "core/events/event_dispatcher.hpp"
 
 #ifdef DEBUG
 	CORE_GET_LOGGER_VAR(_em_hpp_logger_, EVENT_SYSTEM_LOGGER);
@@ -17,6 +18,9 @@
 #endif
 
 #define _LOGGER_    _em_hpp_logger_
+
+#define CORE_EVENT_MANAGER_LISTENER_NOT_FOUND "listener id {} not found in event manager !"
+#define CORE_EVENT_MANAGER_LISTENER_INVALID   "listener id=({},{}) is not valid for event_manager {} ! this could be a bug !"
 
 namespace core {
 
@@ -39,6 +43,14 @@ namespace core {
 	#endif
 	};
 
+	struct event_manager_configs {
+		core::dynamic_allocator const& allocator;
+		u32  size;
+		u32  resize;
+		DEBUG_ONLY id32          uid;  // unique id
+		DEBUG_ONLY string const& name;
+		DEBUG_ONLY core::event_manager_category category;
+	};
 
 	class event_manager {
 
@@ -60,24 +72,17 @@ namespace core {
 		u32    _size_;
 		u32    _resize_;
 		event_manager_category _category_;
-
-		// todo: move from ptr to refcounted
-		core::memory_allocator* _allocator_ = nullptr;
+		core::dynamic_allocator* _allocator_ = nullptr;
 
 		// todo: "optimization" change from map to array for 0(1) insted of log(n) -> map.find( )
 		std::unordered_map<u32, b_dispatcher*> _dispatchers_map_;
 
 	public: // event manager public function
 
-
-		// constructor/destructor
-		event_manager() = default;
-
-		event_manager(
-			event_manager_category category, STRING name,
-			u32 size = _default_size_, u32 resize_value = _default_resize_,
-			core::memory_allocator* allocator = nullptr
-		);
+		// constructor
+		event_manager(event_manager_configs const& parameters);
+		
+		//destructor
 		~event_manager();
 
 		// manager public functions
@@ -103,31 +108,22 @@ namespace core {
 
 namespace core {
 
-event_manager::event_manager(
-	event_manager_category category, STRING name, u32 size , u32 resize_value , core::memory_allocator* allocator
-) 
-	: _category_(category) , _name_(name) , _size_(size) , _resize_(resize_value) , _allocator_(allocator)
+event_manager::event_manager(event_manager_configs const& parameters) 
+	: _category_(parameters.category) , _name_(parameters.name) ,
+	_size_(parameters.size) , _resize_(parameters.resize) , _allocator_((core::dynamic_allocator*)&parameters.allocator)
 {
 	core::event_manager::_total_event_managers_ += 1;
-	CORE_DEBUG_D("event_manager constructed");
+	CORE_DEBUG_D("new event_manager created .");
 }
 
 event_manager::~event_manager() {
 	
 	// destruct all dispatchers
-	if (this->_allocator_) {
-		for (auto& [id, dispatcher] : this->_dispatchers_map_ ) {
-			dispatcher->~b_dispatcher(); 
-			this->_allocator_->deallocate((void*)dispatcher);
-		}
+	for (auto& [id, dispatcher] : this->_dispatchers_map_ ) {
+		dispatcher->~b_dispatcher(); 
+		this->_allocator_->deallocate((void*)dispatcher);
 	}
-	else {
-		for (auto& [id, dispatcher] : this->_dispatchers_map_ ) {
-			dispatcher->~b_dispatcher(); 
-			core::memory::deallocate((void*)dispatcher);
-		}
-	}
-
+	
 	if (core::event_manager::_total_event_managers_) {
 		core::event_manager::_total_event_managers_ -= 1;
 	}
@@ -152,14 +148,8 @@ listener_id event_manager::start_listen(core::callback<type> const& callback_fun
 	// if dispatcher not found
 	if (itr == this->_dispatchers_map_.end()) {
 		// allocate dispatcher
-		void* mem;
-		if (this->_allocator_) {
-			mem = this->_allocator_->allocate(sizeof(core::dispatcher<type>));
-		}
-		else {
-			mem = core::memory::allocate(sizeof(core::dispatcher<type>), core::memory::tag::event_system);
-		}
-
+		void* mem = this->_allocator_->allocate(sizeof(core::dispatcher<type>));
+		
 		// construct dispatcher
 		dptr = new (mem) core::dispatcher<type>(this->_size_, this->_resize_, this->_allocator_);
 		this->_dispatchers_map_[id.index1] = dptr;
@@ -179,8 +169,7 @@ bool event_manager::stop_listen(listener_id id) noexcept {
 	DEBUG_BREAK;
 
 	if (itr == this->_dispatchers_map_.end()) {
-		CORE_ERROR_D(core::status::get_error(core::error::index_out_range));
-		CORE_CRASH();
+		CORE_FATAL_F(CORE_EVENT_MANAGER_LISTENER_NOT_FOUND, id.index2);
 		return false;
 	}
 
@@ -210,17 +199,16 @@ void event_manager::trigger_all(type const& data) noexcept {
 	CORE_WARN_D("event triggered for <{}> but no dispatcher found to handled yet !" , typeid(type).name() );
 }
 
+
 template<typename type>
 void event_manager::trigger(listener_id id, type const& data) noexcept {
 	u32  type_index = core::event_manager::get_type_id<type>();
-	
 	DEBUG_BREAK;
 
 	// note: if type_index not matching index1 , this usually a "usage-bug"
 	if (type_index != id.index1) {
-		CORE_WARN_D("listener id not matching with type id ? this is probablly a bug !");
-		CORE_ERROR_D(core::status::get_error(core::error::invalid_id),id.index1);
-		CORE_CRASH();
+		CORE_WARN_F(CORE_EVENT_MANAGER_LISTENER_INVALID,id.index1 , id.index2 , type_index);
+		DEBUG_BREAK;
 		return;
 	}
 
@@ -231,7 +219,7 @@ void event_manager::trigger(listener_id id, type const& data) noexcept {
 		return;
 	}
 
-	CORE_WARN_D("event triggered for <{}> but no dispatcher found to handled yet !" , typeid(type).name() );
+	CORE_WARN(0,"event triggered for <{}> but no dispatcher found to handled yet !" , typeid(type).name() );
 }
 
 // todo: implement this

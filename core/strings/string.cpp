@@ -8,12 +8,13 @@
 
 namespace core {
 
-	DLL_API string pointer_to_hex_string(void* pointer){
+	DLL_API string pointer_to_hex_string(void* pointer) NOEXP {
 		std::stringstream s_stream;
 		s_stream << std::hex << pointer;
 
 		return string( "0x" + s_stream.str());
 	}
+
 
 }
 

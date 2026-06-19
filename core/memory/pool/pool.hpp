@@ -10,7 +10,6 @@
 
 namespace core {
 
-	typedef u32 pool_index;
 
 	/*
 		memory pool is fixed size allocator , also fast for allocate/deallocate memory
@@ -24,10 +23,10 @@ namespace core {
 
 		u32 pool_size  = 0; // size of pool in bytes
 
-		u32 allocations_count = 0;
+		u32 allocations_count = 0; 
 		u32 allocations_size  = 0;
 		
-		u8 pool_tag = 0;
+		u8 pool_tag = 0; // pool used for what
 
 	public:
 		// constructor's
@@ -37,10 +36,10 @@ namespace core {
 		~memory_pool();
 
 		// pool public functions
-		pool_index allocate() NOEXP;
-		void deallocate(pool_index index) NOEXP;
+		index32 allocate() NOEXP;
+		void deallocate(index32 index) NOEXP;
 
-		INLINE void* get(pool_index) NOEXP;
+		INLINE void* get_pointer(index32 index) NOEXP;
 
 	}; // class memory_pool end
 	
