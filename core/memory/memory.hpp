@@ -25,7 +25,10 @@
 #define ALLOCATOR_SIZE_NOT_ALLOWED  "requested size {}byte for allocator name={} is not allowed : min_allowed={} , max_allowed={} ."
 #define ALLOCATOR_FAILED_TO_GET_INFO "memory allocator {} failed to obtain info about his internal memory !"
 
+#define MEMORY_ORDER_RELAXE  std::memory_order_relaxed // for read-only when no cache syncing is needed
+#define MEMORY_ORDER_ACQUIRE std::memory_order_acquire // when cache syncing is needed
 
+#define MAX_MEMORY_TAGS 255
 
 namespace core {
 
@@ -52,7 +55,7 @@ namespace core {
 		// note: this function preforme tow allocation in one call but !
 		//       both allocations not guarnted to be next each other in memory :)
 		//       because of paging , multi-threading , ... .
-		DLL_API tow_pointers allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP;
+		DLL_API two_pointers allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP;
 
 		DLL_API void deallocate(void* pointer) NOEXP;
 

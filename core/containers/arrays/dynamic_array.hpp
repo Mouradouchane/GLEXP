@@ -7,6 +7,7 @@
 
 #define CORE_DYNAMIC_ARRAY_DEFAULT_RESIZE_VALUE 32
 
+// todo: change to header logger
 #ifdef DEBUG
 	static auto _dsda_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
 #else 

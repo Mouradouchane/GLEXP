@@ -46,7 +46,7 @@ SHARED_REF_TEMPLATE
 template<typename... parameters>
 shared_ref<type>::shared_ref(core::memory_allocator& _allocator_, parameters&&... constructor_parameters) NOEXP {
 
-	tow_pointers ptrs = _allocator_.allocate_tow(sizeof(type) , sizeof(counter_block));
+	two_pointers ptrs = _allocator_.allocate_tow(sizeof(type) , sizeof(counter_block));
 
 	this->memory = (type*)ptrs.ptr1;
 	new (this->memory) type( std::forward<parameters>(constructor_parameters)... );

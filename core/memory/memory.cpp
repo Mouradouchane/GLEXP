@@ -52,7 +52,7 @@ DLL_API void* core::memory::allocate(core::g_memory_request const& request) NOEX
 
 }
 
-DLL_API tow_pointers core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP {
+DLL_API two_pointers core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP {
 
 #ifdef DEBUG
 
@@ -74,17 +74,17 @@ DLL_API tow_pointers core::memory::allocate_tow(g_memory_request const& request_
 
 		total_size += request_1.size + request_2.size;
 
-		return tow_pointers{ ptr1 , ptr2 };
+		return two_pointers{ ptr1 , ptr2 };
 	}
 	else {
 		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_1.size, request_1.tag);
 		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_2.size, request_2.tag);
 
-		return tow_pointers{ nullptr , nullptr };
+		return two_pointers{ nullptr , nullptr };
 	}
 
 #else
-	tow_pointers tptr{
+	two_pointers tptr{
 		new byte[request_1.size] ,
 		new byte[request_2.size]
 	};

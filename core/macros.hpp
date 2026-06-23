@@ -6,14 +6,16 @@
 /*
 	few macros for errors/warnings 
 */
-#define CORE_BUG "[Bug]"
+#define CORE_BUG  " [BUG] "
+#define CORE_INLD " [INVALID] "
 
 #define CORE_SELF_ASSIGN_BUG      CORE_BUG "attempt to assign {} to it self {} !"
-#define CORE_INDEX_OUT_OF_RANGE   CORE_BUG "index {} passed to {} is out of range !"
 #define CORE_SRC_BIGGER_THAN_DEST CORE_BUG "source {} bigger than destination {} !"
 #define CORE_NULLPTR_BUG          CORE_BUG "nullptr passed to {} !"
+#define CORE_INDEX_OUT_OF_RANGE   CORE_BUG "index {} passed to {} is out of range !"
+#define CORE_SIZE_OUT_OF_RANGE    CORE_INLD "size {} passed to {} is not in range , min={} to max={} !"
 
-#define CORE_WARNING_RUNTIME_CRASH " 'note: this will cause a crash during the runtime' "
+#define CORE_WARNINIG_RUNTIME_CRASH " 'note: this will cause a crash during the runtime' "
 
 /*
 	NOTE: if youre not using visual studio or windows 

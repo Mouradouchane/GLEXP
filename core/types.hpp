@@ -19,7 +19,7 @@ template<typename first_ptr_type, typename second_ptr_type> struct duo_pointers 
 	second_ptr_type* second_ptr;
 };
 
-typedef duo_pointers<void, void> tow_pointers;
+typedef duo_pointers<void, void> two_pointers;
 
 
 // unsigned int's
