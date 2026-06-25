@@ -28,13 +28,16 @@
 #define MEMORY_ORDER_RELAXE  std::memory_order_relaxed // for read-only when no cache syncing is needed
 #define MEMORY_ORDER_ACQUIRE std::memory_order_acquire // when cache syncing is needed
 
-#define MAX_MEMORY_TAGS 255
+#define MAX_MEMORY_TAGS   255
+#define MAX_MEMORY_BLOCKS 255
 
 namespace core {
 
 	enum class memory_tag     : u8;
+
 	enum class allocator_tag  : u8;
 	enum class allocator_type : u8;
+	enum class allocator_response : u8;
 
 	struct   memory_request;
 	struct g_memory_request;
@@ -44,6 +47,9 @@ namespace core {
 
 	struct   free_memory;
 	struct i_free_memory;
+
+	struct     memory_handle;
+	struct tow_memory_handles;
 
 	/*
 		core::memory have global allocator it's just a wrapper used by other allocators like: pool, arena , ...
@@ -71,6 +77,25 @@ namespace core {
 		few memory types
 	*/
 	
+	enum class allocator_response : u8 {
+		success  = 0,
+		busy , // the allocator is busy with other thread
+		full , // the allocator is full and no memory left
+		fragmeneted, // the allocator have the memory asked for but it too fragmeneted
+	};
+
+	// returned by the allocator
+	struct memory_handle {
+		const core::allocator_response response = core::allocator_response::full; // to know why allocation failed
+		u8    block_index = 0; // for fast deallocation
+		void* ptr = nullptr;
+	};
+	
+	struct tow_memory_handles {
+		memory_handle handle1;
+		memory_handle handle2;
+	};
+
 	// used by memory allocator
 	struct g_memory_request {
 		u64 size; // could be higher than 4GB

@@ -24,34 +24,87 @@ namespace core {
 
 dynamic_allocator::dynamic_allocator(core::dynamic_allocator_configs const& parameters) NOEXP {
     
-    // check block size if valid
+    // check memory budget
+    if (parameters.memory_budget < parameters.blocks_size) {
+    #ifdef DEBUG
+        CORE_WARN_F(
+            "core::dynamic_allocator(): bad config 'memory_budget={}bytes' is smaller than 'blocks_size={}bytes' !",
+            parameters.memory_budget, parameters.blocks_size
+        );
+        CORE_INFO(
+            "core::dynamic_allocator(): auto reconfig to memory_budget from {}bytes up to {}bytes .",
+            parameters.memory_budget, parameters.blocks_size
+        );
+    #endif
+
+         this->_memory_budget_ = parameters.blocks_size;
+    }
+    else this->_memory_budget_ = parameters.memory_budget;
+
+    // check blocks size
     if (
-        parameters.block_size < dynamic_allocator::min_size_allowed || 
-        parameters.block_size > dynamic_allocator::max_size_allowed
+        parameters.blocks_size < dynamic_allocator::min_size_allowed ||
+        parameters.blocks_size > dynamic_allocator::max_size_allowed
     ) {
+    #ifdef DEBUG
+        CORE_WARN(CORE_LOG_CONFIG_ALL,
+            "core::dynamic_allocator(): bad config blocks size '{}bytes' !" CORE_WARNINIG_RUNTIME_CRASH,
+            parameters.blocks_size
+        );
+
+        if (parameters.blocks_size < dynamic_allocator::min_size_allowed) {
+            this->_blocks_size_ = dynamic_allocator::min_size_allowed;
+            CORE_INFO(
+                "core::dynamic_allocator(): blocks size upsized to {}bytes per block for DEBUG_ONLY !",
+                this->_blocks_size_
+            );
+        }
+        else {
+            this->_blocks_size_ = dynamic_allocator::max_size_allowed;
+            CORE_INFO(
+                "core::dynamic_allocator(): blocks size downsized to {}bytes per block for DEBUG_ONLY !",
+                this->_blocks_size_
+            );
+        }
+
+    #else 
         CORE_FATAL_F(
-            CORE_SIZE_OUT_OF_RANGE, parameters.block_size, "core::dynamic_allocator", 
+            CORE_SIZE_OUT_OF_RANGE, parameters.blocks_size, "core::dynamic_allocator",
             dynamic_allocator::min_size_allowed, dynamic_allocator::max_size_allowed 
         );
+
         return;
+    #endif
     }
 
-    // setup variables
+    // check max allocations
+    if (parameters.max_allocations_per_block > dynamic_allocator::max_allocations_per_block) {
+    #ifdef DEBUG
+        CORE_WARN_F(
+            "core::dynamic_allocator(): max allocations per block '{}' is higher than the maximum allowed '{}' !",
+            parameters.max_allocations_per_block , dynamic_allocator::max_allocations_per_block
+        );
+        CORE_INFO(
+            "core::dynamic_allocator(): auto reconfig max allocations per block from {} to {} ." ,
+            parameters.max_allocations_per_block, dynamic_allocator::max_allocations_per_block
+        );
+    #endif
+
+        this->_blocks_max_allocations_  = dynamic_allocator::max_allocations_per_block;
+    }
+    else this->_blocks_max_allocations_ = parameters.max_allocations_per_block | 1;
+    
+    // setup other variables
 #ifdef DEBUG
     this->_tag_  = parameters.tag;
     this->_name_ = parameters.name;
 #endif
 
-    this->is_mt   = parameters.is_multi_thread;
-    this->_count_ = 12;
-    this->_new_block_size_ = parameters.block_size;
-    this->_block_max_allocation_ = parameters.block_max_allocation;
-
-    // setup blocks list
-    this->create_blocks_list(this->_count_);
+    this->_is_mt_ = parameters.is_multi_thread;
+    this->_blocks_size_ = parameters.blocks_size;
 
     // add first block
-    this->add_block(this->_new_block_size_ , this->_block_max_allocation_ , (u8)this->_tag_);
+    this->add_new_block(this->_blocks_size_);
 }
 
 /*
@@ -60,28 +113,108 @@ dynamic_allocator::dynamic_allocator(core::dynamic_allocator_configs const& para
 
 dynamic_allocator::~dynamic_allocator() NOEXP {
 
-  
+    for (u32 i = 0; i < this->_capacity_; i++) {
+        
+        if (this->_blocks_status_[i]) {
+            // note: memory_block auto detected "memory leaks"
+            this->_blocks_[i].~memory_block();
+            this->_blocks_status_[i] = false;
+        }
+
+    }
+
+    this->_size_ = 0;
+    this->_blocks_count_  = 0;
+    this->_memory_budget_ = 0;
 }
 
 /*
     public functions
 */
 
-void* dynamic_allocator::allocate(core::memory_request const& request) NOEXP {
-    return nullptr;
+core::memory_handle dynamic_allocator::allocate(core::memory_request const& request) NOEXP {
+
+    for (u8 i = 0; i < this->_blocks_count_; i++) {
+    
+        // if block is alive
+        if (this->_blocks_status_[i]) {
+
+            // if block not busy 
+            if (this->_blocks_[i].status()) {
+
+                // try allocate
+                core::memory_handle handle = this->_blocks_[i].allocate(request);
+
+                // if success
+                if (handle.response == core::allocator_response::success) {
+                    return handle;
+                }
+            }
+
+        }
+
+    }
+    /*
+        else mean all the block is busy at the moment or full
+    */
+    
+    // try allocate new block if possible
+    u8 index = this->add_new_block(request.size);
+
+    // try to allocate
+    if (index < this->_capacity_) {
+        core::memory_handle handle = this->_blocks_[index].allocate(request);
+                            handle.block_index = index;
+        return handle;
+    }
+
+    // failed to find new block or memory
+    return core::memory_handle { 
+                .response = core::allocator_response::full,
+                .block_index = 0,
+                .ptr = nullptr, 
+    };
+
 }
 
-void* dynamic_allocator::allocate(u32 size , u8 tag) NOEXP {
-    return nullptr;
+core::memory_handle dynamic_allocator::allocate(u32 size , u8 tag) NOEXP {
+    return this->allocate(
+        core::memory_request{ 
+            .size = size , 
+            .alignement = 0,
+            .tag = tag , 
+        }
+    );
 }
 
-two_pointers dynamic_allocator::allocate_tow(
+core::memory_handle allocate(u32 size, u16 alignement = 0, u8 tag = 0) NOEXP {
+    return this->allocate(
+        core::memory_request{
+            .size = size ,
+            .alignement = alignement,
+            .tag = tag ,
+        }
+    );
+}
+
+core::tow_memory_handles dynamic_allocator::allocate_tow(
     core::memory_request const& request_1, core::memory_request const& request_2
 ) NOEXP {
-    return two_pointers{ 0 };
+    return core::tow_memory_handles{};
 }
 
-void dynamic_allocator::deallocate(void* pointer) NOEXP {
+void dynamic_allocator::deallocate(core::memory_handle handle) NOEXP {
+
+    if (handle.block_index >= this->_capacity_) {
+        CORE_FATAL_F(CORE_INDEX_OUT_OF_RANGE , handle.block_index , "core::dynamic_allocator");
+    }
+
+    if (! this->_blocks_[handle.block_index].deallocate(handle.ptr)) {
+        CORE_WARN_F(
+            "core::dynamic_allocator.deallocate(): memory block failed to deallocate {} !",
+            core::pointer_to_hex_string(handle.ptr)
+        );
+    }
 
 }
 
@@ -141,141 +274,66 @@ u64 dynamic_allocator::peak_memory_usage() NOEXP {
     private helper functions
 */
 
-INLINE void dynamic_allocator::create_blocks_list(u32 blocks_count) NOEXP {
-    
-    this->_blocks_ = (core::memory_block*)core::memory::allocate(
-        core::g_memory_request{ 
-            .size = (sizeof(core::memory_block) * blocks_count ) + (sizeof(bool) * blocks_count) ,
-            .tag = (u8)core::allocator_tag::memory_system 
-        }
-    );
+INLINE u8 dynamic_allocator::add_new_block(u32 block_size) NOEXP{
 
-    this->_states_   = (bool*)((byte*)this->_blocks_ + (sizeof(core::memory_block) * blocks_count));
-    memset(this->_states_, false, sizeof(bool) * blocks_count);
-
-    this->_capacity_ = blocks_count;
-    this->_count_    = 0;
-
-}
-
-
-INLINE void dynamic_allocator::resize_blocks_list(u32 added_count) NOEXP {
-    core::atomic_scope_lock scope_lock(this->_lock_);
-
-    u32 old_capcity = this->_capacity_.load(MEMORY_ORDER_RELAXE);
-    u32 old_size    = sizeof(core::memory_block) * old_capcity;
-
-    u32 new_capacity = old_capcity + (added_count ? added_count : old_capcity);
-    u32 new_size = (sizeof(core::memory_block) * new_capacity) + (sizeof(bool) * new_capacity);
-     
-    // allocate new list
-    core::memory_block* new_list = (core::memory_block*)core::memory::allocate(
-        core::g_memory_request {
-            .size = new_size, 
-            .tag = (u8)core::allocator_tag::memory_system
-        }
-    );
-
-    bool* p_states = (bool*)((byte*)new_list + (sizeof(core::memory_block) * new_capacity));
-
-    // copy to new list's
-    std::memcpy(new_list, this->_blocks_, old_size);
-    std::memcpy(p_states, this->_states_, sizeof(bool) * old_capcity); // move current states to new array
-    memset(this->_states_ + old_capcity, false, sizeof(bool)* (new_capacity - old_capcity)); // zero the rest
-
-    // remove old list's
-    core::memory::deallocate(this->_blocks_);
-
-    // update to new list and capacity
-    this->_blocks_ = new_list;
-    this->_states_ = p_states;
-
-    this->_capacity_.store(new_capacity, MEMORY_ORDER_ACQUIRE);
-
-}
-
-INLINE void dynamic_allocator::deallocate_blocks_list() NOEXP {
-    core::atomic_scope_lock scope_lock(this->_lock_);
-
-    if (this->_blocks_) { 
-
-        // destruct all the blocks
-        for (u32 i = 0; i < this->_count_; i++) {
-            (this->_blocks_ + i)->~memory_block();
-        }
-
-        // reset variables 
-        this->_capacity_ = 0;
-        this->_count_    = 0;
-
-        this->_size_ = 0;
-        this->_peak_ = 0;
-        this->_min_  = 0xFFFFFFFF;
-
-        // deallocate blocks list
-        core::memory::deallocate(this->_blocks_);
-
-        this->_blocks_ = nullptr;
-        this->_states_ = nullptr;
+    if (this->_memory_budget_ < this->_size_ + block_size) {
+    #ifdef DEBUG
+        CORE_WARN(
+            CORE_LOG_CONFIG_ALL , 
+            CORE_WARNING_OUT_OF_BUDGET  CORE_WARNINIG_RUNTIME_CRASH, 
+            "core::dynamic_allocator" , this->_memory_budget_
+        );
+    #else
+        CORE_FATAL(
+            CORE_LOG_CONFIG_ALL,
+            CORE_WARNING_OUT_OF_BUDGET,
+            "core::dynamic_allocator", this->_memory_budget_
+        );
+    #endif
+        return this->_capacity_;
     }
 
-#ifdef DEBUG
-    memset(this->_sections_, 0, sizeof(u8) * MAX_MEMORY_TAGS);
-#endif
+    if (this->_blocks_count_ < this->_capacity_) {
+        u32 index = this->_blocks_count_;
 
-}
-
-INLINE void dynamic_allocator::add_block(u32 block_size , u16 block_max_allocation , u8 block_tag) NOEXP {
-    core::atomic_scope_lock scope_lock(this->_lock_);
-
-    if (this->_count_ < this->_capacity_) {
-
-        if ( ! this->_states_[this->_count_]) {
-            this->_states_[this->_count_] = true;
-            new (this->_blocks_ + this->_count_) core::memory_block(block_size, block_max_allocation, block_tag);
-
-            this->_count_ += 1;
-            this->_size_  += block_size;
-            return;
-        }
-        else { // there is a empty spot but it's not at _count_
-            
-            // O(N) search for that block
+        if (this->_blocks_status_[index]) {
+            // O(N) search for that empty block
             for (u32 i = 0; i < this->_capacity_; i++) {
-                if ( ! this->_states_[i]) {
-                    this->_states_[i] = true;
-                    new (this->_blocks_ + i) core::memory_block(block_size, block_max_allocation, block_tag);
-
-                    this->_count_ += 1;
-                    this->_size_ += block_size;
-                    return;
+                if (! this->_blocks_status_[i]) {
+                    index = i;
+                    break;
                 }
             }
 
+            CORE_FATAL(CORE_LOG_CONFIG_ALL, "core::dynamic_allocator: failed to find empty spot for new block ! this could be a bug , index={}", index);
+            return this->_capacity_;
         }
 
+        new (this->_blocks_ + index) core::memory_block(block_size, this->max_allocations_per_block, (u8)this->_tag_);
+        this->_blocks_count_ += 1;
+        this->_blocks_status_[index] = true;
+        this->_size_ += block_size;
+
+        return index;
     }
-    // else : no empty spot found for new block so resize is needed 
-    this->resize_blocks_list(u32(this->_capacity_  * 0.5));
-    
-    // add new block after resize
-    new (this->_blocks_ + this->_count_) core::memory_block(block_size, block_max_allocation, block_tag);
-    this->_states_[this->_count_] = true;
-    this->_count_ += 1;
-    this->_size_  += block_size;
+    /*
+        else : no empty spot left for new blocks
+    */ 
+    CORE_FATAL(CORE_LOG_CONFIG_ALL, "core::dynamic_allocator: can't allocate more blocks , max allowed {}" , this->_capacity_);
+    return this->_capacity_;
 }
 
-INLINE void dynamic_allocator::remove_block(u32 index) NOEXP {
-    core::atomic_scope_lock scope_lock(this->_lock_);
+INLINE void dynamic_allocator::remove_block(u8 index) NOEXP {
 
     if (index < this->_capacity_){
 
-        if (this->_states_[index]) {
+        if (this->_blocks_status_[index]) {
+            this->_blocks_status_[index] = false;
+
             this->_size_ -= (this->_blocks_ + index)->size();
             
             (this->_blocks_ + index)->~memory_block();
-            this->_states_[index] = false;
-            this->_count_ -= 1;
+            this->_blocks_count_ -= 1;
         }
     }
 

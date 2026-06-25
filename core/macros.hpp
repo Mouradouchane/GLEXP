@@ -16,6 +16,7 @@
 #define CORE_SIZE_OUT_OF_RANGE    CORE_INLD "size {} passed to {} is not in range , min={} to max={} !"
 
 #define CORE_WARNINIG_RUNTIME_CRASH " 'note: this will cause a crash during the runtime' "
+#define CORE_WARNING_OUT_OF_BUDGET  "{} is out of his budget {} ."
 
 /*
 	NOTE: if youre not using visual studio or windows 
