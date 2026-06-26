@@ -203,14 +203,52 @@ core::i_memory_allocation memory_registry::get_allocation(u32 target_size) NOEXP
 
 core::i_memory_allocation memory_registry::get_biggest_allocation(u32 target_size) NOEXP {
 
-	core::memory_allocation allocation = this->list[this->biggest_allocation];
+	if (this->biggest_allocation != this->capacity) {
 
-	if (allocation.size >= target_size) {
-		return core::i_memory_allocation{ allocation.ptr , allocation.size , this->biggest_allocation };
+		core::memory_allocation allocation = this->list[this->biggest_allocation];
+
+		if (allocation.size >= target_size) {
+			core::i_memory_allocation alloc{ allocation.ptr , allocation.size , this->biggest_allocation };
+			this->biggest_allocation = this->capacity;
+			return alloc;
+		}
+
 	}
 	
 	return core::i_memory_allocation{ 0 };
 }
+
+#ifdef DEBUG
+
+	INLINE core::memory_allocation memory_registry::get_info(void* pointer) NOEXP {
+
+		u32 hash  = this->hash_pointer(pointer);
+		u32 index = this->search(hash, pointer);
+
+		if (index < this->capacity) {
+			return this->list[index];
+		}
+	
+		return core::memory_allocation {
+			.ptr  = nullptr,
+			.size = 0,
+			.tag  = (u8)-1
+		};
+
+	}
+
+#else
+
+	INLINE core::memory_allocation memory_registry::get_info(void* pointer) NOEXP {
+		return core::memory_allocation{
+			.ptr  = nullptr,
+			.size = 0,
+			.tag  = (u8)-1
+		};
+
+	}
+
+#endif
 
 
 void memory_registry::merge_free_areas() NOEXP {

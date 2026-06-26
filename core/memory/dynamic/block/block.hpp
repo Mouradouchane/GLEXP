@@ -45,22 +45,36 @@ namespace core {
 		static const u64 min_allowed_size =  128 KB;
 		static const u64 max_allowed_size = 1024 MB;
 
-		// constructor / destructor
-		 memory_block(u32 size , u32 max_allowed_allocations , u8 memory_tag) NOEXP;
+		// constructor
+		memory_block( ) NOEXP = default;
+		memory_block(u32 size , u32 max_allowed_allocations , u8 memory_tag) NOEXP;
+		
+		// destructor
 		~memory_block() NOEXP;
 
 		// memory_block public functions
 
-		void* allocate(core::memory_request const& request) NOEXP;
-		void* allocate(u32 size, u32 alignement = 0, u8 tag = 0) NOEXP;
+		       core::memory_handle allocate(core::memory_request const& request) NOEXP;
+		INLINE core::memory_handle allocate(u32 size, u32 alignement = 0, u8 tag = 0) NOEXP;
 
-		bool  deallocate(void* pointer) NOEXP;
+		core::memory_handle_2 allocate_tow(core::memory_request const& request_1, core::memory_request const& request_2) NOEXP;
+
+		       bool deallocate(void* pointer) NOEXP;
+		INLINE bool deallocate(core::memory_handle handle) NOEXP;
 
 		bool is_busy() NOEXP;
 
 		u32 size() NOEXP;
 		u32 free_memory() NOEXP;
 		u32 allocated_memory() NOEXP;
+
+		core::memory_allocation get_allocation_info(core::memory_handle handle);
+
+		#ifdef DEBUG
+			u8 tag_of(void* pointer) NOEXP;
+		#else
+			INLINE u8 tag_of(void* pointer) NOEXP;
+		#endif
 
 	private: // private helper functions
 
@@ -70,6 +84,11 @@ namespace core {
 
 		INLINE void handle_registry(
 			void** ptr, core::i_memory_allocation const& allocation , core::memory_request const& request
+		) NOEXP;
+
+		INLINE void handle_registry_2(
+			void** ptr_1, void** ptr_2, core::i_memory_allocation const& allocation,
+			core::memory_request const& request_1, core::memory_request const& request_2
 		) NOEXP;
 
 		/*

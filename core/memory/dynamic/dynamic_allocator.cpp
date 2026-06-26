@@ -133,6 +133,8 @@ dynamic_allocator::~dynamic_allocator() NOEXP {
 */
 
 core::memory_handle dynamic_allocator::allocate(core::memory_request const& request) NOEXP {
+    
+    core::memory_handle handle;
 
     for (u8 i = 0; i < this->_blocks_count_; i++) {
     
@@ -140,13 +142,19 @@ core::memory_handle dynamic_allocator::allocate(core::memory_request const& requ
         if (this->_blocks_status_[i]) {
 
             // if block not busy 
-            if (this->_blocks_[i].status()) {
+            if ( ! this->_blocks_[i].is_busy()) {
 
                 // try allocate
-                core::memory_handle handle = this->_blocks_[i].allocate(request);
+                handle = this->_blocks_[i].allocate(request);
 
                 // if success
                 if (handle.response == core::allocator_response::success) {
+                    handle.block_index = i;
+
+                #ifdef DEBUG
+                    this->add_size_to_section(request.size , request.tag);
+                #endif
+
                     return handle;
                 }
             }
@@ -163,21 +171,26 @@ core::memory_handle dynamic_allocator::allocate(core::memory_request const& requ
 
     // try to allocate
     if (index < this->_capacity_) {
-        core::memory_handle handle = this->_blocks_[index].allocate(request);
-                            handle.block_index = index;
+        handle = this->_blocks_[index].allocate(request);
+        handle.block_index = index;
+
+    #ifdef DEBUG
+        this->add_size_to_section(request.size , request.tag);
+    #endif
+
         return handle;
     }
 
     // failed to find new block or memory
     return core::memory_handle { 
-                .response = core::allocator_response::full,
-                .block_index = 0,
-                .ptr = nullptr, 
+            .response = core::allocator_response::full,
+            .block_index = 0,
+            .ptr = nullptr, 
     };
 
 }
 
-core::memory_handle dynamic_allocator::allocate(u32 size , u8 tag) NOEXP {
+INLINE core::memory_handle dynamic_allocator::allocate(u32 size , u8 tag) NOEXP {
     return this->allocate(
         core::memory_request{ 
             .size = size , 
@@ -187,27 +200,92 @@ core::memory_handle dynamic_allocator::allocate(u32 size , u8 tag) NOEXP {
     );
 }
 
-core::memory_handle allocate(u32 size, u16 alignement = 0, u8 tag = 0) NOEXP {
+INLINE core::memory_handle dynamic_allocator::allocate(u32 size, u16 alignement = 0, u8 tag = 0) NOEXP {
     return this->allocate(
         core::memory_request{
             .size = size ,
             .alignement = alignement,
-            .tag = tag ,
+            .tag = tag
         }
     );
 }
 
-core::tow_memory_handles dynamic_allocator::allocate_tow(
+core::memory_handle_2 dynamic_allocator::allocate_tow(
     core::memory_request const& request_1, core::memory_request const& request_2
 ) NOEXP {
-    return core::tow_memory_handles{};
+    
+    core::memory_handle_2 handle;
+
+    for (u8 i = 0; i < this->_blocks_count_; i++) {
+
+        // if block is alive
+        if (this->_blocks_status_[i]) {
+
+            // if block not busy
+            if (! this->_blocks_[i].is_busy()) {
+
+                // try allocate
+                handle = this->_blocks_[i].allocate_tow(request_1 , request_2);
+
+                // if success
+                if (handle.response == core::allocator_response::success) {
+                    handle.block_index = i;
+
+                #ifdef DEBUG
+                    this->add_size_to_section(request_1.size, request_1.tag);
+                    this->add_size_to_section(request_2.size, request_2.tag);
+                #endif
+
+                    return handle;
+                }
+            }
+
+        }
+
+    }
+    /*
+        else mean all the block is busy at the moment or full
+    */
+
+    // try allocate new block if possible
+    u8 index = this->add_new_block(request_1.size + request_2.size);
+
+    // try to allocate
+    if (index < this->_capacity_) {
+        handle = this->_blocks_[index].allocate_tow(request_1, request_2);
+        handle.block_index = index;
+        
+    #ifdef DEBUG
+        this->add_size_to_section(request_1.size, request_1.tag);
+        this->add_size_to_section(request_2.size, request_2.tag);
+    #endif
+
+        return handle;
+    }
+
+    // failed to find new block or memory
+    return core::memory_handle_2{
+            .response = core::allocator_response::full,
+            .block_index = 0,
+            .ptr_1 = nullptr,
+            .ptr_2 = nullptr
+    };
+
 }
 
 void dynamic_allocator::deallocate(core::memory_handle handle) NOEXP {
 
     if (handle.block_index >= this->_capacity_) {
-        CORE_FATAL_F(CORE_INDEX_OUT_OF_RANGE , handle.block_index , "core::dynamic_allocator");
+    #ifdef DEBUG
+        CORE_ERROR_F(CORE_INDEX_OUT_OF_RANGE , handle.block_index , "core::dynamic_allocator");
+        DEBUG_BREAK;
+    #endif
+        return;
     }
+
+#ifdef DEBUG
+    this->remove_size_from_section(handle);
+#endif
 
     if (! this->_blocks_[handle.block_index].deallocate(handle.ptr)) {
         CORE_WARN_F(
@@ -224,11 +302,11 @@ void dynamic_allocator::deallocate(core::memory_handle handle) NOEXP {
 */
 
 u32 dynamic_allocator::blocks_count() NOEXP {
-    return 0;
+    return this->_blocks_count_;
 }
 
 u64 dynamic_allocator::size() NOEXP {
-    return 0;
+    return this->_size_;
 }
 
 u64 dynamic_allocator::current_memory_usage() NOEXP {
@@ -243,7 +321,7 @@ u64 dynamic_allocator::current_memory_usage(core::memory_tag section_tag) NOEXP 
 }
 
 u64 dynamic_allocator::peak_memory_usage() NOEXP {
-    return 0;
+    return this->_peak_;
 }
 
 
@@ -269,18 +347,45 @@ u64 dynamic_allocator::peak_memory_usage() NOEXP {
 
 #endif
 
+    
+DEBUG_ONLY INLINE void dynamic_allocator::add_size_to_section(u32 size, u8 section_tag) {
+
+    if (section_tag < MAX_MEMORY_TAGS) {
+        this->_sections_[section_tag] += size;
+    }
+
+#ifdef DEBUG
+    else {
+        CORE_ERROR_F("invalid memory tag passed {} to core::dynamic_allocator " , section_tag);
+        DEBUG_BREAK;
+    }
+#endif
+
+}
+
+DEBUG_ONLY INLINE void dynamic_allocator::remove_size_from_section(core::memory_handle handle) {
+
+    if (handle.block_index < this->_capacity_) {
+        core::memory_allocation allocation = this->_blocks_[handle.block_index].get_allocation_info();
+        this->_sections_[tag] -= handle.
+    }
+
+}
 
 /*
     private helper functions
 */
 
-INLINE u8 dynamic_allocator::add_new_block(u32 block_size) NOEXP{
-
-    if (this->_memory_budget_ < this->_size_ + block_size) {
+INLINE u8 dynamic_allocator::add_new_block(u32 target_size) NOEXP{
+    // up the size to the allocator block size
+    u32 block_size = (target_size >= this->_blocks_size_) ? target_size : this->_blocks_size_;
+    
+    // check if we about to pass the allowed memory budget
+    if (this->_memory_budget_ < (this->_size_ + block_size)) {
     #ifdef DEBUG
         CORE_WARN(
-            CORE_LOG_CONFIG_ALL , 
-            CORE_WARNING_OUT_OF_BUDGET  CORE_WARNINIG_RUNTIME_CRASH, 
+            CORE_LOG_CONFIG_ALL ,
+            CORE_WARNING_OUT_OF_BUDGET  CORE_WARNINIG_RUNTIME_CRASH,
             "core::dynamic_allocator" , this->_memory_budget_
         );
     #else
@@ -293,10 +398,12 @@ INLINE u8 dynamic_allocator::add_new_block(u32 block_size) NOEXP{
         return this->_capacity_;
     }
 
+    // check if there's any room left for new block
     if (this->_blocks_count_ < this->_capacity_) {
         u32 index = this->_blocks_count_;
 
         if (this->_blocks_status_[index]) {
+
             // O(N) search for that empty block
             for (u32 i = 0; i < this->_capacity_; i++) {
                 if (! this->_blocks_status_[i]) {
@@ -310,8 +417,9 @@ INLINE u8 dynamic_allocator::add_new_block(u32 block_size) NOEXP{
         }
 
         new (this->_blocks_ + index) core::memory_block(block_size, this->max_allocations_per_block, (u8)this->_tag_);
-        this->_blocks_count_ += 1;
+        
         this->_blocks_status_[index] = true;
+        this->_blocks_count_ += 1;
         this->_size_ += block_size;
 
         return index;

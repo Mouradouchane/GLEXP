@@ -81,12 +81,12 @@ namespace core {
 			dynamic_allocator public functions
 		*/
 
-		core::memory_handle allocate(u32 size, u8 tag = 0) NOEXP;
-		core::memory_handle allocate(u32 size, u16 alignement = 0, u8 tag = 0) NOEXP;
-		core::memory_handle allocate(core::memory_request const& request) NOEXP;
+		INLINE core::memory_handle allocate(u32 size, u8 tag = 0) NOEXP;
+		INLINE core::memory_handle allocate(u32 size, u16 alignement = 0, u8 tag = 0) NOEXP;
+		       core::memory_handle allocate(core::memory_request const& request) NOEXP;
 
 		// allocate 2 memory chunks next to each other in one call
-		core::tow_memory_handles allocate_tow(core::memory_request const& request_1 , core::memory_request const& request_2) NOEXP;
+		core::memory_handle_2 allocate_tow(core::memory_request const& request_1 , core::memory_request const& request_2) NOEXP;
 
 		void deallocate(core::memory_handle handle) NOEXP;
 
@@ -109,6 +109,9 @@ namespace core {
 	private: // helper functions
 		INLINE void  remove_block(u8  block_index) NOEXP;
 		INLINE u8   add_new_block(u32 block_size)  NOEXP;
+
+		DEBUG_ONLY INLINE void add_size_to_section(u32 size, u8 section_tag);
+		DEBUG_ONLY INLINE void remove_size_from_section(core::memory_handle handle);
 
 		// not allowed contructor's
 		dynamic_allocator() = delete;

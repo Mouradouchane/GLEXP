@@ -48,8 +48,8 @@ namespace core {
 	struct   free_memory;
 	struct i_free_memory;
 
-	struct     memory_handle;
-	struct tow_memory_handles;
+	struct memory_handle;
+	struct memory_handle_2;
 
 	/*
 		core::memory have global allocator it's just a wrapper used by other allocators like: pool, arena , ...
@@ -78,22 +78,27 @@ namespace core {
 	*/
 	
 	enum class allocator_response : u8 {
-		success  = 0,
-		busy , // the allocator is busy with other thread
-		full , // the allocator is full and no memory left
+		success = 0,
+		busy, // the allocator is busy with other thread
+		full, // the allocator is full and no memory left
+		register_full,
 		fragmeneted, // the allocator have the memory asked for but it too fragmeneted
 	};
 
 	// returned by the allocator
 	struct memory_handle {
-		const core::allocator_response response = core::allocator_response::full; // to know why allocation failed
+		core::allocator_response response = core::allocator_response::full; // to know why allocation failed
 		u8    block_index = 0; // for fast deallocation
+		u16   alloc_index = 0; // todo: move to fast/better handles
 		void* ptr = nullptr;
 	};
 	
-	struct tow_memory_handles {
-		memory_handle handle1;
-		memory_handle handle2;
+	// returend by the allocator for 
+	struct memory_handle_2 {
+		core::allocator_response response = core::allocator_response::full; // to know why allocation failed
+		u8    block_index = 0; // for fast deallocation
+		void* ptr_1 = nullptr; // first allocation
+		void* ptr_2 = nullptr; // second allocation
 	};
 
 	// used by memory allocator
