@@ -52,15 +52,15 @@ namespace core {
 		// destructor
 		~memory_block() NOEXP;
 
-		// memory_block public functions
-
-		       core::memory_handle allocate(core::memory_request const& request) NOEXP;
-		INLINE core::memory_handle allocate(u32 size, u32 alignement = 0, u8 tag = 0) NOEXP;
-
+		/*
+			memory_block public functions
+		*/ 
+		core::memory_handle   allocate(core::memory_request const& request) NOEXP;
+		core::memory_handle   allocate(u32 size, u32 alignement = 0, u8 tag = 0) NOEXP;
 		core::memory_handle_2 allocate_tow(core::memory_request const& request_1, core::memory_request const& request_2) NOEXP;
 
-		       bool deallocate(void* pointer) NOEXP;
-		INLINE bool deallocate(core::memory_handle handle) NOEXP;
+		bool deallocate(void* pointer) NOEXP; // slow
+		bool deallocate(core::memory_handle handle) NOEXP; // faster
 
 		bool is_busy() NOEXP;
 
@@ -68,13 +68,8 @@ namespace core {
 		u32 free_memory() NOEXP;
 		u32 allocated_memory() NOEXP;
 
-		core::memory_allocation get_allocation_info(core::memory_handle handle);
-
-		#ifdef DEBUG
-			u8 tag_of(void* pointer) NOEXP;
-		#else
-			INLINE u8 tag_of(void* pointer) NOEXP;
-		#endif
+		// use this to query information about some memory allocation
+		core::memory_allocation get_allocation_info(core::memory_handle handle) NOEXP;
 
 	private: // private helper functions
 
@@ -82,13 +77,21 @@ namespace core {
 		// note: this locks the entier block for that process !
 		void process_free_list() NOEXP;
 
-		INLINE void handle_registry(
+		// note[WARNING]: lock the block before calling this function !
+		INLINE void internal_allocate(core::memory_request const& request , core::memory_handle& handle) NOEXP;
+
+		INLINE u32 handle_registry(
 			void** ptr, core::i_memory_allocation const& allocation , core::memory_request const& request
 		) NOEXP;
-
+		
 		INLINE void handle_registry_2(
-			void** ptr_1, void** ptr_2, core::i_memory_allocation const& allocation,
-			core::memory_request const& request_1, core::memory_request const& request_2
+			void** ptr_1,
+			void** ptr_2,
+			core::i_memory_allocation const& allocation,
+			core::memory_request const& request_1,
+			core::memory_request const& request_2,
+			u32& index_1,
+			u32& index_2
 		) NOEXP;
 
 		/*

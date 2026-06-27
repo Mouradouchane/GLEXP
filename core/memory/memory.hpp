@@ -85,20 +85,20 @@ namespace core {
 		fragmeneted, // the allocator have the memory asked for but it too fragmeneted
 	};
 
-	// returned by the allocator
+	// returned by memory allocator
 	struct memory_handle {
-		core::allocator_response response = core::allocator_response::full; // to know why allocation failed
-		u8    block_index = 0; // for fast deallocation
-		u16   alloc_index = 0; // todo: move to fast/better handles
+		// allocator response "status"
+		core::allocator_response response = core::allocator_response::full; 
 		void* ptr = nullptr;
+		// this for fast deallocation
+		u8    block_index    = -1;
+		u32   register_index = -1;
 	};
 	
-	// returend by the allocator for 
+	// returend by memory allocator for tow allocations in one handle
 	struct memory_handle_2 {
-		core::allocator_response response = core::allocator_response::full; // to know why allocation failed
-		u8    block_index = 0; // for fast deallocation
-		void* ptr_1 = nullptr; // first allocation
-		void* ptr_2 = nullptr; // second allocation
+		core::memory_handle handle_1;
+		core::memory_handle handle_2;
 	};
 
 	// used by memory allocator
