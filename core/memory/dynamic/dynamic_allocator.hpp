@@ -5,6 +5,7 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
+#include "core/locks/atomic_lock/atomic_lock.hpp"
 #include "core/locks/atomic_types.hpp"
 #include "core/memory/dynamic/block/block.hpp"
 #include "core/strings/string.hpp"
@@ -41,21 +42,6 @@ namespace core {
 	*/
 	DLL_API_CLASS dynamic_allocator {
 	private:
-		bool               _blocks_status_[MAX_MEMORY_BLOCKS] = { false }; // for the status of each block
-		core::memory_block _blocks_[MAX_MEMORY_BLOCKS]; // blocks array
-		u8 const           _capacity_ = MAX_MEMORY_BLOCKS; // max allowed blocks
-		u8                 _blocks_count_  = 0; 
-		u64                _blocks_size_ = core::dynamic_allocator::min_size_allowed;
-		u16                _blocks_max_allocations_; // max allocations allowed per block
-
-		u64          _memory_budget_ = 0; // max allowed size
-		
-		atomic_u32            _size_ = 0; // total memory "currentlly"
-		DEBUG_ONLY atomic_u32 _peak_ = 0;          // peak memory usage
-		DEBUG_ONLY atomic_u32 _min_  = 0xFFFFFFFF; // min  memory usage
-		
-		bool _is_mt_ = false; // is this allocator for multi-threaded usage ?
-
 	#ifdef DEBUG
 		string              _name_; // allocator name for debug 
 		core::allocator_tag _tag_; // allocator main usage tag for debug
@@ -64,12 +50,27 @@ namespace core {
 		atomic_u32 _sections_[MAX_MEMORY_TAGS] = { 0u };
 	#endif
 
+		core::atomic_lock  _lock_;
+		core::memory_block _blocks_[MAX_MEMORY_BLOCKS]; // blocks array
+		bool               _blocks_status_[MAX_MEMORY_BLOCKS] = { false }; // for the status of each block
+		u8 const           _capacity_ = MAX_MEMORY_BLOCKS; // max allowed blocks
+		atomic_u8          _blocks_count_  = 0; 
+		u64                _blocks_size_ = core::dynamic_allocator::min_size_allowed;
+		u16                _blocks_max_allocations_ = MAX_ALLOCATIONS_PRE_BLOCK; // max allocations allowed per block
+
+		u64               _memory_budget_ = 0; // max allowed size
+		
+		           atomic_u64 _size_ = 0; // total memory "currentlly"
+		DEBUG_ONLY atomic_u32 _peak_ = 0;          // peak memory usage
+		DEBUG_ONLY atomic_u32 _min_  = 0xFFFFFFFF; // min  memory usage
+		
+		bool _is_mt_ = false; // is this allocator for multi-threaded usage ?
+
 	public:
 		// public variables for usage 
 		// min/max allowed size for dynamic_allocator "blocks"
 		static const u64 min_size_allowed =  64 KB;
 		static const u64 max_size_allowed = 512 MB;
-		static const u16 max_allocations_per_block = 1024;
 		
 		// constructor
 		dynamic_allocator( core::dynamic_allocator_configs const& parameters ) NOEXP;
@@ -87,7 +88,9 @@ namespace core {
 
 		// allocate 2 memory chunks next to each other in one call
 		core::memory_handle_2 allocate_tow(core::memory_request const& request_1 , core::memory_request const& request_2) NOEXP;
-
+		
+		// note: slow as hell
+		// void deallocate(void* pointer) NOEXP; 
 		void deallocate(core::memory_handle handle) NOEXP;
 
 		u64 size() NOEXP; 
@@ -107,11 +110,13 @@ namespace core {
 	#endif
 	
 	private: // helper functions
-		INLINE void  remove_block(u8  block_index) NOEXP;
-		INLINE u8   add_new_block(u32 block_size)  NOEXP;
+		INLINE u8 add_new_block(u32 block_size) NOEXP;
+		// INLINE void remove_block(u8  block_index) NOEXP;
 
-		DEBUG_ONLY INLINE void add_size_to_section(u32 size, u8 section_tag);
-		DEBUG_ONLY INLINE void remove_size_from_section(core::memory_handle handle);
+		// note: call this function only from allocate / deallocate
+		INLINE void update_size_variables(
+			core::memory_request const& request, core::memory_handle const& handle , bool increment = true
+		) NOEXP;
 
 		// not allowed contructor's
 		dynamic_allocator() = delete;

@@ -281,14 +281,22 @@ core::memory_handle_2 core::memory_block::allocate_tow(
 	};
 }
 
+// faster
 bool core::memory_block::deallocate(core::memory_handle handle) NOEXP {
 	
-	core::memory_allocation allocation = this->active_list.get(handle.register_index);
+	core::memory_allocation allocation = this->active_list.get_info(handle.register_index);
 
 	if (allocation.ptr == handle.ptr) {
-
+		this->active_list.remove(handle.register_index);
+		
+		this->free_list.insert(allocation.ptr, allocation.size, 0);
+	
+		CORE_DEBUG(0, "core::dynamic_allocator successfully deallocate : memory={} , size={} .", core::pointer_to_hex_string(allocation.ptr) , allocation.size);
+		return true;
 	}
 
+	CORE_WARN_D("core::dynamic_allocator failed to deallocate : memory={} , size={} .", core::pointer_to_hex_string(allocation.ptr), allocation.size);
+	return false;
 }
 
 bool core::memory_block::deallocate(void* pointer) NOEXP {
@@ -296,7 +304,7 @@ bool core::memory_block::deallocate(void* pointer) NOEXP {
 
 	if ((pointer < this->start) && (pointer > this->end) ) {
 		CORE_WARN(
-			CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_OUT_OF_RANGE_POINTER , 
+			CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_OUT_OF_RANGE_POINTER ,
 			core::pointer_to_hex_string(pointer),
 			core::pointer_to_hex_string(this->start),
 			core::pointer_to_hex_string(this->end)

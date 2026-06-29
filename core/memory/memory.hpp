@@ -30,6 +30,7 @@
 
 #define MAX_MEMORY_TAGS   255
 #define MAX_MEMORY_BLOCKS 255
+#define MAX_ALLOCATIONS_PRE_BLOCK 1024
 
 namespace core {
 
@@ -91,8 +92,8 @@ namespace core {
 		core::allocator_response response = core::allocator_response::full; 
 		void* ptr = nullptr;
 		// this for fast deallocation
-		u8    block_index    = -1;
-		u32   register_index = -1;
+		u8    block_index    =  (u8)-1;
+		u32   register_index = (u32)-1;
 	};
 	
 	// returend by memory allocator for tow allocations in one handle
@@ -216,8 +217,9 @@ namespace core {
 	/*
 		to_string functions to convert memory tags to strings
 	*/
-	DLL_API string to_string(core::memory_tag    tag) NOEXP;
-	DLL_API string to_string(core::allocator_tag tag) NOEXP;
+	DLL_API string to_string(core::memory_tag tag) NOEXP;
+	DLL_API string to_string(core::memory_tag section_tag, core::memory_tag mem_tag) NOEXP;
+
 
 } // namespace core end
 

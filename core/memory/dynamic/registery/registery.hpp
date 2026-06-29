@@ -65,7 +65,9 @@ namespace core {
 		INLINE u32 get_allocations_size()  NOEXP; // total size of all allocation in register
 		INLINE u32 get_allocations_count() NOEXP; // how many allocation in register
 
-		INLINE core::memory_allocation get_info(void* pointer) NOEXP;
+		// get allocation info
+		INLINE core::memory_allocation get_info(void* pointer) NOEXP; // slow
+		INLINE core::memory_allocation get_info(u32 index) NOEXP; // O(1) faster
 
 		core::i_memory_allocation get_allocation(u32 target_size) NOEXP; // o(n)
 		core::i_memory_allocation get_biggest_allocation(u32 target_size) NOEXP; // O(1)
