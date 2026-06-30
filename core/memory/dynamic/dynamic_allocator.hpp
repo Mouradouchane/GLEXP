@@ -58,9 +58,9 @@ namespace core {
 		u64                _blocks_size_ = core::dynamic_allocator::min_size_allowed;
 		u16                _blocks_max_allocations_ = MAX_ALLOCATIONS_PRE_BLOCK; // max allocations allowed per block
 
-		u64               _memory_budget_ = 0; // max allowed size
+		u64                _memory_budget_ = 0; // max allowed size
 		
-		           atomic_u64 _size_ = 0; // total memory "currentlly"
+		           atomic_u64 _size_ = 0; // total memory "currently"
 		DEBUG_ONLY atomic_u32 _peak_ = 0;          // peak memory usage
 		DEBUG_ONLY atomic_u32 _min_  = 0xFFFFFFFF; // min  memory usage
 		
@@ -82,9 +82,9 @@ namespace core {
 			dynamic_allocator public functions
 		*/
 
-		INLINE core::memory_handle allocate(u32 size, u8 tag = 0) NOEXP;
-		INLINE core::memory_handle allocate(u32 size, u16 alignement = 0, u8 tag = 0) NOEXP;
-		       core::memory_handle allocate(core::memory_request const& request) NOEXP;
+		INLINE core::memory_handle allocate(u32 size, core::memory_tag tag = core::memory_tag::unkown) NOEXP;
+		INLINE core::memory_handle allocate(u32 size, u16 alignement = 0, core::memory_tag tag = core::memory_tag::unkown) NOEXP;
+		       core::memory_handle allocate(core::memory_request request) NOEXP;
 
 		// allocate 2 memory chunks next to each other in one call
 		core::memory_handle_2 allocate_tow(core::memory_request const& request_1 , core::memory_request const& request_2) NOEXP;

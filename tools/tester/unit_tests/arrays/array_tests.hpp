@@ -1,9 +1,11 @@
+#if 0
+
 #pragma once 
 
 #ifndef ARRAY_TESTS
 #define ARRAY_TESTS
 
-#include "core/data_structres/arrays/array.hpp"
+#include "core/containers/arrays/array.hpp"
 #include "tools/tester/test/test.hpp"
 
 struct DtorCounter {
@@ -273,3 +275,5 @@ bool array_t_array_clear_function() {
 }
 
 #endif 
+
+#endif

@@ -118,29 +118,20 @@ dynamic_allocator::dynamic_allocator(core::dynamic_allocator_configs const& para
 
 dynamic_allocator::~dynamic_allocator() NOEXP {
 
-    // note: the blocks destructor will get called automatically because _block_[]
-    /*
-    for (u32 i = 0; i < this->_capacity_; i++) {
-        
-        if (this->_blocks_status_[i]) {
-            // note: memory_block auto detected "memory leaks"
-            this->_blocks_[i].~memory_block();
-            this->_blocks_status_[i] = false;
-        }
-
-    }
-    */
-
+    // note: all the blocks "destructor" will get called automatically because _block_ is array[]
+ 
     this->_size_ = 0;
     this->_blocks_count_  = 0;
     this->_memory_budget_ = 0;
+
+    CORE_DEBUG(0, "core::dynamic_allocator {} destructed !" , core::pointer_to_hex_string(this) );
 }
 
 /*
     public functions
 */
 
-core::memory_handle dynamic_allocator::allocate(core::memory_request const& request) NOEXP {
+core::memory_handle dynamic_allocator::allocate(core::memory_request request) NOEXP {
     
     core::memory_handle handle;
 
@@ -193,22 +184,22 @@ core::memory_handle dynamic_allocator::allocate(core::memory_request const& requ
 
 }
 
-INLINE core::memory_handle dynamic_allocator::allocate(u32 size , u8 tag) NOEXP {
+INLINE core::memory_handle dynamic_allocator::allocate(u32 size , core::memory_tag tag) NOEXP {
     return this->allocate(
         core::memory_request{ 
             .size = size , 
             .alignement = 0,
-            .tag = tag , 
+            .tag = (u8)tag , 
         }
     );
 }
 
-INLINE core::memory_handle dynamic_allocator::allocate(u32 size, u16 alignement, u8 tag) NOEXP {
+INLINE core::memory_handle dynamic_allocator::allocate(u32 size, u16 alignement, core::memory_tag tag) NOEXP {
     return this->allocate(
         core::memory_request{
             .size = size ,
             .alignement = alignement,
-            .tag = tag
+            .tag = (u8)tag
         }
     );
 }
@@ -286,7 +277,7 @@ void dynamic_allocator::deallocate(core::memory_handle handle) NOEXP {
     }
 
     core::memory_allocation alloc = this->_blocks_[handle.block_index].get_allocation_info(handle);
-
+    
     if (! this->_blocks_[handle.block_index].deallocate(handle)) {
         CORE_WARN_F(
             "core::dynamic_allocator.deallocate(): memory block failed to deallocate {} !",
@@ -296,7 +287,7 @@ void dynamic_allocator::deallocate(core::memory_handle handle) NOEXP {
         return;
     }
 
-    this->update_size_variables(core::memory_request{.size = alloc.size , .tag = alloc.tag }, handle , false);
+    this->update_size_variables(core::memory_request{ .size = alloc.size , .tag = alloc.tag }, handle , false);
 
 }
 
@@ -388,7 +379,7 @@ INLINE u8 dynamic_allocator::add_new_block(u32 target_size) NOEXP{
     u32 block_size;
 
     // check size
-    if (target_size > this->_blocks_size_)  block_size = target_size;
+    if (target_size >  this->_blocks_size_) block_size = target_size;
     if (target_size <= this->_blocks_size_) block_size = this->_blocks_size_;
     
     // check allocator memory budget
@@ -424,7 +415,7 @@ INLINE u8 dynamic_allocator::add_new_block(u32 target_size) NOEXP{
         else {
             CORE_FATAL(CORE_LOG_CONFIG_ALL,
                 "core::dynamic_allocator: failed to find empty spot for new block ! this could be a bug , count={} , capacity={}",
-                this->_blocks_count_ , this->_capacity_
+                this->_blocks_count_.load(MEMORY_ORDER_RELAXE) , this->_capacity_
             );
             return this->_capacity_;
         } 

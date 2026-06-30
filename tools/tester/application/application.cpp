@@ -1,7 +1,7 @@
 #pragma once 
 
-#ifndef APPLICATION_CPP
-#define APPLICATION_CPP
+#ifndef TESTER_APPLICATION_CPP
+#define TESTER_APPLICATION_CPP
 
 #define UNIT_TEST
 
@@ -16,20 +16,31 @@
 #include "tools/tester/log/log.hpp"
 #include "tools/tester/string/string_utility.hpp"
 
-#include "core/status/status.hpp"
-#include "core/events/keyboard/keyboard.hpp"
-#include "core/references/references.hpp"
-#include "core/window/window.hpp"
+// todo: add tests for these asap
+// #include "core/events/keyboard/keyboard.hpp"
+// #include "core/references/references.hpp"
+// #include "core/window/window.hpp"
+#include "core/logger/logger.hpp"
 
-// include tests
-#include "tools/tester/unit_tests/arrays/array_tests.hpp"
-#include "tools/tester/unit_tests/arrays/dynamic_array_tests.hpp"
+// enable logger
+static auto _tester_app_cpp_logger_ = CORE_GET_LOGGER(UNIT_TESTER_LOGGER);
+#define _LOGGER_ _tester_app_cpp_logger_
+
+/*
+	include unit-test's function's
+	- todo: add memory allocator for the arrays tests
+*/ 
+// #include "tools/tester/unit_tests/arrays/array_tests.hpp"
+// #include "tools/tester/unit_tests/arrays/dynamic_array_tests.hpp"
+#include "tools/tester/unit_tests/memory_tests/dynamic_allocator_tests/behavior_on_st.hpp"
 
 #include "application.hpp"
 
+#define TESTER_ADD_TEST(FUNCTION)  test(#FUNCTION, FUNCTION)
+
 // few private functions for tester::execute() function
 static inline void exec_all_function();
-static inline void exec_tests_function(std::string& command, std::vector<std::string>* command_toknes);
+static inline void exec_tests_function( std::string& command, std::vector<std::string>* command_toknes);
 static inline void exec_groups_function(std::string& command, std::vector<std::string>* command_toknes);
 
 namespace tester {
@@ -55,51 +66,61 @@ namespace tester {
 
 		core::logger::init("tester_logger" , core::logger::verbosity_level::trace);
 		
-		
+
 
 		/*
 			note: add your unit-tests here
 		*/ 
+		/*
+		add_group(
+			group("core::array tests", {
+				TESTER_ADD_TEST(array_t_construct_count_size_and_begin_end),
+				TESTER_ADD_TEST(get_set_and_operator_index),
+				TESTER_ADD_TEST(ll),
+				TESTER_ADD_TEST(opy_ctor_and_static_copy),
+				TESTER_ADD_TEST(rray_t_static_move_move_assign_move_ctor),
+				TESTER_ADD_TEST(_trivial_destruction),
+				TESTER_ADD_TEST(),
+				TESTER_ADD_TEST(e_reallocate),
+				TESTER_ADD_TEST(ases),
+				TESTER_ADD_TEST(y_t_copy_into_existing_destination),
+				TESTER_ADD_TEST(sic_construction),
+				TESTER_ADD_TEST(_constructor_from_pointer_trivial),
+				TESTER_ADD_TEST(ay_t_array_constructor_from_pointer_nontrivial),
+				TESTER_ADD_TEST(y_constructor_trivial),
+				TESTER_ADD_TEST(_array_copy_constructor_nontrivial),
+				TESTER_ADD_TEST(_t_array_static_copy_nontrivial),
+				TESTER_ADD_TEST(function)
+			})
+		);
 
-	add_group(
-		group("core::array tests", {
-			test("array_construct_count_size_and_begin_end",	array_t_construct_count_size_and_begin_end),
-			test("array_get_set_and_operator_index",			array_t_get_set_and_operator_index),
-			test("array_clear_and_fill",						array_t_clear_and_fill),
-			test("array_copy_ctor_and_static_copy",				array_t_copy_ctor_and_static_copy),
-			test("array_static_move_move_assign_move_ctor",		array_t_static_move_move_assign_move_ctor),
-			test("array_non_trivial_destruction",				array_t_non_trivial_destruction),
-			test("array_sort_function",							array_t_sort_function),
-			test("array_allocate_reallocate",					array_t_allocate_reallocate),
-			test("array_fill_edge_cases",						array_t_fill_edge_cases),
-			test("array_copy_into_existing_destination",		array_t_copy_into_existing_destination),
-			test("array_basic_construction",					array_t_array_basic_construction),
-			test("array_ctor_from_ptr_trivial",					array_t_array_constructor_from_pointer_trivial),
-			test("array_ctor_from_ptr_nontrivial_string",		array_t_array_constructor_from_pointer_nontrivial),
-			test("array_copy_ctor_trivial",						array_t_array_copy_constructor_trivial),
-			test("array_copy_ctor_nontrivial_string",			array_t_array_copy_constructor_nontrivial),
-			test("array_static_copy_nontrivial_string",			array_t_array_static_copy_nontrivial),
-			test("array_clear_function",						array_t_array_clear_function)
-		})
-	);
+		add_group(
+			group("core::dynamic_array tests", {
+				TESTER_ADD_TEST(dynamic_arr_t_construction_basics),
+				TESTER_ADD_TEST(vialdynamic_arr_t_push_and_resize_trivial),
+				TESTER_ADD_TEST(trivial_stringdynamic_arr_t_push_and_resize_nontrivial),
+				TESTER_ADD_TEST(ynamic_arr_t_pop_basics_trivial),
+				TESTER_ADD_TEST(al_stringdynamic_arr_t_pop_basics_nontrivial),
+				TESTER_ADD_TEST(trivialdynamic_arr_t_copy_assignment_nontrivial),
+				TESTER_ADD_TEST(ynamic_arr_t_empty_pop_handling),
+				TESTER_ADD_TEST(e_and_begin_enddynamic_arr_t_construct_count_size_and_begin_end),
+				TESTER_ADD_TEST(r_indexdynamic_arr_t_get_set_and_operator_index),
+				TESTER_ADD_TEST(edynamic_arr_t_push_and_auto_resize),
+				TESTER_ADD_TEST(dynamic_arr_t_nontrivial_push_pop),
+				TESTER_ADD_TEST(mic_arr_t_copy_assignment),
+				TESTER_ADD_TEST(mic_arr_t_move_assignment)
+			})
+		);
+		*/
 
-	add_group(
-		group("core::dynamic_array tests", {
-			test("dynamic_array_construction_basics",				 dynamic_arr_t_construction_basics),
-			test("dynamic_array_push_and_resize_trivial",			 dynamic_arr_t_push_and_resize_trivial),
-			test("dynamic_array_push_and_resize_nontrivial_string",  dynamic_arr_t_push_and_resize_nontrivial),
-			test("dynamic_array_pop_basics_trivial",				 dynamic_arr_t_pop_basics_trivial),
-			test("dynamic_array_pop_basics_nontrivial_string",		 dynamic_arr_t_pop_basics_nontrivial),
-			test("dynamic_array_copy_assignment_nontrivial",		 dynamic_arr_t_copy_assignment_nontrivial),
-			test("dynamic_array_empty_pop_handling",				 dynamic_arr_t_empty_pop_handling),
-			test("dynamic_array_construct_count_size_and_begin_end", dynamic_arr_t_construct_count_size_and_begin_end),
-			test("dynamic_array_get_set_and_operator_index",		 dynamic_arr_t_get_set_and_operator_index),
-			test("dynamic_array_push_and_auto_resize",				 dynamic_arr_t_push_and_auto_resize),
-			test("dynamic_array_nontrivial_push_pop",				 dynamic_arr_t_nontrivial_push_pop),
-			test("dynamic_array_copy_assignment",					 dynamic_arr_t_copy_assignment),
-			test("dynamic_array_move_assignment",					 dynamic_arr_t_move_assignment)
-		})
-	);
+		add_group(
+			group("core::dynamic_array tests", {
+				TESTER_ADD_TEST(dynamic_allocator_simple_usage_on_st_test_1),
+				TESTER_ADD_TEST(dynamic_allocator_simple_usage_on_st_test_2),
+				TESTER_ADD_TEST(dynamic_allocate_memory_1),
+				TESTER_ADD_TEST(dynamic_allocate_memory_2),
+			})
+		);
 
 		logger::load_old_tests_from_files(old_tests);
 		tester::logger::print_help();

@@ -1,7 +1,7 @@
 #pragma once 
 
-#ifndef APPLICATION_HPP
-#define APPLICATION_HPP
+#ifndef TESTER_APPLICATION_HPP
+#define TESTER_APPLICATION_HPP
 
 namespace tester {
 

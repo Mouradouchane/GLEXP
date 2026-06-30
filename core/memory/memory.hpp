@@ -112,7 +112,7 @@ namespace core {
 	struct memory_request {
 		u32 size;      // max size below 4GB
 		u32 alignement; 
-		u8  tag; // "debug-only"
+		DEBUG_ONLY u8  tag;
 	};
 	
 	// used by block allocator
@@ -120,9 +120,7 @@ namespace core {
 		void* ptr;
 		u32   size;
 			
-	#ifdef DEBUG
-		u8    tag; // "debug-only"
-	#endif
+		DEBUG_ONLY u8 tag; 
 
 		// helper function
 		INLINE void clear() NOEXP;
