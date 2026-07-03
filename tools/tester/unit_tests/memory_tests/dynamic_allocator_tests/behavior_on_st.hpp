@@ -1,7 +1,7 @@
 #pragma once 
 
-#ifndef UNIT_TEST_DYNAMIC_ALLOCATOR_HPP
-#define UNIT_TEST_DYNAMIC_ALLOCATOR_HPP
+#ifndef UNIT_TEST_BEHAVIOR_ON_ST_DYNAMIC_ALLOCATOR_HPP
+#define UNIT_TEST_BEHAVIOR_ON_ST_DYNAMIC_ALLOCATOR_HPP
 
 bool dynamic_allocator_simple_usage_on_st_test_1();
 bool dynamic_allocator_simple_usage_on_st_test_2();

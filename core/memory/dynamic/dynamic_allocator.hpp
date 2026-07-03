@@ -7,6 +7,7 @@
 #include "core/types.hpp"
 #include "core/locks/atomic_lock/atomic_lock.hpp"
 #include "core/locks/atomic_types.hpp"
+#include "core/memory/dynamic/registery/registery.hpp"
 #include "core/memory/dynamic/block/block.hpp"
 #include "core/strings/string.hpp"
 

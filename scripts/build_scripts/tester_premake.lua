@@ -63,8 +63,10 @@ local tester = {
 		objdir(utility.s_paths.release .. "/tester/")
 
 		targetname(tester.name)
-		links( core.core_project.lib.release_path .. core.core_project.lib.filename )
-
+		-- links( core.core_project.lib.release_path .. core.core_project.lib.filename )
+		libdirs({ core.core_project.lib.release_path })
+		links({ "core" }) 
+		
 		-- few macros for release
 		defines({"NDEBUG", "NO_DEBUG" , "UNIT_TEST"})
 
@@ -83,8 +85,10 @@ local tester = {
 		objdir(utility.s_paths.release .. "/tester/")
 
 		targetname(tester.name)
-		links( core.core_project.dll.release_path .. core.core_project.dll.lib_filename )
-
+		-- links( core.core_project.dll.release_path .. core.core_project.dll.lib_filename )
+		libdirs({ core.core_project.dll.release_path })
+		links({ "core_d" }) 
+		
 		-- few macros for release
 		defines({"NDEBUG", "NO_DEBUG" , "DLL_IMPORT" , "UNIT_TEST"})
 
@@ -103,8 +107,10 @@ local tester = {
 	objdir(utility.s_paths.debug .. "/tester/")
 
 	targetname(tester.name)
-	links( core.core_project.lib.debug_path .. core.core_project.lib.filename )
-
+	-- links( core.core_project.lib.debug_path .. core.core_project.lib.filename )
+	libdirs({ core.core_project.lib.debug_path })
+	links({ "core" }) 
+		
 	defines({"DEBUG", "UNIT_TEST"})
 	debugdir(utility.s_paths.build .. "/testers/")
 	
@@ -123,8 +129,10 @@ local tester = {
 	objdir(utility.s_paths.debug .. "/tester/")
 
 	targetname(tester.name)
-	links( core.core_project.dll.debug_path .. core.core_project.dll.lib_filename )
-
+	--links( core.core_project.dll.debug_path .. core.core_project.dll.lib_filename )
+	libdirs({ core.core_project.dll.debug_path })
+	links({ "core_d" }) 
+	
 	defines({"DEBUG" , "DLL_IMPORT", "UNIT_TEST"})
 	debugdir(utility.s_paths.build .. "/testers/")
 

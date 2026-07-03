@@ -9,8 +9,8 @@
 #include "core/types.hpp"
 
 #include "core/memory/memory.hpp"
-#include "core/memory/dynamic/registery/registery.hpp"
 #include "core/locks/atomic_lock/atomic_lock.hpp"
+#include "core/memory/dynamic/registery/registery.hpp"
 
 #define MEMORY_BLOCK_IS_REGISTRY_FULL "memory_block registry is full max {} allocation !"
 #define MEMORY_BLOCK_OUT_OF_MEMORY    "memory_block is out of memory , failed to allocate {}bytes ."
