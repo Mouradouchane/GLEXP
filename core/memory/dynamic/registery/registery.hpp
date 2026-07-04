@@ -59,15 +59,15 @@ namespace core {
 		// return capacity if ptr not found
 		u32 exist(void* ptr) NOEXP;
 
-		INLINE u32 get_size() NOEXP; // registry size in bytes
-		INLINE u32 get_capacity() NOEXP; // registry capacity
+		u32 get_size() NOEXP; // registry size in bytes
+		u32 get_capacity() NOEXP; // registry capacity
 
-		INLINE u32 get_allocations_size()  NOEXP; // total size of all allocation in register
-		INLINE u32 get_allocations_count() NOEXP; // how many allocation in register
+		u32 get_allocations_size()  NOEXP; // total size of all allocation in register
+		u32 get_allocations_count() NOEXP; // how many allocation in register
 
 		// get allocation info
-		INLINE core::memory_allocation get_info(void* pointer) NOEXP; // slow
-		INLINE core::memory_allocation get_info(u32 index) NOEXP; // O(1) faster
+		core::memory_allocation get_info(void* pointer) NOEXP; // slow
+		core::memory_allocation get_info(u32 index) NOEXP; // O(1) faster
 
 		core::i_memory_allocation get_allocation(u32 target_size) NOEXP; // o(n)
 		core::i_memory_allocation get_biggest_allocation(u32 target_size) NOEXP; // O(1)

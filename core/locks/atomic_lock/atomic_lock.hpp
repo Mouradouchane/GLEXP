@@ -67,8 +67,8 @@ namespace core {
 
 		// note: - spdlog tries to force some rules to any class who use it and have a std lock like std::atomic !
 		//       - this function not working but here just to pass spdlog rules .
-		DONT_USE INLINE void lock() NOEXP;
-		DONT_USE INLINE void unlock() NOEXP;
+		DONT_USE void lock() NOEXP;
+		DONT_USE void unlock() NOEXP;
 
 	private:
 		// not allowed constructor's 

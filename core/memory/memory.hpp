@@ -53,7 +53,7 @@ namespace core {
 	struct memory_handle_2;
 
 	/*
-		core::memory have global allocator it's just a wrapper used by other allocators like: pool, arena , ...
+		core::memory , global allocator , it's just a wrapper used by other allocators like: pool, arena , ...
 	*/
 	namespace memory {
 
@@ -120,10 +120,10 @@ namespace core {
 		void* ptr;
 		u32   size;
 			
-		DEBUG_ONLY u8 tag; 
+		DEBUG_ONLY u8 tag;
 
 		// helper function
-		INLINE void clear() NOEXP;
+		void clear() NOEXP;
 	};
 
 	// used by registry and allocator

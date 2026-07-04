@@ -117,6 +117,10 @@ u32 memory_registry::insert(void* ptr, u32 size, u8 tag) NOEXP {
 
 }
 
+// todo: implement this
+bool memory_registry::remove(u32 index) NOEXP{ // faster O(1)
+	return false;
+}
 
 bool memory_registry::remove(void* ptr) NOEXP {
 
@@ -167,19 +171,19 @@ u32 memory_registry::exist(void* ptr) NOEXP {
 	return this->search(this->hash_pointer(ptr), ptr);
 }
 
-INLINE u32 memory_registry::get_size() NOEXP {
+u32 memory_registry::get_size() NOEXP {
 	return this->size;
 }
 
-INLINE u32 memory_registry::get_capacity() NOEXP {
+u32 memory_registry::get_capacity() NOEXP {
 	return this->capacity;
 }
 
-INLINE u32 memory_registry::get_allocations_count() NOEXP {
+u32 memory_registry::get_allocations_count() NOEXP {
 	return this->allocations_count;
 }
 
-INLINE u32 memory_registry::get_allocations_size()  NOEXP {
+u32 memory_registry::get_allocations_size()  NOEXP {
 	return this->allocations_size;
 }
 
@@ -218,7 +222,7 @@ core::i_memory_allocation memory_registry::get_biggest_allocation(u32 target_siz
 	return core::i_memory_allocation{ 0 };
 }
 
-INLINE core::memory_allocation memory_registry::get_info(void* pointer) NOEXP {
+core::memory_allocation memory_registry::get_info(void* pointer) NOEXP {
 
 	u32 hash  = this->hash_pointer(pointer);
 	u32 index = this->search(hash, pointer);
@@ -236,7 +240,7 @@ INLINE core::memory_allocation memory_registry::get_info(void* pointer) NOEXP {
 }
 
 // O(1) faster
-INLINE core::memory_allocation memory_registry::get_info(u32 index) NOEXP {
+core::memory_allocation memory_registry::get_info(u32 index) NOEXP {
 
 	if (index < this->capacity) {
 		return this->list[index];

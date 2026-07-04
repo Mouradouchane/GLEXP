@@ -137,14 +137,14 @@ bool atomic_lock::is_locked() NOEXP {
 }
 
 // not: this function just for spdlog and std to use them
-DONT_USE INLINE void atomic_lock::lock() NOEXP {
+DONT_USE void atomic_lock::lock() NOEXP {
 /*
 	this->wait_for_lock();
 */
 }
 
 // not: this function just for spdlog and std to use them
-DONT_USE INLINE void atomic_lock::unlock() NOEXP {
+DONT_USE void atomic_lock::unlock() NOEXP {
 /*
 	core::lock_object current = this->_lock_.load(ATOMIC_RELAXED_ORDER);
 

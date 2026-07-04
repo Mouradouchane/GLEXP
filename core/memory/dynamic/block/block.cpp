@@ -363,6 +363,10 @@ u32 core::memory_block::allocated_memory() NOEXP {
 	return this->active_list.get_allocations_size();
 }
 
+// todo: implement this
+core::memory_allocation core::memory_block::get_allocation_info(core::memory_handle handle) NOEXP {
+	return core::memory_allocation{};
+}
 
 /*
 	private helper functions
@@ -436,7 +440,7 @@ INLINE void core::memory_block::handle_registry_2(
 
 }
 
-// note[WARNING]: lock the block before calling this function !
+// note[WARNING]: lock the memory_block before calling this function !
 INLINE void core::memory_block::internal_allocate(
 	core::memory_request const& request, core::memory_handle& handle
 ) NOEXP {

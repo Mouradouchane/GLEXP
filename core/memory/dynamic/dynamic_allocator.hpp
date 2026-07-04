@@ -83,9 +83,9 @@ namespace core {
 			dynamic_allocator public functions
 		*/
 
-		INLINE core::memory_handle allocate(u32 size, core::memory_tag tag = core::memory_tag::unkown) NOEXP;
-		INLINE core::memory_handle allocate(u32 size, u16 alignement = 0, core::memory_tag tag = core::memory_tag::unkown) NOEXP;
-		       core::memory_handle allocate(core::memory_request request) NOEXP;
+		core::memory_handle allocate(u32 size, core::memory_tag tag = core::memory_tag::unkown) NOEXP;
+		core::memory_handle allocate(u32 size, u16 alignement = 0, core::memory_tag tag = core::memory_tag::unkown) NOEXP;
+		core::memory_handle allocate(core::memory_request request) NOEXP;
 
 		// allocate 2 memory chunks next to each other in one call
 		core::memory_handle_2 allocate_tow(core::memory_request const& request_1 , core::memory_request const& request_2) NOEXP;
@@ -102,14 +102,9 @@ namespace core {
 		u64 current_memory_usage() NOEXP; // for all sections
 		u64 current_memory_usage(core::memory_tag section_tag) NOEXP; // for specific section
 		
-	#ifdef DEBUG
 		DEBUG_ONLY string const& name() NOEXP;
 		DEBUG_ONLY core::allocator_tag tag() NOEXP;
-	#else
-		DEBUG_ONLY INLINE string const& name() NOEXP;
-		DEBUG_ONLY INLINE core::allocator_tag tag() NOEXP;
-	#endif
-	
+
 	private: // helper functions
 		INLINE u8 add_new_block(u32 block_size) NOEXP;
 		// INLINE void remove_block(u8  block_index) NOEXP;

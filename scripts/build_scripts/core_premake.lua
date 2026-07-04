@@ -38,6 +38,8 @@ end
 local link_with = {
     spdlog_debug    = utility.s_paths.libs .. "/spdlog/spdlogd.lib" ,
     spdlog_release  = utility.s_paths.libs .. "/spdlog/spdlog.lib" ,
+	glfw_debug      = utility.s_paths.libs .. "/glfw/glfw3.lib" ,
+	glfw_release    = utility.s_paths.libs .. "glfw3_release.lib"
 }
 
 -- function run( )
@@ -88,7 +90,8 @@ filter("configurations:release")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_release )
-
+	links( link_with.glfw_release )
+	
 	targetname(core.name)
 
 	-- few macros for release
@@ -114,7 +117,8 @@ filter("configurations:dll release")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_release )
-
+	links( link_with.glfw_release )
+	
 	targetname(core.name .. "_d")
 	
 	-- post script to copy dll to build folder 
@@ -148,7 +152,8 @@ filter("configurations:debug")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_debug )
-
+	links( link_with.glfw_debug )
+	
 	debugdir(core.lib.debug_path)
 	defines("DEBUG")
 
@@ -174,7 +179,8 @@ filter("configurations:dll debug")
 
 	-- libraries core need to link with
 	links( link_with.spdlog_debug )
-
+	links( link_with.glfw_debug )
+	
 	-- post script to copy dll to build folder 
 	postbuildcommands({
 		core.dll.debug_post_script,

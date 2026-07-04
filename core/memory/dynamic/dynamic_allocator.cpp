@@ -184,7 +184,7 @@ core::memory_handle dynamic_allocator::allocate(core::memory_request request) NO
 
 }
 
-INLINE core::memory_handle dynamic_allocator::allocate(u32 size , core::memory_tag tag) NOEXP {
+core::memory_handle dynamic_allocator::allocate(u32 size , core::memory_tag tag) NOEXP {
     return this->allocate(
         core::memory_request{ 
             .size = size , 
@@ -194,7 +194,7 @@ INLINE core::memory_handle dynamic_allocator::allocate(u32 size , core::memory_t
     );
 }
 
-INLINE core::memory_handle dynamic_allocator::allocate(u32 size, u16 alignement, core::memory_tag tag) NOEXP {
+core::memory_handle dynamic_allocator::allocate(u32 size, u16 alignement, core::memory_tag tag) NOEXP {
     return this->allocate(
         core::memory_request{
             .size = size ,
@@ -321,22 +321,28 @@ u64 dynamic_allocator::peak_memory_usage() NOEXP {
 
 
 #ifdef DEBUG
-    string const& dynamic_allocator::name() NOEXP {
-        return this->_name_;
-    }
+string const& dynamic_allocator::name() NOEXP {
+    return this->_name_;
+}
 
-    core::allocator_tag dynamic_allocator::tag()  NOEXP {
-        return this->_tag_;
-    }
+core::allocator_tag dynamic_allocator::tag()  NOEXP {
+    return this->_tag_;
+}
 #else 
-    INLINE string dynamic_allocator::name() NOEXP {
-        return "";
-    }
+string dynamic_allocator::name() NOEXP {
+    return "";
+}
 
-    INLINE core::allocator_tag dynamic_allocator::tag() NOEXP {
-        return core::memory_tag::unkown;
-    }
+core::allocator_tag dynamic_allocator::tag() NOEXP {
+    return core::memory_tag::unkown;
+}
 #endif
+
+
+/*
+    private helper functions
+*/
+
 
 /*
     note: call this function only from allocate/deallocate
@@ -368,9 +374,6 @@ INLINE void core::dynamic_allocator::update_size_variables (
 
 }
 
-/*
-    private helper functions
-*/
 
 INLINE u8 dynamic_allocator::add_new_block(u32 target_size) NOEXP{
     

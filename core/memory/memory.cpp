@@ -137,7 +137,7 @@ DLL_API string core::to_string(core::memory_tag section_tag, core::memory_tag me
 }
 
 
-INLINE void core::memory_allocation::clear() NOEXP {
+void core::memory_allocation::clear() NOEXP {
 
 #ifdef DEBUG
 	this->ptr = nullptr;
