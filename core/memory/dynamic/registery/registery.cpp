@@ -117,9 +117,13 @@ u32 memory_registry::insert(void* ptr, u32 size, u8 tag) NOEXP {
 
 }
 
-// todo: implement this
-bool memory_registry::remove(u32 index) NOEXP{ // faster O(1)
-	return false;
+// faster O(1)
+bool memory_registry::remove(u32 index) NOEXP {
+
+	if (index >= this->size) return false;
+
+	this->list[index] = core::memory_allocation{};
+	return true;
 }
 
 bool memory_registry::remove(void* ptr) NOEXP {

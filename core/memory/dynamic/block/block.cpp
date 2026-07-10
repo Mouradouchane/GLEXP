@@ -25,7 +25,7 @@ namespace core {
 core::memory_block::memory_block(u32 size , u32 max_allowed_allocations, u8 memory_tag) NOEXP {
 
 	if (size < memory_block::min_allowed_size || size > memory_block::max_allowed_size) {
-		CORE_FATAL(0, MEMORY_BLOCK_NOT_ALLOWED_SIZE, size, memory_block::min_allowed_size, size > memory_block::max_allowed_size);
+		CORE_FATAL(0, MEMORY_BLOCK_NOT_ALLOWED_SIZE, size, memory_block::min_allowed_size, memory_block::max_allowed_size);
 		return;
 	}
 
@@ -363,9 +363,17 @@ u32 core::memory_block::allocated_memory() NOEXP {
 	return this->active_list.get_allocations_size();
 }
 
-// todo: implement this
 core::memory_allocation core::memory_block::get_allocation_info(core::memory_handle handle) NOEXP {
-	return core::memory_allocation{};
+
+	if (handle.ptr >= this->start && handle.ptr <= this->end) {
+		return this->active_list.get_info(handle.register_index);
+	}
+	
+	CORE_WARN(
+		CORE_LOG_CONFIG_ALL, "invalid handle passed to core::memory_block , handle ptr={} , block_index={}" , 
+		core::pointer_to_hex_string(handle.ptr) , handle.block_index
+	);
+	return core::memory_allocation{ };
 }
 
 /*

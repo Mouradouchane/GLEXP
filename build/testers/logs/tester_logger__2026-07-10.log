@@ -1,0 +1,4 @@
+[07/10/26] [tester_logger] [critical] : memory block with size=65536byte is not allowed because -> min_allowed_size=131072, max_allowed_size=false .
+
+[07/10/26] [tester_logger] [critical] : 
+

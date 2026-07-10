@@ -292,10 +292,6 @@ void dynamic_allocator::deallocate(core::memory_handle handle) NOEXP {
 }
 
 
-/*
-    todo: implement these functions
-*/
-
 u32 dynamic_allocator::blocks_count() NOEXP {
     return this->_blocks_count_;
 }
@@ -304,6 +300,10 @@ u64 dynamic_allocator::size() NOEXP {
     return this->_size_.load(MEMORY_ORDER_RELAXE);
 }
 
+
+/*
+    todo: implement these functions
+*/
 u64 dynamic_allocator::current_memory_usage() NOEXP {
     return 0;
 }
