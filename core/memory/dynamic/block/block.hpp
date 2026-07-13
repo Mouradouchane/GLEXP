@@ -42,7 +42,7 @@ namespace core {
 	
 	public:
 
-		static const u64 min_allowed_size =  128 KB;
+		static const u64 min_allowed_size =   64 KB;
 		static const u64 max_allowed_size = 1024 MB;
 
 		// constructor

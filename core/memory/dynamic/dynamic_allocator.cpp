@@ -25,63 +25,21 @@ namespace core {
 dynamic_allocator::dynamic_allocator(core::dynamic_allocator_configs const& parameters) NOEXP {
     
     // check memory budget
-    if (parameters.memory_budget < parameters.blocks_size) {
-    #ifdef DEBUG
-        CORE_WARN_F(
-            "core::dynamic_allocator(): bad config 'memory_budget={}bytes' is smaller than 'blocks_size={}bytes' !",
-            parameters.memory_budget, parameters.blocks_size
-        );
-        CORE_INFO(
-            "core::dynamic_allocator(): auto reconfig to memory_budget from {}bytes up to {}bytes .",
-            parameters.memory_budget, parameters.blocks_size
-        );
-    #endif
-
-         this->_memory_budget_ = parameters.blocks_size;
-    }
-    else this->_memory_budget_ = parameters.memory_budget;
-
-    // check blocks size
     if (
-        parameters.blocks_size < dynamic_allocator::min_size_allowed ||
-        parameters.blocks_size > dynamic_allocator::max_size_allowed
+        parameters.memory_budget < core::dynamic_allocator::min_size_allowed || 
+        parameters.memory_budget > core::dynamic_allocator::max_size_allowed
     ) {
-    #ifdef DEBUG
-        CORE_WARN(CORE_LOG_CONFIG_ALL,
-            "core::dynamic_allocator(): bad config blocks size '{}bytes' !" CORE_WARNINIG_RUNTIME_CRASH,
-            parameters.blocks_size
+
+        CORE_WARN_F(
+            "core::dynamic_allocator(): memory budget {}bytes not allowed , min={} , max={}!",
+            parameters.memory_budget, core::dynamic_allocator::min_size_allowed , core::dynamic_allocator::max_size_allowed
         );
 
-        if (parameters.blocks_size < dynamic_allocator::min_size_allowed) {
-            this->_blocks_size_ = dynamic_allocator::min_size_allowed;
-
-            CORE_INFO(
-                "core::dynamic_allocator(): blocks size upsized to {}bytes per block for DEBUG_ONLY !",
-                this->_blocks_size_
-            );
-        }
-        else {
-            this->_blocks_size_ = dynamic_allocator::max_size_allowed;
-
-            CORE_INFO(
-                "core::dynamic_allocator(): blocks size downsized to {}bytes per block for DEBUG_ONLY !",
-                this->_blocks_size_
-            );
-        }
-
-    #else 
-        if (parameters.blocks_size < dynamic_allocator::min_size_allowed) {
-            this->_blocks_size_ = dynamic_allocator::min_size_allowed;
-        }
-        else {
-            this->_blocks_size_ = dynamic_allocator::max_size_allowed;
-        }
-    #endif
-
+        return;
     }
-    else {
-        this->_blocks_size_ = parameters.blocks_size;
-    }
+
+    this->_memory_budget_ = parameters.memory_budget;
+    this->_blocks_size_ = u64(parameters.memory_budget / this->_capacity_);
 
     // check max allocations
     if (parameters.max_allocations_per_block > MAX_ALLOCATIONS_PRE_BLOCK) {
@@ -108,8 +66,15 @@ dynamic_allocator::dynamic_allocator(core::dynamic_allocator_configs const& para
 
     this->_is_mt_ = parameters.is_multi_thread;
 
-    // add first block
-    this->add_new_block(this->_blocks_size_);
+    if (parameters.allocate_all_at_once) {
+        for (u32 i = 0; i < this->_capacity_; i++) {
+            this->add_new_block(this->_blocks_size_);
+        }
+    }
+    else {
+        // add first block
+        this->add_new_block(this->_blocks_size_);
+    }
 }
 
 /*

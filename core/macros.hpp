@@ -18,6 +18,10 @@
 #define CORE_WARNINIG_RUNTIME_CRASH " 'note: this will cause a crash during the runtime' "
 #define CORE_WARNING_OUT_OF_BUDGET  "{} is out of his budget {} ."
 
+// macros for todo
+#define CORE_TODO_IMPLEMENT "todo: function called before it implemented !"
+#define CORE_TODO_ADD_SUPPORT "todo: add support for {} ."
+
 /*
 	NOTE: if youre not using visual studio or windows 
 	make sure to change __debugbreak(); with the one working for your IDE/DEBUGGER

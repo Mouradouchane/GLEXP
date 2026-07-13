@@ -5,8 +5,9 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-
 #include "core/strings/string.hpp"
+
+#include "memory_enums.hpp"
 
 /*
 	few macros for memory allocators errors and warnings
@@ -25,6 +26,9 @@
 #define ALLOCATOR_SIZE_NOT_ALLOWED  "requested size {}byte for allocator name={} is not allowed : min_allowed={} , max_allowed={} ."
 #define ALLOCATOR_FAILED_TO_GET_INFO "memory allocator {} failed to obtain info about his internal memory !"
 
+#define G_HIGH_MEMORY_USAGE_DETECTED "global memory allocator reach a new peak memory usage {}bytes !"
+#define G_INVALID_HANLDE "invalid g_memory_handle passed to {} !"
+
 #define MEMORY_ORDER_RELAXE  std::memory_order_relaxed // for read-only when no cache syncing is needed
 #define MEMORY_ORDER_ACQUIRE std::memory_order_acquire // when cache syncing is needed
 
@@ -32,194 +36,134 @@
 #define MAX_MEMORY_BLOCKS 255
 #define MAX_ALLOCATIONS_PRE_BLOCK 1024
 
+#define FRIENDS_TO_MEMORY_HANDLE() \
+		DLL_API g_memory_handle   friend core::memory::allocate(g_memory_request const& request) NOEXP; \
+		DLL_API g_memory_handle_2 friend core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP; \
+		DLL_API void friend core::memory::deallocate(g_memory_handle const& handle) NOEXP;
+
+struct   memory_request; // for other allocator
+struct g_memory_request; // for global allocator
+
+class   memory_handle; // memory handle contain pointer + other info for allocators internal usage
+class g_memory_handle; // for global allocator
+class   memory_handle_2; // 2 memory handles in 1 struct
+class g_memory_handle_2; // for global allocator
+
 namespace core {
 
-	enum class memory_tag     : u8;
-
-	enum class allocator_tag  : u8;
-	enum class allocator_type : u8;
-	enum class allocator_response : u8;
-
-	struct   memory_request;
-	struct g_memory_request;
-
-	struct   memory_allocation;
-	struct i_memory_allocation;
-
-	struct   free_memory;
-	struct i_free_memory;
-
-	struct memory_handle;
-	struct memory_handle_2;
-
 	/*
-		core::memory , global allocator , it's just a wrapper used by other allocators like: pool, arena , ...
+		core::memory is a global allocator , it's just a wrapper used by other allocators like: pool, arena , ...
+		with tagging system for memory debugging and monitoring .
 	*/
 	namespace memory {
 
-		DLL_API void* allocate(g_memory_request const& request) NOEXP;
+		DLL_API g_memory_handle allocate(g_memory_request const& request) NOEXP;
 
 		// note: this function preforme tow allocation in one call but !
 		//       both allocations not guarnted to be next each other in memory :)
 		//       because of paging , multi-threading , ... .
-		DLL_API two_pointers allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP;
+		DLL_API g_memory_handle_2 allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP;
 
-		DLL_API void deallocate(void* pointer) NOEXP;
+		DLL_API void deallocate(g_memory_handle const& handle) NOEXP;
 
 		DLL_API u64 total_memory_usage() NOEXP;
-		DLL_API u64 current_memory_usage(u8 section_tag) NOEXP;
+		DLL_API u64 current_memory_usage(allocator_tag section_tag) NOEXP;
 		DLL_API u64 peak_memory_usage() NOEXP;
 
 	}
 	// namespace memory end
 
-
-	/*
-		few memory types
-	*/
-	
-	enum class allocator_response : u8 {
-		success = 0,
-		busy, // the allocator is busy with other thread
-		full, // the allocator is full and no memory left
-		register_full,
-		fragmeneted, // the allocator have the memory asked for but it too fragmeneted
-	};
-
-	// returned by memory allocator
-	struct memory_handle {
-		// allocator response "status"
-		core::allocator_response response = core::allocator_response::full; 
-		void* ptr = nullptr;
-		// this for fast deallocation
-		u8    block_index    =  (u8)-1;
-		u32   register_index = (u32)-1;
-	};
-	
-	// returend by memory allocator for tow allocations in one handle
-	struct memory_handle_2 {
-		core::memory_handle handle_1;
-		core::memory_handle handle_2;
-	};
-
-	// used by memory allocator
-	struct g_memory_request {
-		u64 size; // could be higher than 4GB
-		u8  tag;  // "debug-only"
-	};
-
-	// used for dynamic allocator
-	struct memory_request {
-		u32 size;      // max size below 4GB
-		u32 alignement; 
-		DEBUG_ONLY u8  tag;
-	};
-	
-	// used by block allocator
-	struct memory_allocation {
-		void* ptr;
-		u32   size;
-			
-		DEBUG_ONLY u8 tag;
-
-		// helper function
-		void clear() NOEXP;
-	};
-
-	// used by registry and allocator
-	struct i_memory_allocation {
-		void* ptr;
-		u32   size;
-		u32	  index;
-	};
-
-	// used by free list and allocator
-	struct free_memory {
-		void* ptr;
-		u32   size;
-	};
-
-	// used by registry and allocator
-	struct i_free_memory {
-		void* ptr;
-		u32   size;
-		u32	  index;
-	};
-
-	/*
-		"debug-only" , used to flag allocator used for what .
-	*/
-	enum class allocator_tag : u8 {
-		unkown = 0,
-
-		memory_system,
-		assets_system,
-		entity_system,
-		events_system,
-		physics_system,
-		graphics_system,
-		collision_system,
-		animation_system,
-		work_system,
-		gui_system,
-
-	#ifdef DEBUG
-		debug_system
-	#endif
-	};
-
-	/*
-		"debug-only" , used to flag the allocation used for what
-	*/
-	enum class memory_tag : u8 {
-		unkown = 0,
-		
-		general,
-		registry,
-		event,
-		thread_worker,
-		entity,
-		mesh,
-		node,
-		gui_element,
-		gui_text,
-		normal,
-		texture,
-		material,
-		physics,
-		collision,
-		skeleton,
-		ai,
-		audio,
-		stdcpp,
-		file,
-		config,
-		timer,
-		debugger,
-
-	#ifdef DEBUG
-		dev,
-	#endif
-	};
-
-
-	// used with void* allocator to tell the allocator real type
-	enum class allocator_type : u8 {
-		unkown = 0,
-		dynamic_allocator = 1,
-		pool_allocator,
-		arena_allocator
-	};
-
-
 	/*
 		to_string functions to convert memory tags to strings
 	*/
-	DLL_API string to_string(core::memory_tag tag) NOEXP;
-	DLL_API string to_string(core::memory_tag section_tag, core::memory_tag mem_tag) NOEXP;
+	DLL_API string to_string(memory_tag tag) NOEXP;
+	DLL_API string to_string(allocator_tag section_tag) NOEXP;
+
+} 
+// namespace core end
 
 
-} // namespace core end
+/*
+	memory handles
+*/
 
+/*
+	- memory handle but for global allocator .
+	- used by allocators to allocate thier own memory to manange .
+*/
+class g_memory_handle {
+	private:
+		FRIENDS_TO_MEMORY_HANDLE();
+
+		allocator_response _response_ = allocator_response::busy;
+		allocator_tag      _tag_ = allocator_tag::unkown;
+		u64   _size_ = 0;
+		void* _ptr_ = nullptr;
+
+	public:
+		// constructor's
+		g_memory_handle() NOEXP = default;
+		g_memory_handle(allocator_response response, u64 size, allocator_tag tag, void* pointer) NOEXP;
+
+		// destructor
+		~g_memory_handle() NOEXP;
+
+		// handle functions
+		allocator_response response() NOEXP;
+		void* get_pointer() NOEXP;
+};
+
+/*
+	memory_handle used by allocators for fast allocation/deallocation memory
+*/
+class memory_handle {
+	private:
+		FRIENDS_TO_MEMORY_HANDLE();
+
+		allocator_response _response_ = allocator_response::full;
+
+		// this for fast look-up and memory allocation/deallocation
+		u8  _block_index_    = (u8)-1;
+		u32 _register_index_ = (u32)-1;
+
+		void* _ptr_ = nullptr;
+
+	public:
+		// constructor's
+		memory_handle() NOEXP = default;
+		memory_handle(allocator_response response, u8 b_index, u32 reg_index, void* pointer) NOEXP;
+
+		// destructor
+		~memory_handle() NOEXP;
+
+		// handle functions
+		allocator_response response() NOEXP;
+		void* get_pointer() NOEXP;
+};
+
+// returend by memory allocator for tow allocations in one handle
+struct memory_handle_2 {
+	memory_handle handle_1;
+	memory_handle handle_2;
+};
+
+struct g_memory_handle_2 {
+	g_memory_handle handle_1;
+	g_memory_handle handle_2;
+};
+
+
+// used by memory allocator
+struct g_memory_request {
+	u64 size; // could be higher than 4GB
+	DEBUG_ONLY allocator_tag tag;
+};
+
+// used for dynamic allocator
+struct memory_request {
+	u64 size;      // max size below 4GB
+	u16 alignement;
+	DEBUG_ONLY memory_tag tag;
+};
 
 #endif

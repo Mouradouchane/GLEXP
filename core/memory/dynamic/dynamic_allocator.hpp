@@ -17,16 +17,17 @@ namespace core {
 		DEBUG_ONLY string name;
 		DEBUG_ONLY core::allocator_tag tag; // for what sub-system this allocator is gonna be used
 		
-		u64 memory_budget; // max memory this allocator should reach
-		u64 blocks_size; // size of each block
-		
+		u64 memory_budget; // max memory this allocator can reach and operates on
+
 		/*
 			how many allocations each memory block can maintain
 			note: the lowest the number , the better the preformance
 		*/ 
 		u16 max_allocations_per_block; 
-
+		
 		bool is_multi_thread; // is this allocator gonna be used by multiple threads/sub-system or not
+		
+		bool allocate_all_at_once; // allocate all memory at once
 	};
 
 	/*
@@ -54,14 +55,16 @@ namespace core {
 		core::atomic_lock  _lock_;
 		core::memory_block _blocks_[MAX_MEMORY_BLOCKS]; // blocks array
 		bool               _blocks_status_[MAX_MEMORY_BLOCKS] = { false }; // for the status of each block
-		u8 const           _capacity_ = MAX_MEMORY_BLOCKS; // max allowed blocks
+		u8 const           _capacity_    = MAX_MEMORY_BLOCKS; // max allowed blocks
 		atomic_u8          _blocks_count_  = 0; 
-		u64                _blocks_size_ = core::dynamic_allocator::min_size_allowed;
 		u16                _blocks_max_allocations_ = MAX_ALLOCATIONS_PRE_BLOCK; // max allocations allowed per block
 
-		u64                _memory_budget_ = 0; // max allowed size
-		
-		           atomic_u64 _size_ = 0; // total memory "currently"
+		// note: this computed automatically at construction time based on the "_memory_budget_"
+		u64                _blocks_size_ = core::dynamic_allocator::min_size_allowed; 
+		// max memory this allocator allowed to use/reach
+		u64                _memory_budget_ = 0; 
+	
+		           atomic_u64 _size_ = 0; // current total memory "size of all blocks"
 		DEBUG_ONLY atomic_u32 _peak_ = 0;          // peak memory usage
 		DEBUG_ONLY atomic_u32 _min_  = 0xFFFFFFFF; // min  memory usage
 		
@@ -70,8 +73,8 @@ namespace core {
 	public:
 		// public variables for usage 
 		// min/max allowed size for dynamic_allocator "blocks"
-		static const u64 min_size_allowed =  64 KB;
-		static const u64 max_size_allowed = 512 MB;
+		static const u64 min_size_allowed = 16 MB;
+		static const u64 max_size_allowed =  2 GB;
 		
 		// constructor
 		dynamic_allocator( core::dynamic_allocator_configs const& parameters ) NOEXP;
