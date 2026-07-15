@@ -6,19 +6,41 @@
 #include "core/logger/logger.hpp"
 #include "memory.hpp"
 
-#ifdef DEBUG
-	static auto _core_global_alloc_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
-#else 
-	static auto _core_global_alloc_logger_ = nullptr;
-#endif
+static std::shared_ptr<spdlog::logger> _core_global_alloc_logger_ = nullptr;
+#define _LOGGER_ _core_global_alloc_logger_
 
-#define _LOGGER_  _core_global_alloc_logger_
+#define GLOBAL_ALLOCATOR_NAME "global allocator"
+#define GLOBAL_ALLOCATOR_HIGH_MEMORY_USAGE_WARN() \
+		CORE_WARN(0, HIGH_MEMORY_USAGE_DETECTED , GLOBAL_ALLOCATOR_NAME , peak_size);
 
 #ifdef DEBUG // to keep track with each sub-system memory usage
 	static u64 sections_sizes[MAX_MEMORY_TAGS] = { 0u };
 #endif
+
 	static u64 total_size = 0; // size of all sections
 	static u64 peak_size  = 0; // max memory we reach
+
+static bool is_init = false;
+DLL_API void core::memory::init() NOEXP {
+	if (!is_init) {
+	#ifdef DEBUG
+		_core_global_alloc_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
+	#else 
+		_core_global_alloc_logger_ = nullptr;
+	#endif
+
+	#ifdef DEBUG
+		for (u8 i = 0; i < 64; i += 1) {
+			CORE_DEBUG(0,"memory-tag: {} {}", i , core::to_string((memory_tag)i) );
+		}
+		for (u8 i = 0; i < 16; i += 1) {
+			CORE_TRACE("allocator-tag: {} {}", i, core::to_string((allocator_tag)i));
+		}
+	#endif
+
+		is_init = true;
+	}
+}
 
 DLL_API g_memory_handle core::memory::allocate(g_memory_request const& request) NOEXP {
 
@@ -41,20 +63,21 @@ DLL_API g_memory_handle core::memory::allocate(g_memory_request const& request) 
 	#ifdef DEBUG
 		if (total_size > peak_size) {
 			peak_size = total_size;
-			CORE_WARN(0, G_HIGH_MEMORY_USAGE_DETECTED);
+			GLOBAL_ALLOCATOR_HIGH_MEMORY_USAGE_WARN();
 		}
 	#endif
 
 		return g_memory_handle(allocator_response::success, request.size, request.tag, ptr);
 	}
 	else {
-		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request.size, request.tag);
+		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request.size, core::to_string(request.tag));
 		return g_memory_handle();
 	}
 
 }
 
 DLL_API g_memory_handle_2 core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP {
+	DEBUG_BREAK;
 
 	// allocate memory
 	void* ptr1 = new byte[request_1.size + 1];
@@ -81,7 +104,7 @@ DLL_API g_memory_handle_2 core::memory::allocate_tow(g_memory_request const& req
 	#ifdef DEBUG
 		if (total_size > peak_size) {
 			peak_size = total_size;
-			CORE_WARN(0, G_HIGH_MEMORY_USAGE_DETECTED);
+			GLOBAL_ALLOCATOR_HIGH_MEMORY_USAGE_WARN();
 		}
 	#endif
 
@@ -91,8 +114,8 @@ DLL_API g_memory_handle_2 core::memory::allocate_tow(g_memory_request const& req
 		};
 	}
 	else {
-		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_1.size, request_1.tag);
-		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_2.size, request_2.tag);
+		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_1.size, core::to_string(request_1.tag));
+		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_2.size, core::to_string(request_2.tag));
 
 		return g_memory_handle_2{
 			g_memory_handle(),
@@ -103,25 +126,27 @@ DLL_API g_memory_handle_2 core::memory::allocate_tow(g_memory_request const& req
 }
 
 DLL_API void core::memory::deallocate(g_memory_handle const& handle) NOEXP {
+	// DEBUG_BREAK;
 
 	if (handle._ptr_) {
-		// free memory
+		u8 tag = *((u8*)handle._ptr_ + handle._size_);
+
+		// release memory
 		delete[] handle._ptr_;
 
-		u32 size = handle._size_;
-		u8  tag = *((u8*)handle._ptr_ + (size - 1));
-
-		// update section
-		total_size -= size;
-	
-	#ifdef DEBUG
-		sections_sizes[tag] -= size;
+		// update internal variables
+		total_size -= handle._size_;
+	#ifdef DEBUG 
+		sections_sizes[tag] -= handle._size_;
 	#endif
 
+		CORE_DEBUG(0, "global-allocator: {} {}bytes used for {} deallocated ." , 
+			core::pointer_to_hex_string(handle._ptr_) , handle._size_, core::to_string((memory_tag)tag)
+		);
 		return;
 	}
 
-	CORE_FATAL(CORE_LOG_CONFIG_ALL, G_INVALID_HANLDE, "core::memory::deallocate()");
+	CORE_FATAL(CORE_LOG_CONFIG_ALL, INVALID_MEMORY_HANLDE, "global-allocator at core::memory::deallocate()");
 }
 
 
@@ -201,13 +226,65 @@ void* g_memory_handle::get_pointer() NOEXP {
 	to string functions
 */
 
+#define MEMORY_TAG_TO_STRING_CASE(TAG) case memory_tag::TAG: return string( #TAG ); break;
+
 DLL_API string core::to_string(memory_tag tag) NOEXP {
-	CORE_FATAL_F(CORE_TODO_IMPLEMENT);
+	
+	switch (tag) {
+		MEMORY_TAG_TO_STRING_CASE(unkown		);
+		MEMORY_TAG_TO_STRING_CASE(general		);
+		MEMORY_TAG_TO_STRING_CASE(registry		);
+		MEMORY_TAG_TO_STRING_CASE(event			);
+		MEMORY_TAG_TO_STRING_CASE(thread_worker	);
+		MEMORY_TAG_TO_STRING_CASE(entity		);
+		MEMORY_TAG_TO_STRING_CASE(mesh			);
+		MEMORY_TAG_TO_STRING_CASE(node			);
+		MEMORY_TAG_TO_STRING_CASE(gui_element	);
+		MEMORY_TAG_TO_STRING_CASE(gui_text		);
+		MEMORY_TAG_TO_STRING_CASE(normal		);
+		MEMORY_TAG_TO_STRING_CASE(texture		);
+		MEMORY_TAG_TO_STRING_CASE(material		);
+		MEMORY_TAG_TO_STRING_CASE(physics		);
+		MEMORY_TAG_TO_STRING_CASE(collision		);
+		MEMORY_TAG_TO_STRING_CASE(skeleton		);
+		MEMORY_TAG_TO_STRING_CASE(ai			);
+		MEMORY_TAG_TO_STRING_CASE(audio			);
+		MEMORY_TAG_TO_STRING_CASE(stdcpp		);
+		MEMORY_TAG_TO_STRING_CASE(file			);
+		MEMORY_TAG_TO_STRING_CASE(config		);
+		MEMORY_TAG_TO_STRING_CASE(timer			);
+		MEMORY_TAG_TO_STRING_CASE(debugger		);
+
+	#ifdef DEBUG
+		MEMORY_TAG_TO_STRING_CASE(dev           );
+	#endif
+	};
+
 	return string("");
 }
 
-DLL_API string core::to_string(allocator_tag tag ) NOEXP {
-	CORE_FATAL_F(CORE_TODO_IMPLEMENT);
+#define ALLOCATOR_TAG_TO_STRING_CASE(TAG) case allocator_tag:: TAG: return string( #TAG ); break;
+
+DLL_API string core::to_string(allocator_tag tag) NOEXP {
+	
+	switch (tag) {
+		ALLOCATOR_TAG_TO_STRING_CASE(unkown				 );
+		ALLOCATOR_TAG_TO_STRING_CASE(memory_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE(assets_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE(entity_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE(events_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE(physics_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE(graphics_system	 );
+		ALLOCATOR_TAG_TO_STRING_CASE(collision_system	 );
+		ALLOCATOR_TAG_TO_STRING_CASE(animation_system	 );
+		ALLOCATOR_TAG_TO_STRING_CASE(work_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE(gui_system          );
+
+	#ifdef DEBUG
+		ALLOCATOR_TAG_TO_STRING_CASE(debug_system        );
+	#endif
+	};
+
 	return string("");
 }
 

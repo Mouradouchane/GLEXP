@@ -21,6 +21,7 @@
 // #include "core/references/references.hpp"
 // #include "core/window/window.hpp"
 #include "core/logger/logger.hpp"
+#include "core/memory/memory.hpp"
 
 // enable logger
 static auto _tester_app_cpp_logger_ = CORE_GET_LOGGER(UNIT_TESTER_LOGGER);
@@ -32,7 +33,8 @@ static auto _tester_app_cpp_logger_ = CORE_GET_LOGGER(UNIT_TESTER_LOGGER);
 */ 
 // #include "tools/tester/unit_tests/arrays/array_tests.hpp"
 // #include "tools/tester/unit_tests/arrays/dynamic_array_tests.hpp"
-#include "tools/tester/unit_tests/memory_tests/dynamic_allocator_tests/behavior_on_st.hpp"
+// #include "tools/tester/unit_tests/memory_tests/dynamic_allocator_tests/behavior_on_st.hpp"
+#include "tools/tester/unit_tests/memory_tests/global_allocator_tests/gloabl_allocator_behavior_test_on_st.hpp"
 
 #include "application.hpp"
 
@@ -65,8 +67,7 @@ namespace tester {
 	void init() { 
 
 		core::logger::init("tester_logger" , core::logger::verbosity_level::trace);
-		
-
+		core::memory::init();
 
 		/*
 			note: add your unit-tests here
@@ -111,7 +112,6 @@ namespace tester {
 				TESTER_ADD_TEST(mic_arr_t_move_assignment)
 			})
 		);
-		*/
 
 		add_group(
 			group("core::dynamic_array tests", {
@@ -119,6 +119,14 @@ namespace tester {
 				TESTER_ADD_TEST(dynamic_allocator_simple_usage_on_st_test_2),
 				TESTER_ADD_TEST(dynamic_allocate_memory_1),
 				TESTER_ADD_TEST(dynamic_allocate_memory_2),
+			})
+		);
+		*/
+		add_group(
+			group("core::memory 'global-allocator' tests", {
+				TESTER_ADD_TEST(global_allocator_simple_behavior_test_on_st_1),
+				TESTER_ADD_TEST(global_allocator_simple_behavior_test_on_st_2),
+				TESTER_ADD_TEST(global_allocator_allocate2_simple_behavior_test_on_st),
 			})
 		);
 

@@ -1,3 +1,4 @@
+#if 0
 #pragma once 
 
 #ifndef UNIT_TEST_BEHAVIOR_ON_ST_DYNAMIC_ALLOCATOR_CPP
@@ -53,4 +54,5 @@ bool dynamic_allocate_memory_2() {
 	return false;
 }
 
+#endif
 #endif

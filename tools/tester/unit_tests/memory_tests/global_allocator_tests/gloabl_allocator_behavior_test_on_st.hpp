@@ -6,7 +6,8 @@
 #include "core/macros.hpp"
 
 bool global_allocator_simple_behavior_test_on_st_1() NOEXP;
-
 bool global_allocator_simple_behavior_test_on_st_2() NOEXP;
+
+bool global_allocator_allocate2_simple_behavior_test_on_st() NOEXP;
 
 #endif

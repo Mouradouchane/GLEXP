@@ -58,13 +58,13 @@ namespace core {
 
 		// used to control logger verbosity level
 		enum class verbosity_level : u8 {
-			trace = 0, 	
-			debug,
-			info,
-			warning,
-			error,
-			fatal,
-			none, // no messages at all
+			trace   = 0, // log anything
+			debug   = 1,
+			info    = 2,
+			warning = 3,
+			error   = 4,
+			fatal   = 5,
+			none    = 6, // no logs at all
 		};
 
 		DLL_API void init(STRING const& logger_name, logger::verbosity_level level, u32 trace_level = 32);

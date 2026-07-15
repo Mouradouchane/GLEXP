@@ -1,3 +1,4 @@
+#if 0
 #pragma once 
 
 #ifndef CORE_MEMORY_BLOCK_CPP
@@ -524,4 +525,5 @@ void core::memory_block::process_free_list() NOEXP {
 
 } // namespace core end
 
+#endif
 #endif

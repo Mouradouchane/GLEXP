@@ -1,3 +1,4 @@
+#if 0
 #pragma once 
 
 #ifndef CORE_MEMORY_REGISTRE_CPP
@@ -351,4 +352,5 @@ u32 memory_registry::search(u32 start_index, void* ptr) NOEXP {
 
 } // namesapce core end
 
+#endif
 #endif

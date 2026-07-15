@@ -88,9 +88,9 @@ struct memory_allocation {
 	void clear() NOEXP {
 		this->ptr = nullptr;
 		this->size = 0;
-#ifdef DEBUG
+	#ifdef DEBUG
 		this->tag = (u8)memory_tag::unkown;
-#endif
+	#endif
 	}
 };
 

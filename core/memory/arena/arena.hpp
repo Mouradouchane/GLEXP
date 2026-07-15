@@ -12,7 +12,7 @@ namespace core {
 
 	public :
 		// constructor/destructor
-		 memory_arena(core::g_memory_request const& arean_parameters);
+		 memory_arena(g_memory_request const& arean_parameters);
 		~memory_arena();
 
 		// public functions

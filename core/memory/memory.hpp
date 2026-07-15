@@ -26,9 +26,9 @@
 #define ALLOCATOR_SIZE_NOT_ALLOWED  "requested size {}byte for allocator name={} is not allowed : min_allowed={} , max_allowed={} ."
 #define ALLOCATOR_FAILED_TO_GET_INFO "memory allocator {} failed to obtain info about his internal memory !"
 
-#define G_HIGH_MEMORY_USAGE_DETECTED "global memory allocator reach a new peak memory usage {}bytes !"
-#define G_INVALID_HANLDE "invalid g_memory_handle passed to {} !"
-
+#define HIGH_MEMORY_USAGE_DETECTED "high memory usage detected at {} , {}bytes !"
+#define INVALID_MEMORY_HANLDE      "invalid memory handle passed to {} !"
+ 
 #define MEMORY_ORDER_RELAXE  std::memory_order_relaxed // for read-only when no cache syncing is needed
 #define MEMORY_ORDER_ACQUIRE std::memory_order_acquire // when cache syncing is needed
 
@@ -44,10 +44,10 @@
 struct   memory_request; // for other allocator
 struct g_memory_request; // for global allocator
 
-class   memory_handle; // memory handle contain pointer + other info for allocators internal usage
-class g_memory_handle; // for global allocator
-class   memory_handle_2; // 2 memory handles in 1 struct
-class g_memory_handle_2; // for global allocator
+class    memory_handle; // memory handle contain pointer + other info for allocators internal usage
+class  g_memory_handle; // for global allocator
+struct   memory_handle_2; // 2 memory handles in 1 struct
+struct g_memory_handle_2; // for global allocator
 
 namespace core {
 
@@ -56,6 +56,8 @@ namespace core {
 		with tagging system for memory debugging and monitoring .
 	*/
 	namespace memory {
+
+		DLL_API void init() NOEXP;
 
 		DLL_API g_memory_handle allocate(g_memory_request const& request) NOEXP;
 

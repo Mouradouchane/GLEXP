@@ -1,3 +1,4 @@
+#if 0
 #pragma once 
 
 #ifndef CORE_MEMORY_ALLOCATOR_CPP
@@ -412,4 +413,5 @@ INLINE void dynamic_allocator::remove_block(u8 index) NOEXP {
 } // namespace core end
 
 
+#endif
 #endif

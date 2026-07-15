@@ -10,6 +10,7 @@
 
 #define CREATE_LOGGER(NAME, CONSOLE_SINK) { \
 			auto __logger__ = std::make_shared<spdlog::logger>(NAME, CONSOLE_SINK); \
+			__logger__->set_level(spdlog::level::level_enum(level)); \
 			spdlog::register_logger(__logger__); \
 			__logger__->enable_backtrace(back_trace_level);\
 		};
@@ -79,7 +80,7 @@ namespace core {
 			file_sink->set_level(spdlog::level::level_enum(core::logger::verbosity_level::warning));
 			file_sink->set_pattern("[%D] [%n] [%l] : %v\n");
 			console_sink->set_color_mode(spdlog::color_mode::always);
-			console_sink->set_pattern("%^[%l] %v%$");
+			console_sink->set_pattern("%^[%n][%l] %v%$");
 
 			console_sink->set_color(spdlog::level::trace, 8);
 			console_sink->set_color(spdlog::level::debug, 11);
