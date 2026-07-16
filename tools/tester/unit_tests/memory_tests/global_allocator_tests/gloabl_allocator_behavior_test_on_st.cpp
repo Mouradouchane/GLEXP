@@ -9,6 +9,7 @@
 
 #include "gloabl_allocator_behavior_test_on_st.hpp"
 
+void write_to_memory(byte* s, byte* e) NOEXP;
 
 bool global_allocator_simple_behavior_test_on_st_1() NOEXP {
 
@@ -100,6 +101,20 @@ bool global_allocator_allocate2_simple_behavior_test_on_st() NOEXP {
 	);
 
 	if(h1.handle_1.response() != h1.handle_2.response()) return TEST_FAIL;
+
+	// write to memory 
+	byte* s = (byte*)h1.handle_1.get_pointer();
+	byte* e = (byte*)h1.handle_1.get_pointer() + (32 MB);
+	write_to_memory(s,e);
+	e--;
+	if (*e != 0xFF) return TEST_FAIL;
+
+	s = (byte*)h1.handle_2.get_pointer();
+	e = (byte*)h1.handle_2.get_pointer() + (32 MB);
+	write_to_memory(s, e);
+	e--;
+	if (*e != 0xFF) return TEST_FAIL;
+
 	u64 t = (2 * 32 MB);
 	u64 size = core::memory::total_memory_usage();
 	u64 peak = core::memory::peak_memory_usage();
@@ -121,6 +136,21 @@ bool global_allocator_allocate2_simple_behavior_test_on_st() NOEXP {
 	if(current != 0) return TEST_FAIL;
 	
 	return TEST_PASS;
+}
+
+// just a function to fill memory with garbage value
+void write_to_memory(byte* s, byte* e) NOEXP {
+	if (e < s) {
+		byte* t = s;
+		s = e;
+		e = t;
+	}
+
+	const byte i = 0xFF;
+	while (s < e) {
+		*s = i;
+		 s++;
+	}
 }
 
 #endif

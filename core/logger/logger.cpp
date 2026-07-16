@@ -82,9 +82,12 @@ namespace core {
 			console_sink->set_color_mode(spdlog::color_mode::always);
 			console_sink->set_pattern("%^[%n][%l] %v%$");
 
+			// setup colors
 			console_sink->set_color(spdlog::level::trace, 8);
-			console_sink->set_color(spdlog::level::debug, 11);
-			console_sink->set_color(spdlog::level::info, 10);
+			console_sink->set_color(spdlog::level::debug, 7);
+			console_sink->set_color(spdlog::level::info , 10);
+			console_sink->set_color(spdlog::level::warn , 14);
+			console_sink->set_color(spdlog::level::err  , 12);
 
 			spdlog::flush_on(spdlog::level::err);
 
@@ -111,7 +114,7 @@ namespace core {
 			#endif
 
 			// unit-test logger test
-			#if defined(UNIT_TEST)
+			#ifdef DEBUG
 				spd_logger->trace("init-logger test trace {} !" , 1);
 				spd_logger->debug("init-logger test debug {} !" , 1);
 				spd_logger->info("init-logger test info {} !" , 1);

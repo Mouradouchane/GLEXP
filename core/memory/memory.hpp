@@ -80,7 +80,7 @@ namespace core {
 	*/
 	DLL_API string to_string(memory_tag tag) NOEXP;
 	DLL_API string to_string(allocator_tag section_tag) NOEXP;
-
+	DLL_API string bytes_to_string(u64 bytes_count) NOEXP;
 } 
 // namespace core end
 
@@ -98,14 +98,17 @@ class g_memory_handle {
 		FRIENDS_TO_MEMORY_HANDLE();
 
 		allocator_response _response_ = allocator_response::busy;
-		allocator_tag      _tag_ = allocator_tag::unkown;
+		allocator_tag      _tag_      = allocator_tag::unkown;
 		u64   _size_ = 0;
-		void* _ptr_ = nullptr;
+		void* _ptr_  = nullptr;
+		bool _deallocate_at_destuctor_ = false;
 
 	public:
 		// constructor's
 		g_memory_handle() NOEXP = default;
-		g_memory_handle(allocator_response response, u64 size, allocator_tag tag, void* pointer) NOEXP;
+		g_memory_handle(
+			allocator_response response, u64 size, allocator_tag tag, void* pointer, bool deallocate_at_destruction_time = false
+		) NOEXP;
 
 		// destructor
 		~g_memory_handle() NOEXP;

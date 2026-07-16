@@ -138,10 +138,10 @@ namespace core {
 				second_msg += __LINE__;\
 				second_msg += ", ";\
 			}\
-			LOGGER->TYPE(second_msg);\
-			if( GET_BIT(CONFIG , core::logger::log_config::dump_stack_trace ) ) {\
-				LOGGER->dump_backtrace();\
-			}\
+			if(second_msg != "") LOGGER->TYPE(second_msg);\
+			if( GET_BIT(CONFIG , core::logger::log_config::dump_stack_trace ) ) { \
+				LOGGER->dump_backtrace(); \
+			} \
 		}
 
 #define CORE_LOG_HEADER(LOGGER,TYPE, CONFIG) if(LOGGER) {\
@@ -244,7 +244,7 @@ namespace core {
 				_LOGGER_->debug(fmt::runtime(FORMAT), ##__VA_ARGS__); \
 				CORE_LOG_DETAILS(_LOGGER_, debug, CONFIG);\
 			}
-	
+
 	#define CORE_TRACE(FORMAT , ...) if(_LOGGER_) _LOGGER_->trace(fmt::runtime(FORMAT) , ##__VA_ARGS__);
 	#define CORE_INFO( FORMAT , ...) if(_LOGGER_) _LOGGER_->info (fmt::runtime(FORMAT) , ##__VA_ARGS__);
 

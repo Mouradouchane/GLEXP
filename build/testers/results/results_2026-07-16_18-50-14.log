@@ -1,0 +1,3 @@
+global_allocator_simple_behavior_test_on_st_1 66979480ns                               successed
+global_allocator_simple_behavior_test_on_st_2 195760706ns                              successed
+global_allocator_allocate2_simple_behavior_test_on_st 182496664548ns                           successed

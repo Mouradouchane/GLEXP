@@ -157,8 +157,8 @@
 
 // example: 2 KB --> 2 *1024u
 #define KB   *1024u
-#define MB   *1048576u
-#define GB   *1073741824u
+#define MB   *1048576ull
+#define GB   *1073741824ull
 // ===================================================
 
 
