@@ -18,7 +18,7 @@ enum class allocator_response : u8 {
 /*
 	"debug-only" , use it to flag allocator's 
 */
-enum class allocator_tag : u8 {
+enum class subsystem_memory_tag : u8 {
 	unkown = 0,
 
 	memory_system,

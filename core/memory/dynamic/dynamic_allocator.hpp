@@ -7,6 +7,7 @@
 #include "core/types.hpp"
 #include "core/locks/atomic_lock/atomic_lock.hpp"
 #include "core/locks/atomic_types.hpp"
+#include "core/memory/memory.hpp"
 #include "core/memory/dynamic/registery/registery.hpp"
 #include "core/memory/dynamic/block/block.hpp"
 #include "core/strings/string.hpp"
@@ -15,7 +16,7 @@ namespace core {
 
 	struct dynamic_allocator_configs {
 		DEBUG_ONLY string name;
-		DEBUG_ONLY core::allocator_tag tag; // for what sub-system this allocator is gonna be used
+		DEBUG_ONLY subsystem_memory_tag tag;
 		
 		u64 memory_budget; // max memory this allocator can reach and operates on
 
@@ -23,7 +24,7 @@ namespace core {
 			how many allocations each memory block can maintain
 			note: the lowest the number , the better the preformance
 		*/ 
-		u16 max_allocations_per_block; 
+		u16 max_allocations_per_block;
 		
 		bool is_multi_thread; // is this allocator gonna be used by multiple threads/sub-system or not
 		
@@ -45,8 +46,8 @@ namespace core {
 	DLL_API_CLASS dynamic_allocator {
 	private:
 	#ifdef DEBUG
-		string              _name_; // allocator name for debug 
-		core::allocator_tag _tag_; // allocator main usage tag for debug
+		string              _name_;
+		subsystem_memory_tag _tag_;
 
 		// used for "debugging purposes" to keep track of memory usage
 		atomic_u32 _sections_[MAX_MEMORY_TAGS] = { 0u };
@@ -63,12 +64,14 @@ namespace core {
 		u64                _blocks_size_ = core::dynamic_allocator::min_size_allowed; 
 		// max memory this allocator allowed to use/reach
 		u64                _memory_budget_ = 0; 
-	
+		
 		           atomic_u64 _size_ = 0; // current total memory "size of all blocks"
 		DEBUG_ONLY atomic_u32 _peak_ = 0;          // peak memory usage
 		DEBUG_ONLY atomic_u32 _min_  = 0xFFFFFFFF; // min  memory usage
 		
 		bool _is_mt_ = false; // is this allocator for multi-threaded usage ?
+
+		g_memory_handle _handle_;
 
 	public:
 		// public variables for usage 
@@ -86,16 +89,14 @@ namespace core {
 			dynamic_allocator public functions
 		*/
 
-		core::memory_handle allocate(u32 size, core::memory_tag tag = core::memory_tag::unkown) NOEXP;
-		core::memory_handle allocate(u32 size, u16 alignement = 0, core::memory_tag tag = core::memory_tag::unkown) NOEXP;
-		core::memory_handle allocate(core::memory_request request) NOEXP;
+		memory_handle allocate(u32 size, memory_tag tag = memory_tag::unkown) NOEXP;
+		memory_handle allocate(u32 size, u16 alignement = 0, memory_tag tag = memory_tag::unkown) NOEXP;
+		memory_handle allocate(memory_request request) NOEXP;
 
 		// allocate 2 memory chunks next to each other in one call
-		core::memory_handle_2 allocate_tow(core::memory_request const& request_1 , core::memory_request const& request_2) NOEXP;
+		memory_handle_2 allocate_tow(memory_request const& request_1 , memory_request const& request_2) NOEXP;
 		
-		// note: slow as hell
-		// void deallocate(void* pointer) NOEXP; 
-		void deallocate(core::memory_handle handle) NOEXP;
+		void deallocate(memory_handle handle) NOEXP;
 
 		u64 size() NOEXP; 
 		u64 blocks_size() NOEXP; // size of each block
@@ -103,10 +104,10 @@ namespace core {
 
 		u64    peak_memory_usage() NOEXP; // max memory usage reached by this allocation
 		u64 current_memory_usage() NOEXP; // for all sections
-		u64 current_memory_usage(core::memory_tag section_tag) NOEXP; // for specific section
+		u64 current_memory_usage(memory_tag section_tag) NOEXP; // for specific section
 		
 		DEBUG_ONLY string const& name() NOEXP;
-		DEBUG_ONLY core::allocator_tag tag() NOEXP;
+		DEBUG_ONLY subsystem_memory_tag tag() NOEXP;
 
 	private: // helper functions
 		INLINE u8 add_new_block(u32 block_size) NOEXP;
@@ -114,8 +115,14 @@ namespace core {
 
 		// note: call this function only from allocate / deallocate
 		INLINE void update_size_variables(
-			core::memory_request const& request, core::memory_handle const& handle , bool increment = true
+			memory_request const& request, memory_handle const& handle , bool increment = true
 		) NOEXP;
+
+		INLINE memory_handle allocate_on_st(memory_request const& request) NOEXP;
+		INLINE memory_handle allocate_on_mt(memory_request const& request) NOEXP;
+
+		INLINE void deallocate_on_st(memory_handle const& handle) NOEXP;
+		INLINE void deallocate_on_mt(memory_handle const& handle) NOEXP;
 
 		// not allowed contructor's
 		dynamic_allocator() = delete;

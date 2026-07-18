@@ -24,7 +24,7 @@ namespace core {
 	*/
 	DLL_API_CLASS memory_registry {
 	private:
-		core::memory_allocation* list = nullptr; // registry memory
+		memory_allocation* list = nullptr; // registry memory
 
 		u32 size     = 0; // list size in byte
 		u32 capacity = 0; // lis capacity
@@ -53,8 +53,8 @@ namespace core {
 
 		// cut allocation from registry and give it back
 		// return empty allocation{nullptr,0} if ptr not found
-		core::memory_allocation cut(void* ptr) NOEXP;
-		// core::memory_allocation cut(u32 index) NOEXP; // faster O(1)
+		memory_allocation cut(void* ptr) NOEXP;
+		// memory_allocation cut(u32 index) NOEXP; // faster O(1)
 
 		// return capacity if ptr not found
 		u32 exist(void* ptr) NOEXP;
@@ -66,11 +66,11 @@ namespace core {
 		u32 get_allocations_count() NOEXP; // how many allocation in register
 
 		// get allocation info
-		core::memory_allocation get_info(void* pointer) NOEXP; // slow
-		core::memory_allocation get_info(u32 index) NOEXP; // O(1) faster
+		memory_allocation get_info(void* pointer) NOEXP; // slow
+		memory_allocation get_info(u32 index) NOEXP; // O(1) faster
 
-		core::i_memory_allocation get_allocation(u32 target_size) NOEXP; // o(n)
-		core::i_memory_allocation get_biggest_allocation(u32 target_size) NOEXP; // O(1)
+		i_memory_allocation get_allocation(u32 target_size) NOEXP; // o(n)
+		i_memory_allocation get_biggest_allocation(u32 target_size) NOEXP; // O(1)
 
 	private: // helper function
 

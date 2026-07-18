@@ -22,6 +22,7 @@ static std::shared_ptr<spdlog::logger> _core_global_alloc_logger_ = nullptr;
 	static u64 peak_size  = 0; // max memory we reach
 
 static bool is_init = false;
+
 DLL_API void core::memory::init() NOEXP {
 	if (!is_init) {
 	#ifdef DEBUG
@@ -35,9 +36,10 @@ DLL_API void core::memory::init() NOEXP {
 			CORE_DEBUG(0,"memory-tag: {} {}", i , core::to_string((memory_tag)i) );
 		}
 		for (u8 i = 0; i < 16; i += 1) {
-			CORE_TRACE("allocator-tag: {} {}", i, core::to_string((allocator_tag)i));
+			CORE_TRACE("allocator-tag: {} {}", i, core::to_string((subsystem_memory_tag)i));
 		}
 
+		// todo: move this to a "global allocator" unit test
 		CORE_DEBUG(0, "BYTE");
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(1));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(2));
@@ -51,31 +53,37 @@ DLL_API void core::memory::init() NOEXP {
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(   2 KB));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(1024 KB));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(1025 KB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(2225 KB));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(3500 KB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(9999 KB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(99999 KB));
 
 		CORE_DEBUG(0, "MB");
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(   1 MB));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(   2 MB));
-		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(  16 MB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(  64 MB));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string( 128 MB));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(1024 MB));
-		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(1025 MB));
-		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(2048 MB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(2222 MB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(3579 MB));
 
 		CORE_DEBUG(0, "GB");
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(   1 GB));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(   2 GB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(   3 GB));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(   7 GB));
 		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(   8 GB));
-		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(  16 GB));
-		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(1024 GB));
-		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(2026 GB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(  64 GB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string( 512 GB));
+		CORE_DEBUG(0, "memory unit to string: {}", core::bytes_to_string(2222 GB));
 
 	#endif
 
 		is_init = true;
 	}
-}
+
+} // init end
+
 
 DLL_API g_memory_handle core::memory::allocate(g_memory_request const& request) NOEXP {
 
@@ -176,11 +184,11 @@ DLL_API g_memory_handle_2 core::memory::allocate_tow(g_memory_request const& req
 DLL_API void core::memory::deallocate(g_memory_handle const& handle) NOEXP {
 	// DEBUG_BREAK;
 
-	if (handle._ptr_) {
-		u8 tag = *((u8*)handle._ptr_ + handle._size_);
+	if (handle.ptr) {
+		u8 tag = *((u8*)handle.ptr + handle._size_);
 
 		// release memory
-		delete[] handle._ptr_;
+		delete[] handle.ptr;
 
 		// update internal variables
 		total_size -= handle._size_;
@@ -188,7 +196,7 @@ DLL_API void core::memory::deallocate(g_memory_handle const& handle) NOEXP {
 		sections_sizes[tag] -= handle._size_;
 
 		CORE_DEBUG(0, "global-allocator: memory {} is deallocated , used for {} size {}." , 
-			core::pointer_to_hex_string(handle._ptr_) , core::to_string((allocator_tag)tag),
+			core::pointer_to_hex_string(handle.ptr) , core::to_string((subsystem_memory_tag)tag),
 			core::bytes_to_string(handle._size_)
 		);
 	#endif
@@ -204,7 +212,7 @@ DLL_API u64 core::memory::total_memory_usage() NOEXP {
 	return total_size;
 }
 
-DLL_API u64 core::memory::current_memory_usage(allocator_tag section_tag) NOEXP {
+DLL_API u64 core::memory::current_memory_usage(subsystem_memory_tag section_tag) NOEXP {
 #ifdef DEBUG
 	return ((u8)section_tag < MAX_MEMORY_TAGS) ? sections_sizes[ (u8)section_tag ] : 0;
 #else
@@ -226,22 +234,14 @@ DLL_API u64 core::memory::peak_memory_usage() NOEXP {
 	class memory_handle
 */
 
-memory_handle::memory_handle(allocator_response response, u8 b_index, u32 reg_index, void* pointer) NOEXP
-	: _response_(response), _block_index_(b_index), _register_index_(reg_index), _ptr_(pointer) 
+memory_handle::memory_handle(allocator_response response_, u8 b_index, u32 reg_index, void* pointer) NOEXP
+	: response(response_), _block_index_(b_index), _register_index_(reg_index), ptr(pointer) 
 {
 };
 
 memory_handle::~memory_handle() NOEXP {
 
-	this->_ptr_ = nullptr;
-}
-
-allocator_response memory_handle::response() NOEXP {
-	return this->_response_;
-}
-
-void* memory_handle::get_pointer() NOEXP {
-	return this->_ptr_;
+	this->ptr = nullptr;
 }
 
 
@@ -249,38 +249,29 @@ void* memory_handle::get_pointer() NOEXP {
 	class g_memory_handle
 */
 g_memory_handle::g_memory_handle(
-	allocator_response response, u64 size, allocator_tag tag, void* pointer, 
+	allocator_response response_, u64 size, subsystem_memory_tag tag, void* pointer, 
 	bool deallocate_at_destruction_time
 ) NOEXP
-	: _response_(response), _size_(size), _tag_(tag), _ptr_(pointer) , _deallocate_at_destuctor_(deallocate_at_destruction_time)
+	: response(response_), _size_(size), _tag_(tag), ptr(pointer) , _deallocate_at_destuctor_(deallocate_at_destruction_time)
 {
 
 }
 
 g_memory_handle::~g_memory_handle() NOEXP {
-	if (this->_deallocate_at_destuctor_ && this->_ptr_) {
+	if (this->_deallocate_at_destuctor_ && this->ptr) {
 		core::memory::deallocate(*this);
 	}
 
 #ifdef DEBUG
-	if (this->_ptr_) {
+	if (this->ptr) {
 		CORE_WARN(core::logger::log_config::dump_stack_trace, 
 			"'memory leak' posibility ! global memory handle destructed while still carrying a vaild pointer !"
 		);
 	}
 #endif
 
-	this->_ptr_ = nullptr;
+	this->ptr = nullptr;
 }
-
-allocator_response g_memory_handle::response() NOEXP {
-	return this->_response_;
-}
-
-void* g_memory_handle::get_pointer() NOEXP {
-	return this->_ptr_;
-}
-
 
 /*
 	to string functions
@@ -323,9 +314,9 @@ DLL_API string core::to_string(memory_tag tag) NOEXP {
 	return string("");
 }
 
-#define ALLOCATOR_TAG_TO_STRING_CASE(TAG) case allocator_tag:: TAG: return string( #TAG ); break;
+#define ALLOCATOR_TAG_TO_STRING_CASE(TAG) case subsystem_memory_tag:: TAG: return string( #TAG ); break;
 
-DLL_API string core::to_string(allocator_tag tag) NOEXP {
+DLL_API string core::to_string(subsystem_memory_tag tag) NOEXP {
 	
 	switch (tag) {
 		ALLOCATOR_TAG_TO_STRING_CASE(unkown				 );
@@ -348,7 +339,7 @@ DLL_API string core::to_string(allocator_tag tag) NOEXP {
 	return string("");
 }
 
-typedef void (*_ptr_fn_byte_converter_)(string& str , u64& bytes_count) NOEXP;
+typedef void (*ptrfn_byte_converter_)(string& str , u64& bytes_count) NOEXP;
 
 void _to_byte_(string& str, u64& bytes_count) NOEXP { 
 	str = std::to_string(bytes_count) + "BYTE";
@@ -374,7 +365,7 @@ DLL_API string core::bytes_to_string(u64 bytes_count) NOEXP {
 	static const u64 _1mb_ = 1 MB;
 	static const u64 _1gb_ = 1 GB;
 
-	static const _ptr_fn_byte_converter_ jump_table[4] = {
+	static const ptrfn_byte_converter_ jump_table[4] = {
 		_to_byte_, _to_kb_, _to_mb_, _to_gb_
 	};
 

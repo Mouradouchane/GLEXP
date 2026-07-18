@@ -39,7 +39,8 @@
 #define FRIENDS_TO_MEMORY_HANDLE() \
 		DLL_API g_memory_handle   friend core::memory::allocate(g_memory_request const& request) NOEXP; \
 		DLL_API g_memory_handle_2 friend core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP; \
-		DLL_API void friend core::memory::deallocate(g_memory_handle const& handle) NOEXP;
+		DLL_API void              friend core::memory::deallocate(g_memory_handle const& handle) NOEXP; \
+		friend  DLL_API_CLASS     core::dynamic_allocator;
 
 struct   memory_request; // for other allocator
 struct g_memory_request; // for global allocator
@@ -49,7 +50,10 @@ class  g_memory_handle; // for global allocator
 struct   memory_handle_2; // 2 memory handles in 1 struct
 struct g_memory_handle_2; // for global allocator
 
+
 namespace core {
+	
+	DLL_API_CLASS dynamic_allocator;
 
 	/*
 		core::memory is a global allocator , it's just a wrapper used by other allocators like: pool, arena , ...
@@ -69,17 +73,17 @@ namespace core {
 		DLL_API void deallocate(g_memory_handle const& handle) NOEXP;
 
 		DLL_API u64 total_memory_usage() NOEXP;
-		DLL_API u64 current_memory_usage(allocator_tag section_tag) NOEXP;
+		DLL_API u64 current_memory_usage(subsystem_memory_tag section_tag) NOEXP;
 		DLL_API u64 peak_memory_usage() NOEXP;
 
 	}
 	// namespace memory end
 
 	/*
-		to_string functions to convert memory tags to strings
+		to_string functions to convert memory tags and units to strings
 	*/
 	DLL_API string to_string(memory_tag tag) NOEXP;
-	DLL_API string to_string(allocator_tag section_tag) NOEXP;
+	DLL_API string to_string(subsystem_memory_tag section_tag) NOEXP;
 	DLL_API string bytes_to_string(u64 bytes_count) NOEXP;
 } 
 // namespace core end
@@ -97,25 +101,22 @@ class g_memory_handle {
 	private:
 		FRIENDS_TO_MEMORY_HANDLE();
 
-		allocator_response _response_ = allocator_response::busy;
-		allocator_tag      _tag_      = allocator_tag::unkown;
+		subsystem_memory_tag _tag_ = subsystem_memory_tag::unkown;
 		u64   _size_ = 0;
-		void* _ptr_  = nullptr;
 		bool _deallocate_at_destuctor_ = false;
 
 	public:
+		void* ptr = nullptr;
+		allocator_response response = allocator_response::busy;
+
 		// constructor's
 		g_memory_handle() NOEXP = default;
 		g_memory_handle(
-			allocator_response response, u64 size, allocator_tag tag, void* pointer, bool deallocate_at_destruction_time = false
+			allocator_response response, u64 size, subsystem_memory_tag tag, void* pointer, bool deallocate_at_destruction_time = false
 		) NOEXP;
 
 		// destructor
 		~g_memory_handle() NOEXP;
-
-		// handle functions
-		allocator_response response() NOEXP;
-		void* get_pointer() NOEXP;
 };
 
 /*
@@ -125,15 +126,14 @@ class memory_handle {
 	private:
 		FRIENDS_TO_MEMORY_HANDLE();
 
-		allocator_response _response_ = allocator_response::full;
-
 		// this for fast look-up and memory allocation/deallocation
 		u8  _block_index_    = (u8)-1;
 		u32 _register_index_ = (u32)-1;
 
-		void* _ptr_ = nullptr;
-
 	public:
+		allocator_response response = allocator_response::full;
+		void* ptr = nullptr;
+		
 		// constructor's
 		memory_handle() NOEXP = default;
 		memory_handle(allocator_response response, u8 b_index, u32 reg_index, void* pointer) NOEXP;
@@ -141,9 +141,9 @@ class memory_handle {
 		// destructor
 		~memory_handle() NOEXP;
 
-		// handle functions
-		allocator_response response() NOEXP;
-		void* get_pointer() NOEXP;
+		INLINE u8  block_index() NOEXP { return this->_block_index_; }
+		INLINE u32 register_index() NOEXP { return this->_register_index_; }
+
 };
 
 // returend by memory allocator for tow allocations in one handle
@@ -161,7 +161,7 @@ struct g_memory_handle_2 {
 // used by memory allocator
 struct g_memory_request {
 	u64 size; // could be higher than 4GB
-	DEBUG_ONLY allocator_tag tag;
+	DEBUG_ONLY subsystem_memory_tag tag;
 };
 
 // used for dynamic allocator

@@ -19,7 +19,7 @@
 
 namespace core {
 
-	DLL_API_CLASS memory_block {
+DLL_API_CLASS memory_block {
 	private:
 		core::atomic_lock lock;
 
@@ -55,12 +55,12 @@ namespace core {
 		/*
 			memory_block public functions
 		*/ 
-		core::memory_handle   allocate(core::memory_request const& request) NOEXP;
-		core::memory_handle   allocate(u32 size, u32 alignement = 0, u8 tag = 0) NOEXP;
-		core::memory_handle_2 allocate_tow(core::memory_request const& request_1, core::memory_request const& request_2) NOEXP;
+		memory_handle   allocate(memory_request const& request) NOEXP;
+		memory_handle   allocate(u32 size, u32 alignement = 0, u8 tag = 0) NOEXP;
+		memory_handle_2 allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP;
 
 		bool deallocate(void* pointer) NOEXP; // slow
-		bool deallocate(core::memory_handle handle) NOEXP; // faster
+		bool deallocate(memory_handle handle) NOEXP; // faster
 
 		bool is_busy() NOEXP;
 
@@ -69,7 +69,7 @@ namespace core {
 		u32 allocated_memory() NOEXP;
 
 		// use this to query information about some memory allocation
-		core::memory_allocation get_allocation_info(core::memory_handle handle) NOEXP;
+		memory_allocation get_allocation_info(memory_handle handle) NOEXP;
 
 	private: // private helper functions
 
@@ -78,18 +78,18 @@ namespace core {
 		void process_free_list() NOEXP;
 
 		// note[WARNING]: lock the block before calling this function !
-		INLINE void internal_allocate(core::memory_request const& request , core::memory_handle& handle) NOEXP;
+		INLINE void internal_allocate(memory_request const& request , memory_handle& handle) NOEXP;
 
 		INLINE u32 handle_registry(
-			void** ptr, core::i_memory_allocation const& allocation , core::memory_request const& request
+			void** ptr, i_memory_allocation const& allocation , memory_request const& request
 		) NOEXP;
 		
 		INLINE void handle_registry_2(
 			void** ptr_1,
 			void** ptr_2,
-			core::i_memory_allocation const& allocation,
-			core::memory_request const& request_1,
-			core::memory_request const& request_2,
+			i_memory_allocation const& allocation,
+			memory_request const& request_1,
+			memory_request const& request_2,
 			u32& index_1,
 			u32& index_2
 		) NOEXP;
@@ -106,8 +106,8 @@ namespace core {
 		core::memory_block& operator = (const core::memory_block && other)     = delete;
 		core::memory_block& operator = (const core::memory_block const& other) = delete;
 
-	};
-	// class memory_block end 
+};
+// class memory_block end 
 	
 }
 // namespace core end

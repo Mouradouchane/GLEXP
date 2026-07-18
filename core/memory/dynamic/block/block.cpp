@@ -36,7 +36,7 @@ core::memory_block::memory_block(u32 size , u32 max_allowed_allocations, u8 memo
 	this->block_tag = memory_tag;
 	  mem_block_tag = memory_tag;
 #else
-	mem_block_tag = (u8)core::allocator_tag::memory_system
+	mem_block_tag = (u8)core::subsystem_memory_tag::memory_system
 #endif
 	std::scoped_lock lc(this->lock);
 

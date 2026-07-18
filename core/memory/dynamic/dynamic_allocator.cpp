@@ -1,4 +1,4 @@
-#if 0
+#if 1
 #pragma once 
 
 #ifndef CORE_MEMORY_ALLOCATOR_CPP
@@ -97,9 +97,16 @@ dynamic_allocator::~dynamic_allocator() NOEXP {
     public functions
 */
 
-core::memory_handle dynamic_allocator::allocate(core::memory_request request) NOEXP {
+memory_handle dynamic_allocator::allocate(memory_request request) NOEXP {
     
-    core::memory_handle handle;
+    switch (this->_is_mt_) {
+        case true  : { return this->allocate_on_mt(request); } break; //  multi-thread allocation
+        case false : { return this->allocate_on_st(request); } break; // single-thread allocation
+    }
+
+    // todo: move this code to mt/st functions
+    /*
+    memory_handle handle;
 
     // loop over all blocks
     for (u8 i = 0; i < this->_blocks_count_; i++) {
@@ -114,8 +121,8 @@ core::memory_handle dynamic_allocator::allocate(core::memory_request request) NO
                 handle = this->_blocks_[i].allocate(request);
 
                 // if success
-                if (handle.response == core::allocator_response::success) {
-                    handle.block_index = i;
+                if (handle.response == allocator_response::success) {
+                    handle._block_index_ = i;
                     this->update_size_variables(request, handle, true);
 
                     return handle;
@@ -125,17 +132,18 @@ core::memory_handle dynamic_allocator::allocate(core::memory_request request) NO
         }
 
     }
+    */
     /*
         else mean all the block is busy at the moment or full
     */
-    
+    /*
     // try allocate new block if possible
     u8 index = this->add_new_block(request.size);
 
     // try to allocate
     if (index < this->_capacity_) {
         handle = this->_blocks_[index].allocate(request);
-        handle.block_index = index;
+        handle._block_index_ = index;
 
         this->update_size_variables(request, handle, true);
 
@@ -143,38 +151,48 @@ core::memory_handle dynamic_allocator::allocate(core::memory_request request) NO
     }
 
     // failed to find new block or memory
-    return core::memory_handle { 
-            .response = core::allocator_response::full,
-            .ptr = nullptr,
-    };
+    return memory_handle{ };
+    */
 
 }
 
-core::memory_handle dynamic_allocator::allocate(u32 size , core::memory_tag tag) NOEXP {
-    return this->allocate(
-        core::memory_request{ 
-            .size = size , 
-            .alignement = 0,
-            .tag = (u8)tag , 
-        }
-    );
+memory_handle dynamic_allocator::allocate(u32 size , memory_tag tag) NOEXP {
+
+    switch (this->_is_mt_) {
+
+        case true  : { //  multi-thread allocation
+            return this->allocate_on_mt(memory_request{ .size = size, .alignement = 0, .tag = tag,}); 
+        } break; 
+
+        case false : { // single-thread allocation
+            return this->allocate_on_st(memory_request{ .size = size, .alignement = 0, .tag = tag, }); 
+        } break; 
+
+    }
+
 }
 
-core::memory_handle dynamic_allocator::allocate(u32 size, u16 alignement, core::memory_tag tag) NOEXP {
-    return this->allocate(
-        core::memory_request{
-            .size = size ,
-            .alignement = alignement,
-            .tag = (u8)tag
-        }
-    );
+memory_handle dynamic_allocator::allocate(u32 size, u16 alignement, memory_tag tag) NOEXP {
+
+    switch (this->_is_mt_) {
+
+        case true: { //  multi-thread allocation
+            return this->allocate_on_mt(memory_request{ .size = size, .alignement = alignement, .tag = tag, });
+        } break;
+
+        case false: { // single-thread allocation
+            return this->allocate_on_st(memory_request{ .size = size, .alignement = alignement, .tag = tag, });
+        } break;
+
+    }
+
 }
 
-core::memory_handle_2 dynamic_allocator::allocate_tow(
-    core::memory_request const& request_1, core::memory_request const& request_2
+memory_handle_2 dynamic_allocator::allocate_tow(
+    memory_request const& request_1, memory_request const& request_2
 ) NOEXP {
     
-    core::memory_handle_2 handle;
+    memory_handle_2 handle;
 
     for (u8 i = 0; i < this->_blocks_count_; i++) {
 
@@ -189,11 +207,11 @@ core::memory_handle_2 dynamic_allocator::allocate_tow(
 
                 // if success
                 if (
-                    (handle.handle_1.response == core::allocator_response::success) && 
-                    (handle.handle_2.response == core::allocator_response::success)
+                    (handle.handle_1.response == allocator_response::success) && 
+                    (handle.handle_2.response == allocator_response::success)
                 ) {
-                    handle.handle_1.block_index = i;
-                    handle.handle_2.block_index = i;
+                    handle.handle_1._block_index_ = i;
+                    handle.handle_2._block_index_ = i;
 
                     this->update_size_variables(request_1, handle.handle_1, true);
                     this->update_size_variables(request_2, handle.handle_2, true);
@@ -215,8 +233,8 @@ core::memory_handle_2 dynamic_allocator::allocate_tow(
     // "second attempt" : try to allocate
     if (index < this->_capacity_) {
         handle = this->_blocks_[index].allocate_tow(request_1, request_2);
-        handle.handle_1.block_index = index;
-        handle.handle_2.block_index = index;
+        handle.handle_1._block_index_ = index;
+        handle.handle_2._block_index_ = index;
         
         this->update_size_variables(request_1, handle.handle_1, true);
         this->update_size_variables(request_2, handle.handle_2, true);
@@ -225,26 +243,40 @@ core::memory_handle_2 dynamic_allocator::allocate_tow(
     }
 
     // failed to find new block or memory
-    return core::memory_handle_2{
-        core::memory_handle {.response = core::allocator_response::full},
-        core::memory_handle {.response = core::allocator_response::full}
+    return memory_handle_2{
+        memory_handle {},
+        memory_handle {}
     };
 
 }
 
-void dynamic_allocator::deallocate(core::memory_handle handle) NOEXP {
+void dynamic_allocator::deallocate(memory_handle handle) NOEXP {
 
-    if (handle.block_index >= this->_capacity_) {
+    switch (this->_is_mt_) {
+
+        case true: { //  multi-thread allocation
+            this->deallocate_on_mt(handle);
+        } break;
+
+        case false: { // single-thread allocation
+            this->deallocate_on_st(handle);
+        } break;
+
+    }
+
+    // todo: move this code to st/mt deallocate
+    /*
+    if (handle._block_index_ >= this->_capacity_) {
         #ifdef DEBUG
-            CORE_ERROR_F(CORE_INDEX_OUT_OF_RANGE , handle.block_index , "core::dynamic_allocator");
+            CORE_ERROR_F(CORE_INDEX_OUT_OF_RANGE , handle._block_index_ , "core::dynamic_allocator");
             DEBUG_BREAK;
         #endif
         return;
     }
 
-    core::memory_allocation alloc = this->_blocks_[handle.block_index].get_allocation_info(handle);
+    memory_allocation alloc = this->_blocks_[handle._block_index_].get_allocation_info(handle);
     
-    if (! this->_blocks_[handle.block_index].deallocate(handle)) {
+    if (! this->_blocks_[handle._block_index_].deallocate(handle)) {
         CORE_WARN_F(
             "core::dynamic_allocator.deallocate(): memory block failed to deallocate {} !",
             core::pointer_to_hex_string(handle.ptr)
@@ -253,8 +285,8 @@ void dynamic_allocator::deallocate(core::memory_handle handle) NOEXP {
         return;
     }
 
-    this->update_size_variables(core::memory_request{ .size = alloc.size , .tag = alloc.tag }, handle , false);
-
+    this->update_size_variables(memory_request{ .size = alloc.size , .tag = (memory_tag)alloc.tag }, handle , false);
+    */
 }
 
 
@@ -274,7 +306,7 @@ u64 dynamic_allocator::current_memory_usage() NOEXP {
     return 0;
 }
 
-u64 dynamic_allocator::current_memory_usage(core::memory_tag section_tag) NOEXP {
+u64 dynamic_allocator::current_memory_usage(memory_tag section_tag) NOEXP {
     if ((u8)section_tag < MAX_MEMORY_TAGS) {
         return this->_sections_[(u8)section_tag];
     }
@@ -291,7 +323,7 @@ string const& dynamic_allocator::name() NOEXP {
     return this->_name_;
 }
 
-core::allocator_tag dynamic_allocator::tag()  NOEXP {
+subsystem_memory_tag dynamic_allocator::tag()  NOEXP {
     return this->_tag_;
 }
 #else 
@@ -299,8 +331,8 @@ string dynamic_allocator::name() NOEXP {
     return "";
 }
 
-core::allocator_tag dynamic_allocator::tag() NOEXP {
-    return core::memory_tag::unkown;
+subsystem_memory_tag dynamic_allocator::tag() NOEXP {
+    return memory_tag::unkown;
 }
 #endif
 
@@ -314,7 +346,7 @@ core::allocator_tag dynamic_allocator::tag() NOEXP {
     note: call this function only from allocate/deallocate
 */
 INLINE void core::dynamic_allocator::update_size_variables (
-    core::memory_request const& request, core::memory_handle const& handle, bool increment
+    memory_request const& request, memory_handle const& handle, bool increment
 ) NOEXP {
 
     // update allocator size
@@ -323,9 +355,9 @@ INLINE void core::dynamic_allocator::update_size_variables (
 
 #ifdef DEBUG
     // update section size
-    if (request.tag < MAX_MEMORY_TAGS) {
-        if(increment) this->_sections_[request.tag].fetch_add(request.size , MEMORY_ORDER_ACQUIRE);
-        else this->_sections_[request.tag].fetch_sub(request.size, MEMORY_ORDER_ACQUIRE);
+    if ((u8)request.tag < MAX_MEMORY_TAGS) {
+        if(increment) this->_sections_[(u8)request.tag].fetch_add(request.size , MEMORY_ORDER_ACQUIRE);
+        else this->_sections_[(u8)request.tag].fetch_sub(request.size, MEMORY_ORDER_ACQUIRE);
     }
 
     // update _min_ & _peak_
