@@ -69,8 +69,8 @@ namespace core {
 		memory_allocation get_info(void* pointer) NOEXP; // slow
 		memory_allocation get_info(u32 index) NOEXP; // O(1) faster
 
-		i_memory_allocation get_allocation(u32 target_size) NOEXP; // o(n)
-		i_memory_allocation get_biggest_allocation(u32 target_size) NOEXP; // O(1)
+		memory_allocation_info get_allocation(u32 target_size) NOEXP; // o(n)
+		memory_allocation_info get_biggest_allocation(u32 target_size) NOEXP; // O(1)
 
 	private: // helper function
 

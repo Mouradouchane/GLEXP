@@ -98,53 +98,62 @@ namespace core {
 	- used by allocators to allocate thier own memory to manange .
 */
 class g_memory_handle {
-	private:
-		FRIENDS_TO_MEMORY_HANDLE();
+private:
+	FRIENDS_TO_MEMORY_HANDLE();
 
-		subsystem_memory_tag _tag_ = subsystem_memory_tag::unkown;
-		u64   _size_ = 0;
-		bool _deallocate_at_destuctor_ = false;
+	subsystem_memory_tag _tag_ = subsystem_memory_tag::unkown;
+	u64   _size_ = 0;
+	bool _deallocate_at_destuctor_ = false;
 
-	public:
-		void* ptr = nullptr;
-		allocator_response response = allocator_response::busy;
+	void* ptr = nullptr;
+public:
+	allocator_response response = allocator_response::busy;
 
-		// constructor's
-		g_memory_handle() NOEXP = default;
-		g_memory_handle(
-			allocator_response response, u64 size, subsystem_memory_tag tag, void* pointer, bool deallocate_at_destruction_time = false
-		) NOEXP;
+	// constructor's
+	g_memory_handle() NOEXP = default;
+	g_memory_handle(
+		allocator_response response, u64 size, subsystem_memory_tag tag, void* pointer, bool deallocate_at_destruction_time = false
+	) NOEXP;
 
-		// destructor
-		~g_memory_handle() NOEXP;
-};
+	// destructor
+	~g_memory_handle() NOEXP;
+
+	// functions
+	INLINE void* pointer() NOEXP { return this->ptr; }
+	INLINE void  set_pointer(void* new_pointer) NOEXP { this->ptr = new_pointer; }
+
+}; // class g_memory_handle end
+
 
 /*
 	memory_handle used by allocators for fast allocation/deallocation memory
 */
 class memory_handle {
-	private:
-		FRIENDS_TO_MEMORY_HANDLE();
+private:
+	FRIENDS_TO_MEMORY_HANDLE();
 
-		// this for fast look-up and memory allocation/deallocation
-		u8  _block_index_    = (u8)-1;
-		u32 _register_index_ = (u32)-1;
+	// this for fast look-up and memory allocation/deallocation
+	u8  _block_index_ = (u8)-1;
+	u32 _register_index_ = (u32)-1;
 
-	public:
-		allocator_response response = allocator_response::full;
-		void* ptr = nullptr;
-		
-		// constructor's
-		memory_handle() NOEXP = default;
-		memory_handle(allocator_response response, u8 b_index, u32 reg_index, void* pointer) NOEXP;
+	void* ptr = nullptr;
+public:
+	allocator_response response = allocator_response::full;
 
-		// destructor
-		~memory_handle() NOEXP;
+	// constructor's
+	memory_handle() NOEXP = default;
+	memory_handle(allocator_response response, u8 b_index, u32 reg_index, void* pointer) NOEXP;
 
-		INLINE u8  block_index() NOEXP { return this->_block_index_; }
-		INLINE u32 register_index() NOEXP { return this->_register_index_; }
+	// destructor
+	~memory_handle() NOEXP;
 
-};
+	// functions
+	INLINE void* pointer() NOEXP { return this->ptr; }
+	INLINE void  set_pointer(void* new_pointer) NOEXP { this->ptr = new_pointer; }
+	INLINE u8  block_index() NOEXP { return this->_block_index_; }
+	INLINE u32 register_index() NOEXP { return this->_register_index_; }
+
+}; // class g_memory_handle end
 
 // returend by memory allocator for tow allocations in one handle
 struct memory_handle_2 {
@@ -160,13 +169,13 @@ struct g_memory_handle_2 {
 
 // used by memory allocator
 struct g_memory_request {
-	u64 size; // could be higher than 4GB
+	u64 size;
 	DEBUG_ONLY subsystem_memory_tag tag;
 };
 
 // used for dynamic allocator
 struct memory_request {
-	u64 size;      // max size below 4GB
+	u64 size;
 	u16 alignement;
 	DEBUG_ONLY memory_tag tag;
 };

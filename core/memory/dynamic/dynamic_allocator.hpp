@@ -57,7 +57,7 @@ namespace core {
 		core::memory_block _blocks_[MAX_MEMORY_BLOCKS]; // blocks array
 		bool               _blocks_status_[MAX_MEMORY_BLOCKS] = { false }; // for the status of each block
 		u8 const           _capacity_    = MAX_MEMORY_BLOCKS; // max allowed blocks
-		atomic_u8          _blocks_count_  = 0; 
+		atomic_u8          _blocks_count_ = 0; 
 		u16                _blocks_max_allocations_ = MAX_ALLOCATIONS_PRE_BLOCK; // max allocations allowed per block
 
 		// note: this computed automatically at construction time based on the "_memory_budget_"
@@ -71,7 +71,7 @@ namespace core {
 		
 		bool _is_mt_ = false; // is this allocator for multi-threaded usage ?
 
-		g_memory_handle _handle_;
+		// g_memory_handle _handle_;
 
 	public:
 		// public variables for usage 
@@ -97,7 +97,7 @@ namespace core {
 		memory_handle_2 allocate_tow(memory_request const& request_1 , memory_request const& request_2) NOEXP;
 		
 		void deallocate(memory_handle handle) NOEXP;
-
+		
 		u64 size() NOEXP; 
 		u64 blocks_size() NOEXP; // size of each block
 		u32 blocks_count() NOEXP; // return's how many memory block in this allocator

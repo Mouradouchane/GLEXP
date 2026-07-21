@@ -59,14 +59,13 @@ DLL_API_CLASS memory_block {
 		memory_handle   allocate(u32 size, u32 alignement = 0, u8 tag = 0) NOEXP;
 		memory_handle_2 allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP;
 
-		bool deallocate(void* pointer) NOEXP; // slow
 		bool deallocate(memory_handle handle) NOEXP; // faster
 
 		bool is_busy() NOEXP;
 
-		u32 size() NOEXP;
-		u32 free_memory() NOEXP;
-		u32 allocated_memory() NOEXP;
+		u64 size() NOEXP;
+		u64 free_memory() NOEXP;
+		u64 allocated_memory() NOEXP;
 
 		// use this to query information about some memory allocation
 		memory_allocation get_allocation_info(memory_handle handle) NOEXP;
@@ -77,17 +76,17 @@ DLL_API_CLASS memory_block {
 		// note: this locks the entier block for that process !
 		void process_free_list() NOEXP;
 
-		// note[WARNING]: lock the block before calling this function !
+		// note [WARNING] : lock the block before calling this function !
 		INLINE void internal_allocate(memory_request const& request , memory_handle& handle) NOEXP;
 
 		INLINE u32 handle_registry(
-			void** ptr, i_memory_allocation const& allocation , memory_request const& request
+			void** ptr, memory_allocation_info const& allocation , memory_request const& request
 		) NOEXP;
 		
 		INLINE void handle_registry_2(
 			void** ptr_1,
 			void** ptr_2,
-			i_memory_allocation const& allocation,
+			memory_allocation_info const& allocation,
 			memory_request const& request_1,
 			memory_request const& request_2,
 			u32& index_1,

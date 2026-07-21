@@ -376,7 +376,6 @@ INLINE void core::dynamic_allocator::update_size_variables (
 INLINE u8 dynamic_allocator::add_new_block(u32 target_size) NOEXP{
     
     core::atomic_scope_lock scope_lock(this->_lock_);
-
     u32 block_size;
 
     // check size
@@ -390,13 +389,9 @@ INLINE u8 dynamic_allocator::add_new_block(u32 target_size) NOEXP{
                 CORE_LOG_CONFIG_ALL , CORE_WARNING_OUT_OF_BUDGET  CORE_WARNINIG_RUNTIME_CRASH,
                 "core::dynamic_allocator" , this->_memory_budget_
             );
-        #else
-            CORE_FATAL(
-                CORE_LOG_CONFIG_ALL, CORE_WARNING_OUT_OF_BUDGET,
-                "core::dynamic_allocator", this->_memory_budget_
-            );
-        #endif
 
+            DEBUG_BREAK;
+        #endif
         return this->_capacity_;
     }
 
@@ -444,6 +439,6 @@ INLINE void dynamic_allocator::remove_block(u8 index) NOEXP {
 
 } // namespace core end
 
-
 #endif
+
 #endif

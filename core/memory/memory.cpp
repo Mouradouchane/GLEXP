@@ -214,13 +214,13 @@ DLL_API u64 core::memory::total_memory_usage() NOEXP {
 
 DLL_API u64 core::memory::current_memory_usage(subsystem_memory_tag section_tag) NOEXP {
 #ifdef DEBUG
-	return ((u8)section_tag < MAX_MEMORY_TAGS) ? sections_sizes[ (u8)section_tag ] : 0;
+	u8 index = (u8)section_tag;
+	return ( index < MAX_MEMORY_TAGS) ? sections_sizes[ index ] : 0;
 #else
 	return 0;
 #endif
 }
 
-// todo: calc peak memory usage
 DLL_API u64 core::memory::peak_memory_usage() NOEXP {
 #ifdef DEBUG
 	return peak_size;

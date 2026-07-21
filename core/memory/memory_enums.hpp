@@ -80,26 +80,27 @@ enum class memory_tag : u8 {
 // used by block allocator
 struct memory_allocation {
 	void* ptr;
-	u32   size;
+	u64   size;
 
-	DEBUG_ONLY u8 tag;
+	DEBUG_ONLY memory_tag tag;
 
 	// helper function
 	void clear() NOEXP {
-		this->ptr = nullptr;
+		this->ptr  = nullptr;
 		this->size = 0;
 	#ifdef DEBUG
-		this->tag = (u8)memory_tag::unkown;
+		this->tag = memory_tag::unkown;
 	#endif
 	}
 };
 
 
 // used by registry and allocator
-struct i_memory_allocation {
+struct memory_allocation_info {
 	void* ptr;
-	u32   size;
+	u64   size;
 	u32	  index;
+	DEBUG_ONLY memory_tag tag;
 };
 
 // used by free list and allocator
