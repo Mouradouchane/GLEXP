@@ -1,4 +1,4 @@
-#if 0
+#if 1
 #pragma once 
 
 #ifndef CORE_MEMORY_REGISTRE_CPP
@@ -26,15 +26,16 @@ namespace core {
 memory_registry::memory_registry() NOEXP {
 
 	this->capacity = memory_registry::default_register_capacity;
-	this->size = sizeof(core::memory_allocation) * this->capacity;
+	this->size = sizeof(memory_allocation) * this->capacity;
 
-	this->list = (core::memory_allocation*) core::memory::allocate(
-		core::g_memory_request {
-			this->size, 
-			(u8)core::memory_tag::registry
+	this->handle = core::memory::allocate(
+		g_memory_request{
+			.size = this->size,
+			.tag = subsystem_memory_tag::memory_system
 		}
 	);
-
+	
+	this->list = (memory_allocation*)this->handle.ptr;
 	this->allocations_count = 0;
 	this->allocations_size  = 0;
 
@@ -47,15 +48,16 @@ memory_registry::memory_registry() NOEXP {
 memory_registry::memory_registry(u32 register_capacity) NOEXP {
 
 	this->capacity = (register_capacity) ? register_capacity : memory_registry::default_register_capacity;
-	this->size = sizeof(core::memory_allocation) * this->capacity;
+	this->size = sizeof(memory_allocation) * this->capacity;
 
-	this->list = (core::memory_allocation*)core::memory::allocate(
-		core::g_memory_request {
-			this->size,
-			(u8)core::memory_tag::registry
+	this->handle = core::memory::allocate(
+		g_memory_request{
+			.size = this->size,
+			.tag = subsystem_memory_tag::memory_system
 		}
 	);
 
+	this->list = (memory_allocation*)this->handle.ptr;
 	this->allocations_count = 0;
 	this->allocations_size  = 0;
 			
@@ -71,13 +73,10 @@ memory_registry::memory_registry(u32 register_capacity) NOEXP {
 memory_registry::~memory_registry() NOEXP {
 
 	// [WARNNING] : any allocations left registred in register will be lost !
-	core::memory::deallocate(this->list);
+	core::memory::deallocate(this->handle);
 
-	this->size = 0;
-
-	CORE_DEBUG(0,"registry with capacity={} desturcted !", this->capacity);
+	this->size     = 0;
 	this->capacity = 0;
-
 }
 
 
@@ -95,7 +94,7 @@ u32 memory_registry::insert(void* ptr, u32 size, u8 tag) NOEXP {
 
 		if (i < this->capacity) {
 		#ifdef DEBUG
-			this->list[i] = core::memory_allocation{ ptr , size , tag };
+			this->list[i] = memory_allocation{ ptr , size , tag };
 		#else 
 			this->list[i] = memory_allocation{ ptr , size };
 		#endif
@@ -123,7 +122,7 @@ bool memory_registry::remove(u32 index) NOEXP {
 
 	if (index >= this->size) return false;
 
-	this->list[index] = core::memory_allocation{};
+	this->list[index] = memory_allocation{};
 	return true;
 }
 
@@ -149,14 +148,14 @@ bool memory_registry::remove(void* ptr) NOEXP {
 }
 
 
-core::memory_allocation memory_registry::cut(void* ptr) NOEXP {
+memory_allocation memory_registry::cut(void* ptr) NOEXP {
 
 	// hash then search for ptr
 	u32 index = this->hash_pointer(ptr);
 	u32 i = this->search(index, ptr);
 
 	if (i < this->capacity) {
-		core::memory_allocation alloc = this->list[i];
+		memory_allocation alloc = this->list[i];
 
 		this->allocations_count -= 1;
 		this->allocations_size  -= this->list[i].size;
@@ -167,7 +166,7 @@ core::memory_allocation memory_registry::cut(void* ptr) NOEXP {
 	}
 	else { // ptr not found
 		CORE_WARN(CORE_LOG_CONFIG_ALL, REGISTRY_PTR_NOT_FOUND, core::pointer_to_hex_string(ptr));
-		return core::memory_allocation{ 0 };
+		return memory_allocation{ 0 };
 	}
 
 }
@@ -193,12 +192,12 @@ u32 memory_registry::get_allocations_size()  NOEXP {
 }
 
 // note: this could be a disaster on preformance level because it O(N)
-core::i_memory_allocation memory_registry::get_allocation(u32 target_size) NOEXP {
+memory_allocation_info memory_registry::get_allocation(u32 target_size) NOEXP {
 
 	for (u32 i = 0; i < this->capacity; i++) {
 
 		if (this->list[i].size >= target_size) {
-			return core::i_memory_allocation { 
+			return memory_allocation_info { 
 				this->list[i].ptr,
 				this->list[i].size,
 				i
@@ -207,27 +206,27 @@ core::i_memory_allocation memory_registry::get_allocation(u32 target_size) NOEXP
 
 	}
 
-	return core::i_memory_allocation{ 0 };
+	return memory_allocation_info{ 0 };
 }
 
-core::i_memory_allocation memory_registry::get_biggest_allocation(u32 target_size) NOEXP {
+memory_allocation_info memory_registry::get_biggest_allocation(u32 target_size) NOEXP {
 
 	if (this->biggest_allocation != this->capacity) {
 
-		core::memory_allocation allocation = this->list[this->biggest_allocation];
+		memory_allocation allocation = this->list[this->biggest_allocation];
 
 		if (allocation.size >= target_size) {
-			core::i_memory_allocation alloc{ allocation.ptr , allocation.size , this->biggest_allocation };
+			memory_allocation_info alloc{ allocation.ptr , allocation.size , this->biggest_allocation };
 			this->biggest_allocation = this->capacity;
 			return alloc;
 		}
 
 	}
 	
-	return core::i_memory_allocation{ 0 };
+	return memory_allocation_info{ 0 };
 }
 
-core::memory_allocation memory_registry::get_info(void* pointer) NOEXP {
+memory_allocation memory_registry::get_info(void* pointer) NOEXP {
 
 	u32 hash  = this->hash_pointer(pointer);
 	u32 index = this->search(hash, pointer);
@@ -236,7 +235,7 @@ core::memory_allocation memory_registry::get_info(void* pointer) NOEXP {
 		return this->list[index];
 	}
 	
-	return core::memory_allocation {
+	return memory_allocation {
 		.ptr  = nullptr,
 		.size = 0,
 		.tag  = (u8)-1
@@ -245,13 +244,13 @@ core::memory_allocation memory_registry::get_info(void* pointer) NOEXP {
 }
 
 // O(1) faster
-core::memory_allocation memory_registry::get_info(u32 index) NOEXP {
+memory_allocation memory_registry::get_info(u32 index) NOEXP {
 
 	if (index < this->capacity) {
 		return this->list[index];
 	}
 
-	return core::memory_allocation{
+	return memory_allocation{
 		.ptr = nullptr,
 		.size = 0,
 		.tag = (u8)-1
@@ -262,12 +261,12 @@ core::memory_allocation memory_registry::get_info(u32 index) NOEXP {
 void memory_registry::merge_free_areas() NOEXP {
 
 	// copy list
-	std::vector<core::memory_allocation> c_list(this->list , this->list + this->capacity);
+	std::vector<memory_allocation> c_list(this->list , this->list + this->capacity);
 
 	// sort allocations by address
 	std::sort(
 		c_list.begin(), c_list.end(), 
-		[&](core::memory_allocation const& A , core::memory_allocation const& B) -> bool {
+		[&](memory_allocation const& A , memory_allocation const& B) -> bool {
 			return (A.ptr < B.ptr);
 		}
 	);
@@ -282,7 +281,7 @@ void memory_registry::merge_free_areas() NOEXP {
 			c_list[i + 1].size += c_list[i].size;
 
 			// empty current allocation
-			c_list[i] = core::memory_allocation{ 0 };
+			c_list[i] = memory_allocation{ 0 };
 		}
 
 	}
@@ -290,7 +289,7 @@ void memory_registry::merge_free_areas() NOEXP {
 	// empty registry list
 	std::memset(this->list, 0, this->size);
 
-	core::i_memory_allocation new_biggest = { 0 };
+	memory_allocation_info new_biggest = { 0 };
 
 	// insert back the new once
 	for (u32 i = 0; i < c_list.size(); i++) {
@@ -304,7 +303,7 @@ void memory_registry::merge_free_areas() NOEXP {
 
 				// keep track of the biggest allocation
 				if (this->list[i].size > new_biggest.size) {
-					new_biggest = core::i_memory_allocation {
+					new_biggest = memory_allocation_info {
 						this->list[i].ptr,
 						this->list[i].size,
 						i

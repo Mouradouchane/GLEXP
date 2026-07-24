@@ -105,8 +105,8 @@ private:
 	u64   _size_ = 0;
 	bool _deallocate_at_destuctor_ = false;
 
-	void* ptr = nullptr;
 public:
+	void* ptr = nullptr;
 	allocator_response response = allocator_response::busy;
 
 	// constructor's
@@ -118,10 +118,6 @@ public:
 	// destructor
 	~g_memory_handle() NOEXP;
 
-	// functions
-	INLINE void* pointer() NOEXP { return this->ptr; }
-	INLINE void  set_pointer(void* new_pointer) NOEXP { this->ptr = new_pointer; }
-
 }; // class g_memory_handle end
 
 
@@ -132,9 +128,11 @@ class memory_handle {
 private:
 	FRIENDS_TO_MEMORY_HANDLE();
 
-	// this for fast look-up and memory allocation/deallocation
+	// internal variables for fast memory management
 	u8  _block_index_ = (u8)-1;
 	u32 _register_index_ = (u32)-1;
+	u32 _magic_ = NULL;
+	core::dynamic_allocator* allocator; // allocator of this memory
 
 	void* ptr = nullptr;
 public:
@@ -150,8 +148,8 @@ public:
 	// functions
 	INLINE void* pointer() NOEXP { return this->ptr; }
 	INLINE void  set_pointer(void* new_pointer) NOEXP { this->ptr = new_pointer; }
-	INLINE u8  block_index() NOEXP { return this->_block_index_; }
-	INLINE u32 register_index() NOEXP { return this->_register_index_; }
+	INLINE u8    block_index() NOEXP { return this->_block_index_; }
+	INLINE u32   register_index() NOEXP { return this->_register_index_; }
 
 }; // class g_memory_handle end
 

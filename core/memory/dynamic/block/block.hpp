@@ -23,14 +23,15 @@ DLL_API_CLASS memory_block {
 	private:
 		core::atomic_lock lock;
 
+		g_memory_handle handle;
 		byte* start = nullptr; // block start
 		byte* end   = nullptr; // block end
 		byte* seek  = nullptr; // current free spot
 		u64   block_size  = 0; // block memory size in bytes
 
 	#ifdef DEBUG
-		id16  block_id  = 0;
-		u8    block_tag = 0; // memory_block usage
+		DEBUG_ONLY id16 block_id = 0;
+		DEBUG_ONLY subsystem_memory_tag block_tag; // memory_block usage
 	#endif
 
 		/*
@@ -41,13 +42,12 @@ DLL_API_CLASS memory_block {
 		core::memory_registry free_list;   // list of the current free/avalible areas in block
 	
 	public:
-
 		static const u64 min_allowed_size =   64 KB;
 		static const u64 max_allowed_size = 1024 MB;
 
 		// constructor
 		memory_block( ) NOEXP = default;
-		memory_block(u32 size , u32 max_allowed_allocations , u8 memory_tag) NOEXP;
+		memory_block(u32 size , u32 max_allowed_allocations , subsystem_memory_tag tag) NOEXP;
 		
 		// destructor
 		~memory_block() NOEXP;

@@ -24,6 +24,7 @@ namespace core {
 	*/
 	DLL_API_CLASS memory_registry {
 	private:
+		g_memory_handle    handle;
 		memory_allocation* list = nullptr; // registry memory
 
 		u32 size     = 0; // list size in byte
