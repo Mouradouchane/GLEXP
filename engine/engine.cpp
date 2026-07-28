@@ -10,15 +10,14 @@
 #include <chrono>
 #include <thread>
 
-#define  GLFW_INCLUDE_NONE
+#define GLFW_INCLUDE_NONE
 #include "libs/glfw/glfw3.h"
 #include "libs/glew/glew.h"
 
-#include "core/logger/logger.hpp"
 #include "core/assert.hpp"
+#include "core/logger/logger.hpp"
 #include "core/memory/memory.hpp"
-#include "core/memory/memory_heap.hpp"
-#include "core/data_structres/hashmaps/hash_map.hpp"
+#include "core/memory/dynamic/dynamic_allocator.hpp"
 
 #include "engine/graphics/glerror_debug.hpp"
 #include "engine/config/config.hpp"
@@ -33,7 +32,7 @@
 namespace engine {
 
 	bool running = true;
-	bool is_init = falase;
+	bool is_init = false;
 
 	// todo: add more variables/configs
 }

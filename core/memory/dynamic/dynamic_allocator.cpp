@@ -399,7 +399,7 @@ INLINE u8 dynamic_allocator::add_new_block(u32 target_size) NOEXP{
         if (this->_blocks_status_[this->_blocks_count_] == false) {
             u8 index = this->_blocks_count_;
 
-            new (this->_blocks_ + index) core::memory_block(block_size, this->_blocks_max_allocations_ , (u8)this->_tag_);
+            new (this->_blocks_ + index) core::memory_block(block_size, this->_blocks_max_allocations_ , this->_tag_);
 
             this->_blocks_status_[index] = true;
             this->_size_ += block_size;

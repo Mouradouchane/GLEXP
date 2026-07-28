@@ -1,3 +1,4 @@
+#if 0
 #pragma once
 
 #ifndef CONFIG_HPP
@@ -5,6 +6,10 @@
 
 #include <string>
 #include "core/status/status.hpp"
+
+/*
+	todo: refactor all of this
+*/
 
 namespace config {
 
@@ -49,4 +54,5 @@ namespace config {
 
 }
 
+#endif
 #endif

@@ -17,29 +17,27 @@
 
 #define _LOGGER_  _core_memory_block_alloc_logger_
 
-namespace core {
-	
 /*
 	constructor's
 */
 
-core::memory_block::memory_block(u32 size , u32 max_allowed_allocations, subsystem_memory_tag tag) NOEXP {
+core::memory_block::memory_block(u64 size , u32 max_allowed_allocations, subsystem_memory_tag tag) NOEXP {
 
-	if (size < memory_block::min_allowed_size || size > memory_block::max_allowed_size) {
-		CORE_FATAL(0, MEMORY_BLOCK_NOT_ALLOWED_SIZE, size, memory_block::min_allowed_size, memory_block::max_allowed_size);
+	if (memory_block::min_allowed_size <= size <= memory_block::max_allowed_size) {
+		CORE_FATAL(
+			0, MEMORY_BLOCK_NOT_ALLOWED_SIZE, 
+			core::bytes_to_string(size) ,
+			core::bytes_to_string(memory_block::min_allowed_size), 
+			core::bytes_to_string(memory_block::max_allowed_size)
+		);
 		return;
 	}
 
-	subsystem_memory_tag mem_block_tag;
+	std::scoped_lock lc(this->lock);
 
 #ifdef DEBUG
 	this->block_tag = tag;
-	mem_block_tag   = tag;
-#else
-	mem_block_tag = core::subsystem_memory_tag::memory_system;
 #endif
-
-	std::scoped_lock lc(this->lock);
 
 	this->block_size = size;
 
@@ -47,12 +45,12 @@ core::memory_block::memory_block(u32 size , u32 max_allowed_allocations, subsyst
 	this->handle = core::memory::allocate(
 		g_memory_request{ 
 			.size = this->block_size,
-			.tag = mem_block_tag
+			.tag  = this->block_tag
 		}
 	);
 	
 	if (this->handle.response != allocator_response::success) {
-		CORE_FATAL(CORE_LOG_CONFIG_ALL, ALLOCATOR_FAILED, size, core::to_string(tag));
+		CORE_FATAL(CORE_LOG_CONFIG_ALL, ALLOCATOR_FAILED, core::bytes_to_string(size) , core::to_string(tag));
 		return;
 	}
 
@@ -75,7 +73,7 @@ core::memory_block::memory_block(u32 size , u32 max_allowed_allocations, subsyst
 	destructor
 */
 
-memory_block::~memory_block() NOEXP {
+core::memory_block::~memory_block() NOEXP {
 	
 	// lock memory block
 	id32 id = this->lock.wait_for_lock();
@@ -99,7 +97,10 @@ memory_block::~memory_block() NOEXP {
 		this->end   = nullptr;
 	}
 
-	CORE_DEBUG(0, "memory_block is destructed , {} usage , size {}bytes .", this->block_tag, this->block_size);
+	CORE_DEBUG(
+		0, "memory_block is destructed , {} usage , size {}bytes .", 
+		core::to_string(this->block_tag), core::bytes_to_string(this->block_size)
+	);
 
 	this->lock.release(id);
 }
@@ -115,10 +116,7 @@ memory_handle core::memory_block::allocate(memory_request const& request) NOEXP 
 
 	// if the block is busy at the moment
 	if (this->lock.is_locked()) {
-
-		return memory_handle{
-			.response = allocator_response::busy
-		};
+		return memory_handle(allocator_response::busy,-1,-1,nullptr);
 	}
 
 	// lock the block
@@ -135,10 +133,7 @@ memory_handle core::memory_block::allocate(u32 size, u32 alignement, memory_tag 
 
 	// if the block is busy at the moment
 	if (this->lock.is_locked()) {
-
-		return memory_handle{
-			.response = allocator_response::busy
-		};
+		return memory_handle(allocator_response::busy, -1, -1, nullptr);
 	}
 
 	// lock the block
@@ -146,7 +141,10 @@ memory_handle core::memory_block::allocate(u32 size, u32 alignement, memory_tag 
 
 	// try allocate
 	memory_handle handle;
-	this->internal_allocate(memory_request{ size, alignement , tag }, handle);
+	this->internal_allocate(
+		memory_request{ .size = size, .alignement = alignement , .tag = tag }, 
+		handle
+	);
 
 	return handle;
 }
@@ -160,16 +158,9 @@ memory_handle_2 core::memory_block::allocate_tow(
 
 	// if memory block is busy at the moment
 	if (this->lock.is_locked()) {
-		handle_1 = {
-			.response = allocator_response::busy,
-		};
-		handle_2 = {
-			.response = allocator_response::busy,
-		};
-
-		return memory_handle_2{ 
-			handle_1,
-			handle_2
+		return memory_handle_2 { 
+			memory_handle(allocator_response::busy, -1, -1, nullptr),
+			memory_handle(allocator_response::busy, -1, -1, nullptr)
 		};
 	}
 
@@ -180,7 +171,9 @@ memory_handle_2 core::memory_block::allocate_tow(
 
 	u32 current_free_memory = (this->seek < this->end) ? u32(this->end - this->seek) : 0u;
 
-	// 1- try linear-allocation "fast"
+	/*
+		1 - try "linear-allocation" if possible
+	*/ 
 	if ((request_1.size + request_2.size) <= current_free_memory) {
 
 		// allocate 1 from seek
@@ -196,160 +189,104 @@ memory_handle_2 core::memory_block::allocate_tow(
 		this->seek += request_2.size;
 
 		// register the allocation
-		u32 result_1 = this->active_list.insert(pointer_1, request_1.size, request_1.tag);
-		u32 result_2 = this->active_list.insert(pointer_2, request_2.size, request_2.tag);
+		u32 reg_index_1 = this->active_list.insert(pointer_1, request_1.size, request_1.tag);
+		u32 reg_index_2 = this->active_list.insert(pointer_2, request_2.size, request_2.tag);
 
-	#ifdef DEBUG
-		if (result_1 >= this->active_list.get_capacity()) {
-			CORE_ERROR(CORE_LOG_CONFIG_ALL, "memory_block register failed to insert new registry in linear-allocation !");
+		// check registry insertion
+		if (reg_index_1 >= this->active_list.get_capacity() || reg_index_2 >= this->active_list.get_capacity() ) {
+			CORE_ERROR(
+				CORE_LOG_CONFIG_ALL,"memory_block register failed to insert new registry in linear-allocation !"
+			);
+
+			// cancel allocation
+			this->active_list.cut(reg_index_1);
+			this->active_list.cut(reg_index_2);
+
+			return memory_handle_2 {
+				memory_handle(allocator_response::busy, -1, -1, nullptr),
+				memory_handle(allocator_response::busy, -1, -1, nullptr)
+			};
 		}
 
-		if (result_2 >= this->active_list.get_capacity()) {
-			CORE_ERROR(CORE_LOG_CONFIG_ALL, "memory_block register failed to insert new registry in linear-allocation !");
-		}
-	#endif
 
 		// give back memory
-		handle_1 = {
-			.response = allocator_response::success,
-			.ptr = pointer_1,
-			.register_index = result_1
-		};
-
-		handle_2 = {
-			.response = allocator_response::success,
-			.ptr = pointer_2,
-			.register_index = result_2
-		};
-
 		return memory_handle_2{
-			handle_1 ,
-			handle_2
+			memory_handle(allocator_response::success, 0, reg_index_1, pointer_1),
+			memory_handle(allocator_response::success, 0, reg_index_2, pointer_2)
 		};
 	}
 
-	// if active list registry is full
+	/*
+		if active list registry is full
+	*/ 
 	if (this->active_list.get_allocations_count() >= (this->active_list.get_capacity() - 2)) {
-		// todo: change this error message to MEMORY_BLOCK_FAILED_TO_REGISTER_ALLOCATION
-		CORE_WARN(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_OUT_OF_MEMORY, request_1.size + request_2.size);
-
-		handle_1 = {
-			.response = allocator_response::register_full,
-		};
-		handle_2 = {
-			.response = allocator_response::register_full,
-		};
-
-		return memory_handle_2{
-			handle_1,
-			handle_2
-		};
-	}
-
-	// 2- try to allocate from the biggest allocation in free_list "a little bit slower"
-	core::memory_allocation_info allocation = this->free_list.get_biggest_allocation(request_1.size + request_2.size);
-
-	u32 index_1 = 0;
-	u32 index_2 = 0;
-
-	this->handle_registry_2(&pointer_1, &pointer_2, allocation, request_1, request_2 , index_1 , index_2);
-
-	if (pointer_1 && pointer_2) {
-
-		handle_1 = {
-			.response = allocator_response::success,
-			.ptr = pointer_1,
-			.register_index = index_1
-		};
-		handle_2 = {
-			.response = allocator_response::success,
-			.ptr = pointer_2,
-			.register_index = index_2
-		};
+		CORE_ERROR(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_FAILED_TO_REGISTER_ALLOCATION);
 
 		return memory_handle_2 {
-			handle_1,
-			handle_2
+			memory_handle(allocator_response::register_full, -1, -1, nullptr),
+			memory_handle(allocator_response::register_full, -1, -1, nullptr)
+		};
+	}
+
+	/*
+		2 - try to allocate from free list
+	*/ 
+	memory_allocation_info allocation = this->free_list.get_allocation_with_size(request_1.size + request_2.size);
+
+	u32 reg_index_1 = -1;
+	u32 reg_index_2 = -1;
+	u32 reg_cap = this->active_list.get_capacity();
+
+	this->handle_registry_2(&pointer_1, &pointer_2, allocation, request_1, request_2 , reg_index_1, reg_index_2);
+
+	if (reg_index_1 < reg_cap && reg_index_2 < reg_cap) {
+		return memory_handle_2{
+			.handle_1 = memory_handle(allocator_response::success, 0, reg_index_1, pointer_1),
+			.handle_2 = memory_handle(allocator_response::success, 0, reg_index_2, pointer_2)
 		};
 	}
 	else {
 		// if one allocation failed "roll-back"
-		if (pointer_1) this->active_list.remove(pointer_1);
-		if (pointer_2) this->active_list.remove(pointer_2);
+		this->active_list.cut(reg_index_1);
+		this->active_list.cut(reg_index_2);
 	}
 
-	// 3- failed to find empty place for allocation because block is either fragmeneted or full .
+	/*
+		3 - failed to find empty place for allocation because block is either fragmeneted or full .
+	*/ 
+	
 	// todo[IMPORTANT]: put this in different thread ---> pass it to the work_system .
 	this->process_free_list();
 
 	return memory_handle_2 {
-			memory_handle{
-				.response = allocator_response::fragmeneted 
-			},
-			memory_handle{
-				.response = allocator_response::fragmeneted 
-			}
+		.handle_1 = memory_handle(allocator_response::fragmeneted, -1, -1, nullptr),
+		.handle_2 = memory_handle(allocator_response::fragmeneted, -1, -1, nullptr)
 	};
+
 }
 
 // faster
-bool core::memory_block::deallocate(memory_handle handle) NOEXP {
+bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 	
-	core::memory_allocation allocation = this->active_list.get_info(handle.register_index);
-
-	if (allocation.ptr == handle.ptr) {
-		this->active_list.remove(handle.register_index);
-		
-		this->free_list.insert(allocation.ptr, allocation.size, 0);
-	
-		CORE_DEBUG(0, "core::dynamic_allocator successfully deallocate : memory={} , size={} .", core::pointer_to_hex_string(allocation.ptr) , allocation.size);
-		return true;
-	}
-
-	CORE_WARN_D("core::dynamic_allocator failed to deallocate : memory={} , size={} .", core::pointer_to_hex_string(allocation.ptr), allocation.size);
-	return false;
-}
-
-bool core::memory_block::deallocate(void* pointer) NOEXP {
-	core::atomic_scope_lock scope_lock(this->lock);
-
-	if ((pointer < this->start) && (pointer > this->end) ) {
-		CORE_WARN(
-			CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_OUT_OF_RANGE_POINTER ,
-			core::pointer_to_hex_string(pointer),
-			core::pointer_to_hex_string(this->start),
-			core::pointer_to_hex_string(this->end)
-		);
-
-		return false;
-	}
-
-	// cut the allocation from active list
-	core::memory_allocation allocation = this->active_list.cut(pointer);
+	memory_allocation allocation = this->active_list.cut(handle.ptr , handle._register_index_);
 
 	if (allocation.ptr) {
-
-	// put that allocation in free list
-	#ifdef DEBUG
-		this->free_list.insert(allocation.ptr, allocation.size, allocation.tag);
-	#else
-		this->free_list.insert(allocation.ptr, allocation.size, 0);
-	#endif
-
+		this->free_list.insert(allocation);
+	
+		CORE_DEBUG(
+			0, "memory_block deallocate memory at {} with size {} used for {} .", 
+			core::pointer_to_hex_string(allocation.ptr) , core::bytes_to_string(allocation.size) , 
+			core::to_string(allocation.tag)
+		);
+	
 		return true;
 	}
-	else {
-
-		CORE_WARN(
-			CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_OUT_OF_RANGE_POINTER,
-			core::pointer_to_hex_string(pointer),
-			core::pointer_to_hex_string(this->start),
-			core::pointer_to_hex_string(this->end)
-		);
-
-		return false;
-	}
-
+	// else failed to deallocate
+	CORE_WARN_D(
+		"memory_block failed to deallocate memory at {} passed in memory_handle !", 
+		core::pointer_to_hex_string(handle.ptr)
+	);
+	return false;
 }
 
 
@@ -358,33 +295,34 @@ bool core::memory_block::is_busy() NOEXP {
 }
 
 
-u32 core::memory_block::size() NOEXP {
+u64 core::memory_block::size() NOEXP {
 	return this->block_size;
 }
 
-u32 core::memory_block::free_memory() NOEXP {
+u64 core::memory_block::free_memory() NOEXP {
 	core::atomic_scope_lock scope_lock(this->lock);
 
 	return this->free_list.get_allocations_size();
 }
 
-u32 core::memory_block::allocated_memory() NOEXP {
+u64 core::memory_block::allocated_memory() NOEXP {
 	core::atomic_scope_lock scope_lock(this->lock);
 
 	return this->active_list.get_allocations_size();
 }
 
-core::memory_allocation core::memory_block::get_allocation_info(memory_handle handle) NOEXP {
+memory_allocation core::memory_block::get_allocation_info(memory_handle const& handle) NOEXP {
 
-	if (handle.ptr >= this->start && handle.ptr <= this->end) {
-		return this->active_list.get_info(handle.register_index);
-	}
+	memory_allocation info = this->active_list.get_allocation_info(handle._register_index_);
+
+	if (handle.ptr == info.ptr) return info;
 	
 	CORE_WARN(
-		CORE_LOG_CONFIG_ALL, "invalid handle passed to core::memory_block , handle ptr={} , block_index={}" , 
-		core::pointer_to_hex_string(handle.ptr) , handle.block_index
+		CORE_LOG_CONFIG_ALL, 
+		"invalid handle passed to memory_block.get_allocation_info function , handle not matching with what in registry !" , 
 	);
-	return core::memory_allocation{ };
+
+	return memory_allocation{ };
 }
 
 /*
@@ -392,13 +330,13 @@ core::memory_allocation core::memory_block::get_allocation_info(memory_handle ha
 */
 
 INLINE u32 core::memory_block::handle_registry (
-	void** ptr, core::memory_allocation_info const& allocation, memory_request const& request
+	void** ptr, memory_allocation_info const& allocation, memory_request const& request
 ) NOEXP {
 
 	if (allocation.ptr) {
 
 		// remove from free_list
-		this->free_list.remove(allocation.index);
+		this->free_list.cut(allocation.index);
 
 		// "allocate" by move it to active_list 
 		u32 index = this->active_list.insert(allocation.ptr, request.size, request.tag);
@@ -422,7 +360,7 @@ INLINE u32 core::memory_block::handle_registry (
 INLINE void core::memory_block::handle_registry_2(
 	void** ptr_1,
 	void** ptr_2,
-	core::memory_allocation_info const& allocation,
+	memory_allocation_info const& allocation,
 	memory_request const& request_1,
 	memory_request const& request_2,
 	u32& index_1,
@@ -438,12 +376,12 @@ INLINE void core::memory_block::handle_registry_2(
 		index_1 = this->active_list.insert(allocation.ptr, request_1.size, request_1.tag);
 		index_2 = this->active_list.insert((byte*)allocation.ptr + request_1.size, request_2.size, request_2.tag);
 
-		// if memory left but it back in free_list
+		// if memory left put it back in free_list
 		if ((request_1.size + request_2.size) < allocation.size) {
 			this->free_list.insert(
 				(byte*)allocation.ptr + (request_1.size + request_2.size),
 				allocation.size - (request_1.size + request_2.size),
-				0
+				memory_tag::unkown
 			);
 		}
 
@@ -464,8 +402,18 @@ INLINE void core::memory_block::internal_allocate(
 	memory_request const& request, memory_handle& handle
 ) NOEXP {
 
-	void* pointer = nullptr;
+	// check if registry is full
+	if (this->active_list.get_allocations_count() >= (this->active_list.get_capacity() - 1)) {
+		CORE_WARN(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_IS_REGISTRY_FULL, this->active_list.get_capacity());
 
+		handle.ptr = nullptr;
+		handle.response = allocator_response::register_full;
+		handle._register_index_ = -1;
+
+		return;
+	}
+
+	void* pointer = nullptr;
 	u32 current_free_memory = (this->seek < this->end) ? u32(this->end - this->seek) : 0u;
 
 	// 1- try linear-allocation "fast"
@@ -478,39 +426,32 @@ INLINE void core::memory_block::internal_allocate(
 		this->seek += request.size;
 
 		// register the allocation
-		u32 result = this->active_list.insert(pointer, request.size, request.tag);
+		u32 reg_index = this->active_list.insert(pointer, request.size, request.tag);
 
-	#ifdef DEBUG
-		if (result >= this->active_list.get_capacity()) {
-			CORE_ERROR(CORE_LOG_CONFIG_ALL, "memory_block register failed to insert new registry in linear-allocation !");
+		if (reg_index >= this->active_list.get_capacity()) {
+			CORE_ERROR(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_IS_REGISTRY_FULL , this->active_list.get_capacity());
+			// give back memory
+			handle.response = allocator_response::register_full;
+			handle.ptr = nullptr;
+			handle._register_index_ = -1;
 		}
-	#endif
-
-		// give back memory
-		handle.ptr = pointer;
-		handle.register_index = result;
-		handle.response = allocator_response::success;
-
-		return;
-	}
-
-	// if active list registry is full
-	if (this->active_list.get_allocations_count() >= (this->active_list.get_capacity() - 1)) {
-		CORE_WARN(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_OUT_OF_MEMORY, request.size);
-
-		handle.ptr = nullptr;
-		handle.response = allocator_response::register_full;
+		else {
+			// give back memory
+			handle.response = allocator_response::success;
+			handle.ptr = pointer;
+			handle._register_index_ = reg_index;
+		}
 
 		return;
 	}
 
-	// 2- try to allocate from the biggest allocation in free_list "a little bit slower"
-	core::memory_allocation_info allocation = this->free_list.get_biggest_allocation(request.size);
+	// 2- try to find empty allocation in free list , "first fit"
+	memory_allocation_info allocation = this->free_list.get_allocation_with_size(request.size);
 	u32 index = this->handle_registry(&pointer, allocation, request);
 
 	if (pointer && (index < this->active_list.capacity)) {
 		handle.ptr = pointer;
-		handle.register_index = index;
+		handle._register_index_ = index;
 		handle.response = allocator_response::success;
 
 		return;
@@ -532,8 +473,6 @@ void core::memory_block::process_free_list() NOEXP {
 	
 	this->free_list.merge_free_areas();
 }
-
-} // namespace core end
 
 #endif
 #endif

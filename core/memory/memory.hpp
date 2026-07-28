@@ -40,7 +40,10 @@
 		DLL_API g_memory_handle   friend core::memory::allocate(g_memory_request const& request) NOEXP; \
 		DLL_API g_memory_handle_2 friend core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP; \
 		DLL_API void              friend core::memory::deallocate(g_memory_handle const& handle) NOEXP; \
-		friend  DLL_API_CLASS     core::dynamic_allocator;
+		friend  DLL_API_CLASS     core::dynamic_allocator;\
+		friend  DLL_API_CLASS     core::memory_block;\
+		friend  DLL_API_CLASS     core::memory_registry;\
+
 
 struct   memory_request; // for other allocator
 struct g_memory_request; // for global allocator
@@ -54,6 +57,8 @@ struct g_memory_handle_2; // for global allocator
 namespace core {
 	
 	DLL_API_CLASS dynamic_allocator;
+	DLL_API_CLASS memory_block;
+	DLL_API_CLASS memory_registry;
 
 	/*
 		core::memory is a global allocator , it's just a wrapper used by other allocators like: pool, arena , ...
@@ -131,7 +136,7 @@ private:
 	// internal variables for fast memory management
 	u8  _block_index_ = (u8)-1;
 	u32 _register_index_ = (u32)-1;
-	u32 _magic_ = NULL;
+	u32 _magic_ = NULL; // for "future" reallocation
 	core::dynamic_allocator* allocator; // allocator of this memory
 
 	void* ptr = nullptr;
@@ -174,7 +179,7 @@ struct g_memory_request {
 // used for dynamic allocator
 struct memory_request {
 	u64 size;
-	u16 alignement;
+	u64 alignement;
 	DEBUG_ONLY memory_tag tag;
 };
 

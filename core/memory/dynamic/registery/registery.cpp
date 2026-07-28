@@ -84,7 +84,7 @@ memory_registry::~memory_registry() NOEXP {
 	registry public functions
 */
 
-u32 memory_registry::insert(void* ptr, u32 size, u8 tag) NOEXP {
+u32 memory_registry::insert(void* ptr, u32 size, memory_tag tag) NOEXP {
 
 	if (this->allocations_count < this->capacity) {
 
@@ -117,59 +117,61 @@ u32 memory_registry::insert(void* ptr, u32 size, u8 tag) NOEXP {
 
 }
 
-// faster O(1)
-bool memory_registry::remove(u32 index) NOEXP {
-
-	if (index >= this->size) return false;
-
-	this->list[index] = memory_allocation{};
-	return true;
+u32 memory_registry::insert(memory_allocation allocation) NOEXP {
+	return this->insert(allocation.ptr, allocation.size, allocation.tag);
 }
 
-bool memory_registry::remove(void* ptr) NOEXP {
-
-	// hash then search for ptr
-	u32 index = this->hash_pointer(ptr);
-	u32 i = this->search(index, ptr);
-
-	if (i < this->capacity) {
-		this->allocations_count -= 1;
-		this->allocations_size  -= this->list[i].size;
-
-		this->list[i].clear();
-
-		return true;
-	}
-	else { // ptr not found
-		CORE_WARN(CORE_LOG_CONFIG_ALL, REGISTRY_PTR_NOT_FOUND, core::pointer_to_hex_string(ptr));
-		return false;
-	}
-
+void memory_registry::remove(u32 index) NOEXP {
+	if (index < this->size) this->list[index] = memory_allocation{};
 }
 
+memory_allocation memory_registry::cut(void* ptr, u32 index) NOEXP {
 
-memory_allocation memory_registry::cut(void* ptr) NOEXP {
+	memory_allocation alloc = {0};
 
-	// hash then search for ptr
-	u32 index = this->hash_pointer(ptr);
-	u32 i = this->search(index, ptr);
+	if (index < this->capacity) {
 
-	if (i < this->capacity) {
-		memory_allocation alloc = this->list[i];
+		if(this->list[index].ptr == ptr) {
 
-		this->allocations_count -= 1;
-		this->allocations_size  -= this->list[i].size;
+			alloc = this->list[index];
 
-		this->list[i].clear();
+			this->allocations_count -= 1;
+			this->allocations_size  -= this->list[index].size;
+
+			this->list[index] = {0};
+		}
 
 		return alloc;
 	}
 	else { // ptr not found
-		CORE_WARN(CORE_LOG_CONFIG_ALL, REGISTRY_PTR_NOT_FOUND, core::pointer_to_hex_string(ptr));
-		return memory_allocation{ 0 };
+		CORE_ERROR(CORE_LOG_CONFIG_ALL, REGISTRY_PTR_NOT_FOUND, core::pointer_to_hex_string(ptr));
+		return alloc;
 	}
 
 }
+
+memory_allocation memory_registry::cut(u32 index) NOEXP {
+
+	memory_allocation alloc = { 0 };
+
+	if (index < this->capacity) {
+
+		alloc = this->list[index];
+
+		this->allocations_count -= 1;
+		this->allocations_size  -= this->list[index].size;
+
+		this->list[index] = { 0 };
+	
+		return alloc;
+	}
+	else { // ptr not found
+		CORE_ERROR(CORE_LOG_CONFIG_ALL, CORE_INDEX_OUT_OF_RANGE ,index , "registery");
+		return alloc;
+	}
+
+}
+
 
 u32 memory_registry::exist(void* ptr) NOEXP {
 	return this->search(this->hash_pointer(ptr), ptr);
@@ -192,15 +194,16 @@ u32 memory_registry::get_allocations_size()  NOEXP {
 }
 
 // note: this could be a disaster on preformance level because it O(N)
-memory_allocation_info memory_registry::get_allocation(u32 target_size) NOEXP {
+memory_allocation_info memory_registry::get_allocation_with_size(u32 target_size) NOEXP {
 
 	for (u32 i = 0; i < this->capacity; i++) {
 
 		if (this->list[i].size >= target_size) {
 			return memory_allocation_info { 
-				this->list[i].ptr,
-				this->list[i].size,
-				i
+				.ptr   = this->list[i].ptr,
+				.size  = this->list[i].size,
+				.index = i,
+				.tag   = this->list[i].tag
 			};
 		}
 
@@ -209,51 +212,16 @@ memory_allocation_info memory_registry::get_allocation(u32 target_size) NOEXP {
 	return memory_allocation_info{ 0 };
 }
 
-memory_allocation_info memory_registry::get_biggest_allocation(u32 target_size) NOEXP {
-
-	if (this->biggest_allocation != this->capacity) {
-
-		memory_allocation allocation = this->list[this->biggest_allocation];
-
-		if (allocation.size >= target_size) {
-			memory_allocation_info alloc{ allocation.ptr , allocation.size , this->biggest_allocation };
-			this->biggest_allocation = this->capacity;
-			return alloc;
-		}
-
-	}
-	
-	return memory_allocation_info{ 0 };
-}
-
-memory_allocation memory_registry::get_info(void* pointer) NOEXP {
-
-	u32 hash  = this->hash_pointer(pointer);
-	u32 index = this->search(hash, pointer);
+// O(1) faster
+memory_allocation memory_registry::get_allocation_info(u32 index) NOEXP {
 
 	if (index < this->capacity) {
 		return this->list[index];
 	}
-	
+
 	return memory_allocation {
 		.ptr  = nullptr,
-		.size = 0,
-		.tag  = (u8)-1
-	};
-
-}
-
-// O(1) faster
-memory_allocation memory_registry::get_info(u32 index) NOEXP {
-
-	if (index < this->capacity) {
-		return this->list[index];
-	}
-
-	return memory_allocation{
-		.ptr = nullptr,
-		.size = 0,
-		.tag = (u8)-1
+		.size = 0
 	};
 }
 
