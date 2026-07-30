@@ -8,6 +8,7 @@
 */
 #define CORE_BUG  " [BUG] "
 #define CORE_INLD " [INVALID] "
+#define CORE_TODO " [TODO] "
 
 #define CORE_SELF_ASSIGN_BUG      CORE_BUG "attempt to assign {} to it self {} !"
 #define CORE_SRC_BIGGER_THAN_DEST CORE_BUG "source {} bigger than destination {} !"
@@ -19,8 +20,8 @@
 #define CORE_WARNING_OUT_OF_BUDGET  "{} is out of his budget {} ."
 
 // macros for todo
-#define CORE_TODO_IMPLEMENT "todo: function called before it implemented !"
-#define CORE_TODO_ADD_SUPPORT "todo: add support for {} ."
+#define CORE_TODO_IMPLEMENT   CORE_TODO " function called before it implemented !"
+#define CORE_TODO_ADD_SUPPORT CORE_TODO " add support for {} ."
 
 /*
 	NOTE: if youre not using visual studio or windows 
@@ -51,8 +52,7 @@
 	#define FUNCTION_DEFINITION_FULL __PRETTY_FUNCTION__
 #endif
 
-#define FUNCTION_DEFINITION __FUNCTION__ 
-
+#define FUNCTION_DEFINITION __FUNCTION__
 
 // current arch x64 or x32 maybe other arch later 
 #if defined(_WIN64) || defined(WIN64) || defined(__x86_64__) || defined(_____LP64_____)
