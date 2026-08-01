@@ -4,6 +4,9 @@
 #ifndef CORE_TIMER_CPP
 #define CORE_TIMER_CPP
 
+#include <unordered_map>
+#include <array>
+
 #include "timer.hpp"
 #include "core/logger/logger.hpp"
 
@@ -15,14 +18,16 @@
 
 #define _LOGGER_  _core_timer_logger_ 
 
+#define MAX_TIMERS_REGISTERS 255
+std::array<std::unordered_map<u32, timer>, MAX_TIMERS_REGISTERS> timers_registery();
+
 /*
 	constructor
 */
-timer::timer(string const& name, timer_tag tag) NOEXP {
-#ifdef DEBUG
-	this->name = name;
-	this->tag  = tag;
-#endif
+timer::timer(string const& timer_name, u32 timer_id, timer_tag timer_tag_) NOEXP {
+	this->tag  = timer_tag_;
+	this->id   = timer_id;
+	this->name = timer_name;
 
 	this->start_point = GET_STEADY_TIME();
 }
@@ -36,7 +41,7 @@ timer::~timer() NOEXP {
 
 	// todo: save the result in timer's registery
 
-	CORE_TRACE("{}:{}", elapse, this->name);
+	CORE_TRACE("{} : {}", elapse, this->name);
 }
 
 /*
@@ -75,7 +80,6 @@ u32 timer::seconds() NOEXP{
 
 
 string core::time_to_string(timer const& t) NOEXP {
-
 	
 }
 

@@ -13,11 +13,14 @@
 	few macros for timers
 */ 
 #ifdef DEBUG
-	#define TIMER_THIS() timer __t__(FUNCTION_DEFINITION , _TIMER_TAG_);
+	#define EXECTION_TIME_SCOPE() \
+			static u32 __timer__id__ = timers_registery.get_id(_TIMER_TAG_); \
+			timer __t__(FUNCTION_DEFINITION , __timer__id__ , _TIMER_TAG_);
 
-	#define TIMER(SOME_CODE , TIMER_TAG) \
+	#define EXECTION_TIME(SOME_CODE , TIMER_TAG) \
 			{\
-				timer __t__(FUNCTION_DEFINITION , TIMER_TAG); \
+				u32 __timer__id__ = timers_registery.get_id(_TIMER_TAG_); \
+				timer __t__(FUNCTION_DEFINITION , __timer__id__ , TIMER_TAG); \
 				SOME_CODE; \
 			}
 #else 
@@ -77,17 +80,13 @@ DLL_API_CLASS timer {
 
 private:
 	time_point start_point;
-
-	u64 index = (u64)-1;
-
-#ifdef DEBUG
-	string    name;
-	timer_tag tag = timer_tag::unkown;
-#endif
+	timer_tag  tag = timer_tag::unkown;
+	u32        id  = (u32)-1;
+	string     name;
 
 public:
 	// constructor's
-	timer(string const& name, timer_tag tag) NOEXP;
+	timer(string const& timer_name, u32 timer_id, timer_tag timer_tag_) NOEXP;
 
 	// destructor
 	~timer() NOEXP;
@@ -103,6 +102,14 @@ public:
 
 }; // class timer end
 
+
+namespace timers_registery {
+
+	bool  set(u32 id, timer const& t) NOEXP;
+	timer get(u32 id) NOEXP;
+	u32   get_id(string const& unique_name, timer_tag tag) NOEXP;
+
+};
 
 namespace core {
 
