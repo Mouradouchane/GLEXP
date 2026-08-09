@@ -87,7 +87,7 @@ namespace core {
 	/*
 		to_string functions to convert memory tags and units to strings
 	*/
-	DLL_API string to_string(memory_tag tag) NOEXP;
+	DLL_API string to_string(memory_tag _tag_) NOEXP;
 	DLL_API string to_string(subsystem_memory_tag section_tag) NOEXP;
 	DLL_API string bytes_to_string(u64 bytes_count) NOEXP;
 } 
@@ -117,7 +117,7 @@ public:
 	// constructor's
 	g_memory_handle() NOEXP = default;
 	g_memory_handle(
-		allocator_response response, u64 size, subsystem_memory_tag tag, void* pointer, bool deallocate_at_destruction_time = false
+		allocator_response response, u64 size, subsystem_memory_tag _tag_, void* pointer, bool deallocate_at_destruction_time = false
 	) NOEXP;
 
 	// destructor
@@ -173,14 +173,14 @@ struct g_memory_handle_2 {
 // used by memory allocator
 struct g_memory_request {
 	u64 size;
-	DEBUG_ONLY subsystem_memory_tag tag;
+	DEBUG_ONLY subsystem_memory_tag _tag_;
 };
 
 // used for dynamic allocator
 struct memory_request {
 	u64 size;
 	u64 alignement;
-	DEBUG_ONLY memory_tag tag;
+	DEBUG_ONLY memory_tag _tag_;
 };
 
 #endif

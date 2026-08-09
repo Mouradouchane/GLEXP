@@ -16,7 +16,7 @@ namespace core {
 
 	struct dynamic_allocator_configs {
 		DEBUG_ONLY string name;
-		DEBUG_ONLY subsystem_memory_tag tag;
+		DEBUG_ONLY subsystem_memory_tag _tag_;
 		
 		u64 memory_budget; // max memory this allocator can reach and operates on
 
@@ -89,8 +89,8 @@ namespace core {
 			dynamic_allocator public functions
 		*/
 
-		memory_handle allocate(u32 size, memory_tag tag = memory_tag::unkown) NOEXP;
-		memory_handle allocate(u32 size, u16 alignement = 0, memory_tag tag = memory_tag::unkown) NOEXP;
+		memory_handle allocate(u32 size, memory_tag _tag_ = memory_tag::unkown) NOEXP;
+		memory_handle allocate(u32 size, u16 alignement = 0, memory_tag _tag_ = memory_tag::unkown) NOEXP;
 		memory_handle allocate(memory_request request) NOEXP;
 
 		// allocate 2 memory chunks next to each other in one call
@@ -107,7 +107,7 @@ namespace core {
 		u64 current_memory_usage(memory_tag section_tag) NOEXP; // for specific section
 		
 		DEBUG_ONLY string const& name() NOEXP;
-		DEBUG_ONLY subsystem_memory_tag tag() NOEXP;
+		DEBUG_ONLY subsystem_memory_tag _tag_() NOEXP;
 
 	private: // helper functions
 		INLINE u8 add_new_block(u32 block_size) NOEXP;

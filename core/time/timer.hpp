@@ -13,19 +13,24 @@
 	few macros for timers
 */ 
 #ifdef DEBUG
-	#define EXECTION_TIME_SCOPE() \
-			static u32 __timer__id__ = timers_registery.get_id(_TIMER_TAG_); \
-			timer __t__(FUNCTION_DEFINITION , __timer__id__ , _TIMER_TAG_);
+	/*
+		note[IMPORTANT]: #define _THIS_CODE_TIMER_TAG_ timer_tag::"your_tag", in your file before using these macro
+	*/ 
+	#define TIMER_THIS_SCOPE() \
+			static u32 __timer__id__ = 0; \
+			if(__timer__id__ == 0) __timer__id__ = timers_registery.get_id_for_timer(_THIS_CODE_TIMER_TAG_); \
+			timer __t__(FUNCTION_DEFINITION , __timer__id__ , _THIS_CODE_TIMER_TAG_);
 
-	#define EXECTION_TIME(SOME_CODE , TIMER_TAG) \
+	#define TIMER_THIS_CODE(SOME_CODE) \
 			{\
-				u32 __timer__id__ = timers_registery.get_id(_TIMER_TAG_); \
-				timer __t__(FUNCTION_DEFINITION , __timer__id__ , TIMER_TAG); \
+				static u32 __timer__id__ = 0; \
+				if(__timer__id__  == 0) __timer__id__ = timers_registery.get_id_for_timer(_THIS_CODE_TIMER_TAG_); \
+				timer __t__(#SOME_CODE , __timer__id__ , _THIS_CODE_TIMER_TAG_); \
 				SOME_CODE; \
 			}
 #else 
-	#define TIMER_THIS()
-	#define TIMER(SOME_CODE , TIMER_TAG) SOME_CODE
+	#define TIMER_THIS_SCOPE()
+	#define TIMER_THIS_CODE(SOME_CODE) SOME_CODE ;
 #endif
 
 #define GET_STEADY_TIME()   std::chrono::steady_clock::now()
@@ -80,7 +85,7 @@ DLL_API_CLASS timer {
 
 private:
 	time_point start_point;
-	timer_tag  tag = timer_tag::unkown;
+	timer_tag  _tag_ = timer_tag::unkown;
 	u32        id  = (u32)-1;
 	string     name;
 
@@ -105,10 +110,12 @@ public:
 
 namespace timers_registery {
 
-	bool  set(u32 id, timer const& t) NOEXP;
-	timer get(u32 id) NOEXP;
-	u32   get_id(string const& unique_name, timer_tag tag) NOEXP;
+	u32 get_id_for_timer(timer_tag category) NOEXP;
 
+	bool save_timer(timer const& t) NOEXP;
+	timer get_timer(timer_tag category, u32 id) NOEXP;
+
+	timer* timers(timer_tag category) NOEXP;
 };
 
 namespace core {

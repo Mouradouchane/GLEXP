@@ -25,7 +25,7 @@ std::array<std::unordered_map<u32, timer>, MAX_TIMERS_REGISTERS> timers_register
 	constructor
 */
 timer::timer(string const& timer_name, u32 timer_id, timer_tag timer_tag_) NOEXP {
-	this->tag  = timer_tag_;
+	this->_tag_  = timer_tag_;
 	this->id   = timer_id;
 	this->name = timer_name;
 
