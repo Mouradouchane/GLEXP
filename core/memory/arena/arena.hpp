@@ -16,7 +16,7 @@ namespace core {
 		~memory_arena();
 
 		// public functions
-		void* allocate(u32 size , u8 tag) NOEXP;
+		void* allocate(u32 size , u8 _tag_) NOEXP;
 		void  deallocate(void* pointer)   NOEXP;
 
 		DEBUG_ONLY std::string arena_name() NOEXP;

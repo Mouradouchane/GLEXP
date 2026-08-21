@@ -61,7 +61,7 @@ dynamic_allocator::dynamic_allocator(core::dynamic_allocator_configs const& para
     
     // setup other variables
 #ifdef DEBUG
-    this->_tag_  = parameters.tag;
+    this->_tag_  = parameters._tag_;
     this->_name_ = parameters.name;
 #endif
 
@@ -156,32 +156,32 @@ memory_handle dynamic_allocator::allocate(memory_request request) NOEXP {
 
 }
 
-memory_handle dynamic_allocator::allocate(u32 size , memory_tag tag) NOEXP {
+memory_handle dynamic_allocator::allocate(u32 size , memory_tag _tag_) NOEXP {
 
     switch (this->_is_mt_) {
 
         case true  : { //  multi-thread allocation
-            return this->allocate_on_mt(memory_request{ .size = size, .alignement = 0, .tag = tag,}); 
+            return this->allocate_on_mt(memory_request{ .size = size, .alignement = 0, ._tag_ = _tag_,}); 
         } break; 
 
         case false : { // single-thread allocation
-            return this->allocate_on_st(memory_request{ .size = size, .alignement = 0, .tag = tag, }); 
+            return this->allocate_on_st(memory_request{ .size = size, .alignement = 0, ._tag_ = _tag_, }); 
         } break; 
 
     }
 
 }
 
-memory_handle dynamic_allocator::allocate(u32 size, u16 alignement, memory_tag tag) NOEXP {
+memory_handle dynamic_allocator::allocate(u32 size, u16 alignement, memory_tag _tag_) NOEXP {
 
     switch (this->_is_mt_) {
 
         case true: { //  multi-thread allocation
-            return this->allocate_on_mt(memory_request{ .size = size, .alignement = alignement, .tag = tag, });
+            return this->allocate_on_mt(memory_request{ .size = size, .alignement = alignement, ._tag_ = _tag_, });
         } break;
 
         case false: { // single-thread allocation
-            return this->allocate_on_st(memory_request{ .size = size, .alignement = alignement, .tag = tag, });
+            return this->allocate_on_st(memory_request{ .size = size, .alignement = alignement, ._tag_ = _tag_, });
         } break;
 
     }
@@ -323,7 +323,7 @@ string const& dynamic_allocator::name() NOEXP {
     return this->_name_;
 }
 
-subsystem_memory_tag dynamic_allocator::tag()  NOEXP {
+subsystem_memory_tag dynamic_allocator::_tag_()  NOEXP {
     return this->_tag_;
 }
 #else 
@@ -355,9 +355,9 @@ INLINE void core::dynamic_allocator::update_size_variables (
 
 #ifdef DEBUG
     // update section size
-    if ((u8)request.tag < MAX_MEMORY_TAGS) {
-        if(increment) this->_sections_[(u8)request.tag].fetch_add(request.size , MEMORY_ORDER_ACQUIRE);
-        else this->_sections_[(u8)request.tag].fetch_sub(request.size, MEMORY_ORDER_ACQUIRE);
+    if ((u8)request._tag_ < MAX_MEMORY_TAGS) {
+        if(increment) this->_sections_[(u8)request._tag_].fetch_add(request.size , MEMORY_ORDER_ACQUIRE);
+        else this->_sections_[(u8)request._tag_].fetch_sub(request.size, MEMORY_ORDER_ACQUIRE);
     }
 
     // update _min_ & _peak_

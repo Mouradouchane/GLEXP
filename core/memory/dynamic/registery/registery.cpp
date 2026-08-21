@@ -31,7 +31,7 @@ memory_registry::memory_registry() NOEXP {
 	this->handle = core::memory::allocate(
 		g_memory_request{
 			.size = this->size,
-			.tag = subsystem_memory_tag::memory_system
+			._tag_ = subsystem_memory_tag::memory_system
 		}
 	);
 	
@@ -53,7 +53,7 @@ memory_registry::memory_registry(u32 register_capacity) NOEXP {
 	this->handle = core::memory::allocate(
 		g_memory_request{
 			.size = this->size,
-			.tag = subsystem_memory_tag::memory_system
+			._tag_ = subsystem_memory_tag::memory_system
 		}
 	);
 
@@ -84,7 +84,7 @@ memory_registry::~memory_registry() NOEXP {
 	registry public functions
 */
 
-u32 memory_registry::insert(void* ptr, u32 size, memory_tag tag) NOEXP {
+u32 memory_registry::insert(void* ptr, u32 size, memory_tag _tag_) NOEXP {
 
 	if (this->allocations_count < this->capacity) {
 
@@ -94,7 +94,7 @@ u32 memory_registry::insert(void* ptr, u32 size, memory_tag tag) NOEXP {
 
 		if (i < this->capacity) {
 		#ifdef DEBUG
-			this->list[i] = memory_allocation{ ptr , size , tag };
+			this->list[i] = memory_allocation{ ptr , size , _tag_ };
 		#else 
 			this->list[i] = memory_allocation{ ptr , size };
 		#endif
@@ -118,7 +118,7 @@ u32 memory_registry::insert(void* ptr, u32 size, memory_tag tag) NOEXP {
 }
 
 u32 memory_registry::insert(memory_allocation allocation) NOEXP {
-	return this->insert(allocation.ptr, allocation.size, allocation.tag);
+	return this->insert(allocation.ptr, allocation.size, allocation._tag_);
 }
 
 void memory_registry::remove(u32 index) NOEXP {
@@ -203,7 +203,7 @@ memory_allocation_info memory_registry::get_allocation_with_size(u32 target_size
 				.ptr   = this->list[i].ptr,
 				.size  = this->list[i].size,
 				.index = i,
-				.tag   = this->list[i].tag
+				._tag_   = this->list[i]._tag_
 			};
 		}
 

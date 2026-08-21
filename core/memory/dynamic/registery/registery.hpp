@@ -45,7 +45,7 @@ namespace core {
 
 		// public functions
 
-		u32 insert(void* ptr, u32 size, memory_tag tag) NOEXP;
+		u32 insert(void* ptr, u32 size, memory_tag _tag_) NOEXP;
 		u32 insert(memory_allocation allocation) NOEXP;
 
 		// cut allocation from registry if founded

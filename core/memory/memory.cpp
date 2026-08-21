@@ -95,10 +95,10 @@ DLL_API g_memory_handle core::memory::allocate(g_memory_request const& request) 
 	#ifdef DEBUG
 		// tag memory
 		u8* tptr = ((u8*)ptr + request.size);
-		*tptr = (u8)request.tag;
+		*tptr = (u8)request._tag_;
 
 		// update list
-		sections_sizes[(u8)request.tag] += request.size;
+		sections_sizes[(u8)request._tag_] += request.size;
 	#endif
 
 		total_size += request.size;
@@ -110,14 +110,14 @@ DLL_API g_memory_handle core::memory::allocate(g_memory_request const& request) 
 		}
 
 		CORE_DEBUG(0, "global-allocator: new memory allocated {} for {}.",
-			core::bytes_to_string(request.size), core::to_string(request.tag)
+			core::bytes_to_string(request.size), core::to_string(request._tag_)
 		);
 	#endif
 
-		return g_memory_handle(allocator_response::success, request.size, request.tag, ptr);
+		return g_memory_handle(allocator_response::success, request.size, request._tag_, ptr);
 	}
 	else {
-		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request.size, core::to_string(request.tag));
+		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request.size, core::to_string(request._tag_));
 		return g_memory_handle();
 	}
 
@@ -131,19 +131,19 @@ DLL_API g_memory_handle_2 core::memory::allocate_tow(g_memory_request const& req
 	void* ptr2 = new byte[request_2.size + 1];
 
 	// try mark the memory with tag
-	if ((ptr1 && ptr2) && (u8)request_1.tag < MAX_MEMORY_TAGS && (u8)request_2.tag < MAX_MEMORY_TAGS) {
+	if ((ptr1 && ptr2) && (u8)request_1._tag_ < MAX_MEMORY_TAGS && (u8)request_2._tag_ < MAX_MEMORY_TAGS) {
 	
 	#ifdef DEBUG
 		// tag memory
 		u8* tptr1 = ((u8*)ptr1 + request_1.size);
-		*tptr1 = (u8)request_1.tag;
+		*tptr1 = (u8)request_1._tag_;
 
 		u8* tptr2 = ((u8*)ptr2 + request_2.size);
-		*tptr2 = (u8)request_2.tag;
+		*tptr2 = (u8)request_2._tag_;
 
 		// update list
-		sections_sizes[(u8)request_1.tag] += request_1.size;
-		sections_sizes[(u8)request_2.tag] += request_2.size;
+		sections_sizes[(u8)request_1._tag_] += request_1.size;
+		sections_sizes[(u8)request_2._tag_] += request_2.size;
 	#endif
 
 		total_size += request_1.size + request_2.size;
@@ -155,23 +155,23 @@ DLL_API g_memory_handle_2 core::memory::allocate_tow(g_memory_request const& req
 		}
 
 		CORE_DEBUG(0, "global-allocator: new memory allocated {} for {}.",
-			core::bytes_to_string(request_1.size), core::to_string(request_1.tag)
+			core::bytes_to_string(request_1.size), core::to_string(request_1._tag_)
 		);
 
 		CORE_DEBUG(0, "global-allocator: new memory allocated {} for {}.",
-			core::bytes_to_string(request_2.size), core::to_string(request_2.tag)
+			core::bytes_to_string(request_2.size), core::to_string(request_2._tag_)
 		);
 	#endif
 
 
 		return g_memory_handle_2{
-			g_memory_handle(allocator_response::success, request_1.size, request_1.tag, ptr1),
-			g_memory_handle(allocator_response::success, request_2.size, request_2.tag, ptr2)
+			g_memory_handle(allocator_response::success, request_1.size, request_1._tag_, ptr1),
+			g_memory_handle(allocator_response::success, request_2.size, request_2._tag_, ptr2)
 		};
 	}
 	else {
-		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_1.size, core::to_string(request_1.tag));
-		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_2.size, core::to_string(request_2.tag));
+		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_1.size, core::to_string(request_1._tag_));
+		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_2.size, core::to_string(request_2._tag_));
 
 		return g_memory_handle_2{
 			g_memory_handle(),
@@ -185,7 +185,7 @@ DLL_API void core::memory::deallocate(g_memory_handle const& handle) NOEXP {
 	// DEBUG_BREAK;
 
 	if (handle.ptr) {
-		u8 tag = *((u8*)handle.ptr + handle._size_);
+		u8 _tag_ = *((u8*)handle.ptr + handle._size_);
 
 		// release memory
 		delete[] handle.ptr;
@@ -193,10 +193,10 @@ DLL_API void core::memory::deallocate(g_memory_handle const& handle) NOEXP {
 		// update internal variables
 		total_size -= handle._size_;
 	#ifdef DEBUG 
-		sections_sizes[tag] -= handle._size_;
+		sections_sizes[_tag_] -= handle._size_;
 
 		CORE_DEBUG(0, "global-allocator: memory {} is deallocated , used for {} size {}." , 
-			core::pointer_to_hex_string(handle.ptr) , core::to_string((subsystem_memory_tag)tag),
+			core::pointer_to_hex_string(handle.ptr) , core::to_string((subsystem_memory_tag)_tag_),
 			core::bytes_to_string(handle._size_)
 		);
 	#endif
@@ -249,10 +249,10 @@ memory_handle::~memory_handle() NOEXP {
 	class g_memory_handle
 */
 g_memory_handle::g_memory_handle(
-	allocator_response response_, u64 size, subsystem_memory_tag tag, void* pointer, 
+	allocator_response response_, u64 size, subsystem_memory_tag _tag_, void* pointer, 
 	bool deallocate_at_destruction_time
 ) NOEXP
-	: response(response_), _size_(size), _tag_(tag), ptr(pointer) , _deallocate_at_destuctor_(deallocate_at_destruction_time)
+	: response(response_), _size_(size), _tag_(_tag_), ptr(pointer) , _deallocate_at_destuctor_(deallocate_at_destruction_time)
 {
 
 }
@@ -279,9 +279,9 @@ g_memory_handle::~g_memory_handle() NOEXP {
 
 #define MEMORY_TAG_TO_STRING_CASE(TAG) case memory_tag::TAG: return string( #TAG ); break;
 
-DLL_API string core::to_string(memory_tag tag) NOEXP {
+DLL_API string core::to_string(memory_tag _tag_) NOEXP {
 	
-	switch (tag) {
+	switch (_tag_) {
 		MEMORY_TAG_TO_STRING_CASE(unkown		);
 		MEMORY_TAG_TO_STRING_CASE(general		);
 		MEMORY_TAG_TO_STRING_CASE(registry		);
@@ -316,9 +316,9 @@ DLL_API string core::to_string(memory_tag tag) NOEXP {
 
 #define ALLOCATOR_TAG_TO_STRING_CASE(TAG) case subsystem_memory_tag:: TAG: return string( #TAG ); break;
 
-DLL_API string core::to_string(subsystem_memory_tag tag) NOEXP {
+DLL_API string core::to_string(subsystem_memory_tag _tag_) NOEXP {
 	
-	switch (tag) {
+	switch (_tag_) {
 		ALLOCATOR_TAG_TO_STRING_CASE(unkown				 );
 		ALLOCATOR_TAG_TO_STRING_CASE(memory_system		 );
 		ALLOCATOR_TAG_TO_STRING_CASE(assets_system		 );

@@ -21,7 +21,7 @@
 	constructor's
 */
 
-core::memory_block::memory_block(u64 size , u32 max_allowed_allocations, subsystem_memory_tag tag) NOEXP {
+core::memory_block::memory_block(u64 size , u32 max_allowed_allocations, subsystem_memory_tag _tag_) NOEXP {
 
 	if (memory_block::min_allowed_size <= size <= memory_block::max_allowed_size) {
 		CORE_FATAL(
@@ -36,7 +36,7 @@ core::memory_block::memory_block(u64 size , u32 max_allowed_allocations, subsyst
 	std::scoped_lock lc(this->lock);
 
 #ifdef DEBUG
-	this->block_tag = tag;
+	this->block_tag = _tag_;
 #endif
 
 	this->block_size = size;
@@ -45,12 +45,12 @@ core::memory_block::memory_block(u64 size , u32 max_allowed_allocations, subsyst
 	this->handle = core::memory::allocate(
 		g_memory_request{ 
 			.size = this->block_size,
-			.tag  = this->block_tag
+			._tag_  = this->block_tag
 		}
 	);
 	
 	if (this->handle.response != allocator_response::success) {
-		CORE_FATAL(CORE_LOG_CONFIG_ALL, ALLOCATOR_FAILED, core::bytes_to_string(size) , core::to_string(tag));
+		CORE_FATAL(CORE_LOG_CONFIG_ALL, ALLOCATOR_FAILED, core::bytes_to_string(size) , core::to_string(_tag_));
 		return;
 	}
 
@@ -65,7 +65,7 @@ core::memory_block::memory_block(u64 size , u32 max_allowed_allocations, subsyst
 
 	CORE_DEBUG(
 		0, "new memory_block is created for {} usage , {} .", 
-		core::bytes_to_string(this->block_size) , core::to_string(tag)
+		core::bytes_to_string(this->block_size) , core::to_string(_tag_)
 	);
 }
 
@@ -129,7 +129,7 @@ memory_handle core::memory_block::allocate(memory_request const& request) NOEXP 
 	return handle;
 }
 
-memory_handle core::memory_block::allocate(u32 size, u32 alignement, memory_tag tag) NOEXP {
+memory_handle core::memory_block::allocate(u32 size, u32 alignement, memory_tag _tag_) NOEXP {
 
 	// if the block is busy at the moment
 	if (this->lock.is_locked()) {
@@ -142,7 +142,7 @@ memory_handle core::memory_block::allocate(u32 size, u32 alignement, memory_tag 
 	// try allocate
 	memory_handle handle;
 	this->internal_allocate(
-		memory_request{ .size = size, .alignement = alignement , .tag = tag }, 
+		memory_request{ .size = size, .alignement = alignement , ._tag_ = _tag_ }, 
 		handle
 	);
 
@@ -189,8 +189,8 @@ memory_handle_2 core::memory_block::allocate_tow(
 		this->seek += request_2.size;
 
 		// register the allocation
-		u32 reg_index_1 = this->active_list.insert(pointer_1, request_1.size, request_1.tag);
-		u32 reg_index_2 = this->active_list.insert(pointer_2, request_2.size, request_2.tag);
+		u32 reg_index_1 = this->active_list.insert(pointer_1, request_1.size, request_1._tag_);
+		u32 reg_index_2 = this->active_list.insert(pointer_2, request_2.size, request_2._tag_);
 
 		// check registry insertion
 		if (reg_index_1 >= this->active_list.get_capacity() || reg_index_2 >= this->active_list.get_capacity() ) {
@@ -276,7 +276,7 @@ bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 		CORE_DEBUG(
 			0, "memory_block deallocate memory at {} with size {} used for {} .", 
 			core::pointer_to_hex_string(allocation.ptr) , core::bytes_to_string(allocation.size) , 
-			core::to_string(allocation.tag)
+			core::to_string(allocation._tag_)
 		);
 	
 		return true;
@@ -339,11 +339,11 @@ INLINE u32 core::memory_block::handle_registry (
 		this->free_list.cut(allocation.index);
 
 		// "allocate" by move it to active_list 
-		u32 index = this->active_list.insert(allocation.ptr, request.size, request.tag);
+		u32 index = this->active_list.insert(allocation.ptr, request.size, request._tag_);
 
 		// if memory left but it back in free_list
 		if (request.size < allocation.size) {
-			this->free_list.insert((byte*)allocation.ptr + request.size, allocation.size - request.size, request.tag);
+			this->free_list.insert((byte*)allocation.ptr + request.size, allocation.size - request.size, request._tag_);
 		}
 
 		*ptr = allocation.ptr;
@@ -373,8 +373,8 @@ INLINE void core::memory_block::handle_registry_2(
 		this->free_list.remove(allocation.index);
 
 		// "allocate" by move it to active_list 
-		index_1 = this->active_list.insert(allocation.ptr, request_1.size, request_1.tag);
-		index_2 = this->active_list.insert((byte*)allocation.ptr + request_1.size, request_2.size, request_2.tag);
+		index_1 = this->active_list.insert(allocation.ptr, request_1.size, request_1._tag_);
+		index_2 = this->active_list.insert((byte*)allocation.ptr + request_1.size, request_2.size, request_2._tag_);
 
 		// if memory left put it back in free_list
 		if ((request_1.size + request_2.size) < allocation.size) {
@@ -426,7 +426,7 @@ INLINE void core::memory_block::internal_allocate(
 		this->seek += request.size;
 
 		// register the allocation
-		u32 reg_index = this->active_list.insert(pointer, request.size, request.tag);
+		u32 reg_index = this->active_list.insert(pointer, request.size, request._tag_);
 
 		if (reg_index >= this->active_list.get_capacity()) {
 			CORE_ERROR(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_IS_REGISTRY_FULL , this->active_list.get_capacity());

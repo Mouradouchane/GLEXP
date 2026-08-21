@@ -19,7 +19,7 @@ namespace core {
 	*/
 	template<typename type> struct c_array {
 		// variables
-		core::memory_allocator* allocator = nullptr;
+		core::memory_allocator* _allocator_ = nullptr;
 		u32   count  = NULL;
 		u32   size   = NULL;
 		type* start  = nullptr;
@@ -55,7 +55,7 @@ namespace core {
 			}
 			else {
 				new_arary.start = _allocator->allocate(new_array.size);
-				new_array.allocator = _allocator;
+				new_array._allocator_ = _allocator;
 			}
 
 			new_array.end = new_array.start + new_array.count;
@@ -66,11 +66,11 @@ namespace core {
 		
 		static void destroy(core::c_array<type>& _array) {
 
-			if (_array.allocator == nullptr) {
+			if (_array._allocator_ == nullptr) {
 				core::global_memory::deallocate(_array.start);
 			}
 			else {
-				_array.allocator->deallocate(_array.start);
+				_array._allocator_->deallocate(_array.start);
 			}
 
 			CORE_INFO("deallocated core::c_array -> type:{} , address:&{} , size:{}", typeid(type).name(), &_array, _array.size);
@@ -93,9 +93,9 @@ namespace core {
 		// todo: multi-threaded copying
 		static void copy(core::c_array<type> const& source, core::c_array<type>& destination) {
 			CRASH_IF(source.start == nullptr || destination.start == nullptr, "core::c_array::copy(source={}, destination={}) : source or destination memory is null-pointer !", &source, &destination);
-			CORE_WARN_IF(source.size_ > destination.size_ , "core::c_array::copy(source={}, destination={}) : source array is bigger than the destination array !", &source, &destination);
+			CORE_WARN_IF(source._size_ > destination._size_ , "core::c_array::copy(source={}, destination={}) : source array is bigger than the destination array !", &source, &destination);
 
-			std::memcpy(destination.start , source.start , destination.size_);
+			std::memcpy(destination.start , source.start , destination._size_);
 		}
 
 		// todo: multi-threaded moving

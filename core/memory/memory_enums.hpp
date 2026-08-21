@@ -82,14 +82,14 @@ struct memory_allocation {
 	void* ptr;
 	u64   size;
 
-	DEBUG_ONLY memory_tag tag;
+	DEBUG_ONLY memory_tag _tag_;
 
 	// helper function
 	void clear() NOEXP {
 		this->ptr  = nullptr;
 		this->size = 0;
 	#ifdef DEBUG
-		this->tag = memory_tag::unkown;
+		this->_tag_ = memory_tag::unkown;
 	#endif
 	}
 };
@@ -100,7 +100,7 @@ struct memory_allocation_info {
 	void* ptr;
 	u64   size;
 	u32	  index;
-	DEBUG_ONLY memory_tag tag;
+	DEBUG_ONLY memory_tag _tag_;
 };
 
 // used by free list and allocator

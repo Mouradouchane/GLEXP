@@ -5,10 +5,11 @@
 #define CORE_TIMER_CPP
 
 #include <unordered_map>
-#include <array>
 
 #include "timer.hpp"
 #include "core/logger/logger.hpp"
+#include "core/containers/arrays/fixed_array/array.hpp"
+#include "core/containers/arrays/dynamic_array/dynamic_array.hpp"
 
 #ifdef DEBUG
 	static auto _core_timer_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
@@ -19,7 +20,7 @@
 #define _LOGGER_  _core_timer_logger_ 
 
 #define MAX_TIMERS_REGISTERS 255
-std::array<std::unordered_map<u32, timer>, MAX_TIMERS_REGISTERS> timers_registery();
+core::array<core::dynamic_array<timer>> timers_registery(MAX_TIMERS_REGISTERS);
 
 /*
 	constructor
