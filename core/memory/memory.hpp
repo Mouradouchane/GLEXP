@@ -173,7 +173,7 @@ struct g_memory_handle_2 {
 // used by memory allocator
 struct g_memory_request {
 	u64 size;
-	DEBUG_ONLY subsystem_memory_tag _tag_;
+	DEBUG_ONLY subsystem_memory_tag tag;
 };
 
 // used for dynamic allocator

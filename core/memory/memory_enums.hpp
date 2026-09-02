@@ -20,7 +20,7 @@ enum class allocator_response : u8 {
 */
 enum class subsystem_memory_tag : u8 {
 	unkown = 0,
-
+	time_system,
 	memory_system,
 	assets_system,
 	entity_system,

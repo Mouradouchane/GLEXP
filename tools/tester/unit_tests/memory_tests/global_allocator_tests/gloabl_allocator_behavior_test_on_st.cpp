@@ -16,40 +16,40 @@ bool global_allocator_simple_behavior_test_on_st_1() NOEXP {
 	g_memory_handle h1 = core::memory::allocate(
 		g_memory_request{ 
 			.size = 32 MB , 
-			.tag = allocator_tag::debug_system
+			.tag = subsystem_memory_tag::debug_system
 		}
 	);
 
-	if (h1.get_pointer() == nullptr) return TEST_FAIL;
+	if (h1.ptr == nullptr) return TEST_FAIL;
 	if (h1.response() != allocator_response::success) return TEST_FAIL;
 
-	u64 size = core::memory::current_memory_usage(allocator_tag::debug_system);
+	u64 size = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 	if (size != (32 MB)) return TEST_FAIL;
 
 	g_memory_handle h2 = core::memory::allocate(
 		g_memory_request{
 			.size = 32 MB ,
-			.tag = allocator_tag::debug_system
+			.tag = subsystem_memory_tag::debug_system
 		}
 	);
 
 	if (h2.get_pointer() == nullptr) return TEST_FAIL;
 	if (h2.response() != allocator_response::success) return TEST_FAIL;
 
-	size = core::memory::current_memory_usage(allocator_tag::debug_system);
+	size = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 	if (size != (64 MB)) return TEST_FAIL;
 
-	size = core::memory::current_memory_usage(allocator_tag::graphics_system);
+	size = core::memory::current_memory_usage(subsystem_memory_tag::graphics_system);
 	if (size != 0) return TEST_FAIL;
 	
 	core::memory::deallocate(h1);
 
-	size = core::memory::current_memory_usage(allocator_tag::debug_system);
+	size = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 	if (size != (32 MB)) return TEST_FAIL;
 
 	core::memory::deallocate(h2);
 
-	size = core::memory::current_memory_usage(allocator_tag::debug_system);
+	size = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 	if (size != 0) return TEST_FAIL;
 
 	return TEST_PASS;
@@ -65,7 +65,7 @@ bool global_allocator_simple_behavior_test_on_st_2() NOEXP {
 		handles[i] = core::memory::allocate(
 			g_memory_request{
 				.size = 8 MB,
-				.tag = (allocator_tag)i
+				.tag  = (subsystem_memory_tag)i,
 			}
 		);
 	}
@@ -77,7 +77,7 @@ bool global_allocator_simple_behavior_test_on_st_2() NOEXP {
 	if(size != psize) return TEST_FAIL;
 
 	core::memory::deallocate(handles[0]);
-	if (core::memory::current_memory_usage(allocator_tag::unkown) != 0) return TEST_FAIL;
+	if (core::memory::current_memory_usage(subsystem_memory_tag::unkown) != 0) return TEST_FAIL;
 
 	// deallocate memory
 	for (u8 i = 1; i < 12; i++) {
@@ -96,8 +96,8 @@ bool global_allocator_simple_behavior_test_on_st_2() NOEXP {
 bool global_allocator_allocate2_simple_behavior_test_on_st() NOEXP {
 
 	g_memory_handle_2 h1 = core::memory::allocate_tow(
-		g_memory_request{ .size = 32 MB , .tag = allocator_tag::debug_system },
-		g_memory_request{ .size = 32 MB , .tag = allocator_tag::debug_system }
+		g_memory_request{ .size = 32 MB , .tag = subsystem_memory_tag::debug_system },
+		g_memory_request{ .size = 32 MB , .tag = subsystem_memory_tag::debug_system }
 	);
 
 	if(h1.handle_1.response() != h1.handle_2.response()) return TEST_FAIL;
@@ -122,16 +122,16 @@ bool global_allocator_allocate2_simple_behavior_test_on_st() NOEXP {
 	if(size != t) return TEST_FAIL;
 	if(peak < t)  return TEST_FAIL;
 
-	u64 current = core::memory::current_memory_usage(allocator_tag::debug_system);
+	u64 current = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 	if(current != t) return TEST_FAIL;
 
 	core::memory::deallocate(h1.handle_1);
-	current = core::memory::current_memory_usage(allocator_tag::debug_system);
+	current = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 
 	if(current != (32 MB)) return TEST_FAIL;
 
 	core::memory::deallocate(h1.handle_2);
-	current = core::memory::current_memory_usage(allocator_tag::debug_system);
+	current = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 
 	if(current != 0) return TEST_FAIL;
 	

@@ -162,7 +162,7 @@ core::array<type>::~array() NOEXP {
 */
 
 template<typename type>
-type& core::array<type>::operator[](u32 index) NOEXP {
+type& core::array<type>::operator[](u32 const& index) NOEXP {
 
 	if (index < this->_capacity_) return *(this->_begin_ + index);
 	
@@ -171,7 +171,7 @@ type& core::array<type>::operator[](u32 index) NOEXP {
 		CORE_WARN_HPP(_arr_hpp_lgr_,0,CORE_WARNINIG_RUNTIME_CRASH);
 	#endif
 
-	return *(this->_begin_ + this->_capacity_); // out of range value
+	return *(this->_begin_ + this->_capacity_); // access out of range value
 }
 
 /*
@@ -206,18 +206,18 @@ void core::array<type>::clear() NOEXP {
 }
 
 template<typename type>
-u32 core::array<type>::capacity() NOEXP {
+u32 core::array<type>::elements_count() NOEXP {
 	return this->_capacity_;
 }
 
 template<typename type>
-u32 core::array<type>::size() NOEXP {
+u64 core::array<type>::size() NOEXP {
 	return this->_size_;
 }
 
 
 template<typename type>
-bool core::array<type>::resize() {
+bool core::array<type>::resize() NOEXP {
 
 	type* new_buffer = nullptr;
 	u32   new_count  = this->_count_ + this->_resize_value_;
@@ -273,7 +273,7 @@ void core::array<type>::set_resize_value(u32 elements_count) {
 */
 
 template<typename type> 
-void core::array<type>::copy_elements(core::array<type> const& source, core::array<type>& destination) {
+void core::array<type>::copy_elements(core::array<type> const& source, core::array<type>& destination) NOEXP {
 
 	if ((&source) == (&destination)) {
 	#ifdef DEBUG
@@ -337,7 +337,7 @@ void core::array<type>::copy_elements(core::array<type> const& source, core::arr
 
 // todo : add option for multi-threaded moving elements later
 template<typename type>
-void core::array<type>::move_elements(core::array<type>& source, core::array<type>& destination) {
+void core::array<type>::move_elements(core::array<type>& source, core::array<type>& destination) NOEXP {
 
 	if ((&source) == (&destination)) {
 	#ifdef DEBUG
@@ -402,7 +402,7 @@ void core::array<type>::move_elements(core::array<type>& source, core::array<typ
 }
 
 template<typename type>
-void core::array<type>::move_ownership(core::array<type>& source, core::array<type>& destination) {
+void core::array<type>::move_ownership(core::array<type>& source, core::array<type>& destination) NOEXP {
 
 	if ((&source) == (&destination)) {
 	#ifdef DEBUG
@@ -448,7 +448,7 @@ INLINE void core::array<type>::sort(
 }
 
 template<typename type>
-void core::array<type>::reallocate(core::array<type>& _array_, bool destruct_elements) {
+void core::array<type>::reallocate(core::array<type>& _array_, bool destruct_elements) NOEXP {
 
 	// allocate new memory
 	memory_handle new_handle = _array_._allocator_->allocate(

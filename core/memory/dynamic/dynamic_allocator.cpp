@@ -323,7 +323,7 @@ string const& dynamic_allocator::name() NOEXP {
     return this->_name_;
 }
 
-subsystem_memory_tag dynamic_allocator::_tag_()  NOEXP {
+subsystem_memory_tag dynamic_allocator::tag()  NOEXP {
     return this->_tag_;
 }
 #else 

@@ -35,6 +35,7 @@ static auto _tester_app_cpp_logger_ = CORE_GET_LOGGER(UNIT_TESTER_LOGGER);
 // #include "tools/tester/unit_tests/arrays/dynamic_array_tests.hpp"
 // #include "tools/tester/unit_tests/memory_tests/dynamic_allocator_tests/behavior_on_st.hpp"
 #include "tools/tester/unit_tests/memory_tests/global_allocator_tests/gloabl_allocator_behavior_test_on_st.hpp"
+#include "tools/tester/unit_tests/arrays/array_tests.hpp"
 
 #include "application.hpp"
 
@@ -72,29 +73,27 @@ namespace tester {
 		/*
 			note: add your unit-tests here
 		*/ 
-		/*
 		add_group(
 			group("core::array tests", {
 				TESTER_ADD_TEST(array_t_construct_count_size_and_begin_end),
-				TESTER_ADD_TEST(get_set_and_operator_index),
-				TESTER_ADD_TEST(ll),
-				TESTER_ADD_TEST(opy_ctor_and_static_copy),
-				TESTER_ADD_TEST(rray_t_static_move_move_assign_move_ctor),
-				TESTER_ADD_TEST(_trivial_destruction),
-				TESTER_ADD_TEST(),
-				TESTER_ADD_TEST(e_reallocate),
-				TESTER_ADD_TEST(ases),
-				TESTER_ADD_TEST(y_t_copy_into_existing_destination),
-				TESTER_ADD_TEST(sic_construction),
-				TESTER_ADD_TEST(_constructor_from_pointer_trivial),
-				TESTER_ADD_TEST(ay_t_array_constructor_from_pointer_nontrivial),
-				TESTER_ADD_TEST(y_constructor_trivial),
-				TESTER_ADD_TEST(_array_copy_constructor_nontrivial),
-				TESTER_ADD_TEST(_t_array_static_copy_nontrivial),
-				TESTER_ADD_TEST(function)
+				TESTER_ADD_TEST(array_t_get_set_and_operator_index),
+				TESTER_ADD_TEST(array_t_clear_and_fill),
+				TESTER_ADD_TEST(array_t_copy_ctor_and_static_copy),
+				TESTER_ADD_TEST(array_t_static_move_move_assign_move_ctor),
+				TESTER_ADD_TEST(array_t_non_trivial_destruction),
+				TESTER_ADD_TEST(array_t_sort_function),
+				TESTER_ADD_TEST(array_t_allocate_reallocate),
+				TESTER_ADD_TEST(array_t_fill_edge_cases),
+				TESTER_ADD_TEST(array_t_copy_into_existing_destination),
+				TESTER_ADD_TEST(array_t_array_basic_construction),
+				TESTER_ADD_TEST(array_t_array_constructor_from_pointer_nontrivial),
+				TESTER_ADD_TEST(array_t_array_copy_constructor_trivial),
+				TESTER_ADD_TEST(array_t_array_copy_constructor_nontrivial),
+				TESTER_ADD_TEST(array_t_array_static_copy_nontrivial),
+				TESTER_ADD_TEST(array_t_array_clear_function)
 			})
 		);
-
+		/*
 		add_group(
 			group("core::dynamic_array tests", {
 				TESTER_ADD_TEST(dynamic_arr_t_construction_basics),

@@ -85,9 +85,9 @@ DLL_API_CLASS timer {
 
 private:
 	time_point start_point;
+	u32        _id_  = (u32)-1;
 	timer_tag  _tag_ = timer_tag::unkown;
-	u32        id  = (u32)-1;
-	string     name;
+	string     _name_;
 
 public:
 	// constructor's

@@ -107,7 +107,7 @@ namespace core {
 		u64 current_memory_usage(memory_tag section_tag) NOEXP; // for specific section
 		
 		DEBUG_ONLY string const& name() NOEXP;
-		DEBUG_ONLY subsystem_memory_tag _tag_() NOEXP;
+		DEBUG_ONLY subsystem_memory_tag tag() NOEXP;
 
 	private: // helper functions
 		INLINE u8 add_new_block(u32 block_size) NOEXP;

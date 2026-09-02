@@ -12,7 +12,7 @@
 #include "core/assert.hpp"
 #include "core/memory/dynamic/dynamic_allocator.hpp"
 
-#define CORE_ARRAY_DEFAULT_RESIZE_VALUE 32
+#define CORE_ARRAY_DEFAULT_RESIZE_VALUE 1
 
 namespace core {
 
@@ -22,17 +22,17 @@ namespace core {
 				  - needs core::dynamic_allocator to allocate memory .
 */
 template<typename type> class array {
-
 private:
 	static const string _typename_(typeid(type).name());
 	
 	core::dynamic_allocator* _allocator_ = nullptr;
-	u32 _size_         = 0;
+	memory_handle             _handle_   = memory_handle{ 0 };
+
+	u64 _size_         = 0;
 	u32 _capacity_     = 0;
 	u32 _resize_value_ = CORE_ARRAY_DEFAULT_RESIZE_VALUE;
-	type* _begin_ = nullptr;
-	type* _end_   = nullptr;
-	memory_handle _handle_ = memory_handle{ 0 };
+	type* _begin_      = nullptr;
+	type* _end_        = nullptr;
 
 #ifdef DEBUG
 	memory_tag _tag_ = memory_tag::unkown;
@@ -55,7 +55,7 @@ public:
 	/*
 		operator's
 	*/ 
-	type& operator[](u32 index) NOEXP;
+	type& operator[](u32 const& index) NOEXP;
 
 	/*
 		array public functions
@@ -66,8 +66,8 @@ public:
 	const type* begin() const NOEXP;
 	const type* end()   const NOEXP;
 
-	u32  capacity() NOEXP;
-	u32  size()  NOEXP; // size of array in bytes
+	u32  elements_count() NOEXP;
+	u64  size()  NOEXP; // size of array in bytes
 		
 	void clear() NOEXP;
 	bool resize() NOEXP;

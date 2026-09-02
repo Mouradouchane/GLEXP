@@ -1,15 +1,15 @@
-#if 1
+#if 0
 #pragma once
 
 #ifndef CORE_TIMER_CPP
 #define CORE_TIMER_CPP
 
-#include <unordered_map>
+#include "core/logger/logger.hpp"
+#include "core/memory/memory.hpp"
+#include "core/memory/dynamic/dynamic_allocator.hpp"
+#include "core/containers/arrays/array.hpp"
 
 #include "timer.hpp"
-#include "core/logger/logger.hpp"
-#include "core/containers/arrays/fixed_array/array.hpp"
-#include "core/containers/arrays/dynamic_array/dynamic_array.hpp"
 
 #ifdef DEBUG
 	static auto _core_timer_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
@@ -19,16 +19,28 @@
 
 #define _LOGGER_  _core_timer_logger_ 
 
-#define MAX_TIMERS_REGISTERS 255
-core::array<core::dynamic_array<timer>> timers_registery(MAX_TIMERS_REGISTERS);
+// memory allocator for timers registers
+core::dynamic_allocator timers_allocator( 
+	core::dynamic_allocator_configs{ 
+		.name  = string("timers_allocator"),
+		._tag_ = subsystem_memory_tag::time_system,
+		.memory_budget = 16 MB ,
+		.max_allocations_per_block = 100,
+		.is_multi_thread = false,
+		.allocate_all_at_once = true
+	} 
+);
+
+#define TIMERS_REGISTERS_COUNT 255
+core::array<core::array<timer>> timers_registery(TIMERS_REGISTERS_COUNT , &timers_allocator , memory_tag::timer);
 
 /*
 	constructor
 */
 timer::timer(string const& timer_name, u32 timer_id, timer_tag timer_tag_) NOEXP {
 	this->_tag_  = timer_tag_;
-	this->id   = timer_id;
-	this->name = timer_name;
+	this->_id_   = timer_id;
+	this->_name_ = timer_name;
 
 	this->start_point = GET_STEADY_TIME();
 }
@@ -42,7 +54,7 @@ timer::~timer() NOEXP {
 
 	// todo: save the result in timer's registery
 
-	CORE_TRACE("{} : {}", elapse, this->name);
+	CORE_TRACE("{} : {}", elapse, this->_name_);
 }
 
 /*
@@ -80,8 +92,9 @@ u32 timer::seconds() NOEXP{
 }
 
 
+// todo:
 string core::time_to_string(timer const& t) NOEXP {
-	
+	return string("todo:implement this !");
 }
 
 #endif
