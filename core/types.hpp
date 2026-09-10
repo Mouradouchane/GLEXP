@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 
-#define TYPE_NAME(TYPE) typeid(TYPE).name
+#define TYPE_NAME(TYPE) typeid(TYPE).name()
 
 // pointers
 typedef void*     ptr;

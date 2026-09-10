@@ -21,7 +21,7 @@
 
 // memory allocator for timers registers
 core::dynamic_allocator timers_allocator( 
-	core::dynamic_allocator_configs{ 
+	core::dynamic_allocator_parameters{ 
 		.name  = string("timers_allocator"),
 		._tag_ = subsystem_memory_tag::time_system,
 		.memory_budget = 16 MB ,

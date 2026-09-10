@@ -21,7 +21,7 @@
 template<typename type>
 core::array<type>::array(u32 elements_count, core::dynamic_allocator const& _allocator, memory_tag tag_) NOEXP {
 
-	this->allocate = &_allocator;
+	this->_allocator_ = (core::dynamic_allocator*)&_allocator;
 	this->_capacity_ = (elements_count) ? elements_count : 1;
 	this->_size_ = (this->_capacity_ * sizeof(type));
 	this->_tag_ = tag_;
@@ -29,7 +29,9 @@ core::array<type>::array(u32 elements_count, core::dynamic_allocator const& _all
 	// allocate memory
 	this->_handle_ = this->_allocator_->allocate(
 		memory_request{
-			.alignement = 0 , .size = this->_size_ , .tag = tag_
+			.size = this->_size_ , 
+			.alignement = 0 , 
+			.tag = tag_,
 		}
 	);
 
@@ -38,7 +40,7 @@ core::array<type>::array(u32 elements_count, core::dynamic_allocator const& _all
 		return;
 	}
 
-	this->_begin_ = (type*)_handle_.ptr;
+	this->_begin_ = (type*)_handle_.pointer();
 	this->_end_   = this->_begin_ + this->_capacity_;
 
 	/*
@@ -82,7 +84,7 @@ core::array<type>::array(core::array<type> const& array_to_copy, core::dynamic_a
 		return;
 	}
 
-	this->_begin_ = (type*)_handle_.ptr;
+	this->_begin_ = (type*)_handle_.pointer();
 	this->_end_   = this->_begin_ + this->_capacity_;
 
 	// todo: add multi-thread copying for large data !
@@ -236,7 +238,7 @@ bool core::array<type>::resize() NOEXP {
 		return false;
 	}
 
-	new_buffer = (type*)new_handle.ptr;
+	new_buffer = (type*)new_handle.pointer();
 
 	// move elements to new memory
 	if constexpr (std::is_trivially_copyable<type>::value) {
@@ -434,7 +436,7 @@ void core::array<type>::fill(core::array<type>& _array_, type const& fill_value)
 		return;
 	}
 
-	std::fill<type>(_array_._begin_, _array_._end_, fill_value);
+	std::fill(_array_._begin_, _array_._end_, fill_value);
 }
 
 template<typename type>
@@ -443,7 +445,7 @@ INLINE void core::array<type>::sort(
 ) NOEXP {
 
 	if (_array_._begin_) {
-		std::sort<type>(_array_._begin_, _array_._end_ , compare_function);
+		std::sort(_array_._begin_, _array_._end_ , compare_function);
 	}
 }
 
@@ -453,21 +455,21 @@ void core::array<type>::reallocate(core::array<type>& _array_, bool destruct_ele
 	// allocate new memory
 	memory_handle new_handle = _array_._allocator_->allocate(
 		memory_request{
-			.alignement = 0,
 			.size = _array_._size_,
+			.alignement = 0,
 			.tag  = _array_._tag_
 		}
 	);
 
 	// move elements to new memory
-	std::memmove(new_handle.ptr, _array_._begin_, _array_._size_);
+	std::memmove(new_handle.pointer(), _array_._begin_, _array_._size_);
 
 	// deallocate old memory
 	_array_._allocator_->deallocate(_array_._handle_);
 
 	// update array variables
 	_array_._handle_ = new_handle;
-	_array_._begin_  = (type*)new_handle.ptr;
+	_array_._begin_  = (type*)new_handle.pointer();
 	_array_._end_    = _array_._begin_ + _array_._capacity_;
 
 }

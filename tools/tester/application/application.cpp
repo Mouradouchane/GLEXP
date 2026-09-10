@@ -31,7 +31,6 @@ static auto _tester_app_cpp_logger_ = CORE_GET_LOGGER(UNIT_TESTER_LOGGER);
 	include unit-test's function's
 	- todo: add memory allocator for the arrays tests
 */ 
-// #include "tools/tester/unit_tests/arrays/array_tests.hpp"
 // #include "tools/tester/unit_tests/arrays/dynamic_array_tests.hpp"
 // #include "tools/tester/unit_tests/memory_tests/dynamic_allocator_tests/behavior_on_st.hpp"
 #include "tools/tester/unit_tests/memory_tests/global_allocator_tests/gloabl_allocator_behavior_test_on_st.hpp"

@@ -27,16 +27,18 @@ int DtorCounter::count = 0;
 
 #ifndef TESTER_MEMORY_ALLOCATOR
 #define TESTER_MEMORY_ALLOCATOR
-core::dynamic_allocator_configs __params__{
-	.name = string("array unit-test allocator"),
-	._tag_ = subsystem_memory_tag::debug_system,
-	.memory_budget = 32 MB,
-	.max_allocations_per_block = 512,
-	.is_multi_thread = false,
-	.allocate_all_at_once = true,
-};
 
-core::dynamic_allocator allocator(__params__);
+	dynamic_allocator_parameters __params__{
+		.name = string("array unit-test allocator"),
+		.tag  = subsystem_memory_tag::debug_system,
+		.memory_budget = 32 MB,
+		.max_allocations_per_block = 512,
+		.is_multi_thread = false,
+		.allocate_all_at_once = true,
+	};
+
+	core::dynamic_allocator allocator(__params__);
+
 #endif
 
 bool cmp_int(int const& a, int const& b) {

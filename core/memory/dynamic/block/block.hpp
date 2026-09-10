@@ -58,9 +58,10 @@ public:
 	/*
 		memory_block public functions
 	*/
-	memory_handle   allocate(memory_request const& request) NOEXP;
-	memory_handle   allocate(u32 size, u32 alignement, memory_tag _tag_) NOEXP;
-	memory_handle_2 allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP;
+	memory_handle  allocate(memory_request const& request) NOEXP;
+	memory_handle  allocate(u32 size, u32 alignement, memory_tag _tag_) NOEXP;
+
+	same_pair<memory_handle> allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP;
 
 	bool deallocate(memory_handle const& handle) NOEXP;
 

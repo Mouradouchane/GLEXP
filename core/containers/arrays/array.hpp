@@ -23,10 +23,10 @@ namespace core {
 */
 template<typename type> class array {
 private:
-	static const string _typename_(typeid(type).name());
+	inline static const string _typename_ = TYPE_NAME(type);
 	
 	core::dynamic_allocator* _allocator_ = nullptr;
-	memory_handle             _handle_   = memory_handle{ 0 };
+	memory_handle             _handle_;
 
 	u64 _size_         = 0;
 	u32 _capacity_     = 0;

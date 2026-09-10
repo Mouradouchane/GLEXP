@@ -6,6 +6,7 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 #include "core/strings/string.hpp"
+#include "core/pair/pair.hpp"
 
 #include "memory_enums.hpp"
 
@@ -38,21 +39,18 @@
 
 #define FRIENDS_TO_MEMORY_HANDLE() \
 		DLL_API g_memory_handle   friend core::memory::allocate(g_memory_request const& request) NOEXP; \
-		DLL_API g_memory_handle_2 friend core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP; \
+		DLL_API same_pair<g_memory_handle> friend core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP; \
 		DLL_API void              friend core::memory::deallocate(g_memory_handle const& handle) NOEXP; \
 		friend  DLL_API_CLASS     core::dynamic_allocator;\
 		friend  DLL_API_CLASS     core::memory_block;\
 		friend  DLL_API_CLASS     core::memory_registry;\
 
 
-struct   memory_request; // for other allocator
-struct g_memory_request; // for global allocator
+struct   memory_request; // for specific allocator
+struct g_memory_request; // for global   allocator
 
-class    memory_handle; // memory handle contain pointer + other info for allocators internal usage
-class  g_memory_handle; // for global allocator
-struct   memory_handle_2; // 2 memory handles in 1 struct
-struct g_memory_handle_2; // for global allocator
-
+class    memory_handle; // given back by specific allocator like dynamic_allocator
+class  g_memory_handle; // given back by global allocator
 
 namespace core {
 	
@@ -73,7 +71,7 @@ namespace core {
 		// note: this function preforme tow allocation in one call but !
 		//       both allocations not guarnted to be next each other in memory :)
 		//       because of paging , multi-threading , ... .
-		DLL_API g_memory_handle_2 allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP;
+		DLL_API same_pair<g_memory_handle> allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP;
 
 		DLL_API void deallocate(g_memory_handle const& handle) NOEXP;
 
@@ -110,18 +108,23 @@ private:
 	u64   _size_ = 0;
 	bool _deallocate_at_destuctor_ = false;
 
-public:
 	void* ptr = nullptr;
-	allocator_response response = allocator_response::busy;
+	allocator_response _response_ = allocator_response::busy;
+public:
 
 	// constructor's
 	g_memory_handle() NOEXP = default;
 	g_memory_handle(
-		allocator_response response, u64 size, subsystem_memory_tag _tag_, void* pointer, bool deallocate_at_destruction_time = false
+		allocator_response response, u64 size, subsystem_memory_tag tag_, void* pointer, bool deallocate_at_destruction_time = false
 	) NOEXP;
 
 	// destructor
 	~g_memory_handle() NOEXP;
+
+	// functions
+	INLINE void* pointer() NOEXP { return this->ptr; }
+	INLINE allocator_response response() NOEXP { return this->_response_; }
+	INLINE subsystem_memory_tag tag() NOEXP { return this->_tag_; }
 
 }; // class g_memory_handle end
 
@@ -152,22 +155,10 @@ public:
 
 	// functions
 	INLINE void* pointer() NOEXP { return this->ptr; }
-	INLINE void  set_pointer(void* new_pointer) NOEXP { this->ptr = new_pointer; }
 	INLINE u8    block_index() NOEXP { return this->_block_index_; }
 	INLINE u32   register_index() NOEXP { return this->_register_index_; }
 
 }; // class g_memory_handle end
-
-// returend by memory allocator for tow allocations in one handle
-struct memory_handle_2 {
-	memory_handle handle_1;
-	memory_handle handle_2;
-};
-
-struct g_memory_handle_2 {
-	g_memory_handle handle_1;
-	g_memory_handle handle_2;
-};
 
 
 // used by memory allocator
@@ -180,7 +171,7 @@ struct g_memory_request {
 struct memory_request {
 	u64 size;
 	u64 alignement;
-	DEBUG_ONLY memory_tag _tag_;
+	DEBUG_ONLY memory_tag tag;
 };
 
 #endif

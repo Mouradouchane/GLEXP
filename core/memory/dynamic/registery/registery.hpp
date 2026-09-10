@@ -11,8 +11,8 @@
 // few errors/warnings for registry
 #define REGISTRY_ZERO_SIZE_NOT_ALLOWED "zero size registry is not allowed , auto adjust to default size ."
 #define REGISTRY_FAILED_TO_INSERT "registry failed to insert ({},{}) !"
-#define REGISTRY_IS_FULL        "registery is full , failed to insert ."
-#define REGISTRY_PTR_NOT_FOUND  "registry: pointer {} not found in registry ."
+#define REGISTRY_IS_FULL          "registry is full , failed to insert ."
+#define REGISTRY_PTR_NOT_FOUND    "registry: pointer {} not found in registry ."
 
 namespace core {
 	

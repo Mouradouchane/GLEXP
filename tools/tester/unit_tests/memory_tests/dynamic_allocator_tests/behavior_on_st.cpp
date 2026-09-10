@@ -1,4 +1,4 @@
-#if 0
+#if 1
 #pragma once 
 
 #ifndef UNIT_TEST_BEHAVIOR_ON_ST_DYNAMIC_ALLOCATOR_CPP
@@ -13,8 +13,8 @@
 
 bool dynamic_allocator_simple_usage_on_st_test_1() {
 	
-	core::dynamic_allocator_configs parameters;
-	parameters.tag = core::allocator_tag::debug_system;
+	dynamic_allocator_parameters parameters;
+	parameters.tag = subsystem_memory_tag::debug_system;
 	parameters.max_allocations_per_block = 512;
 	parameters.memory_budget = 32 MB;
 	parameters.allocate_all_at_once = false;
@@ -24,19 +24,19 @@ bool dynamic_allocator_simple_usage_on_st_test_1() {
 	core::dynamic_allocator dc(parameters);
 
 	if (dc.name() != "tester allocator 1") { DEBUG_FAILUER(); }
-	if(dc.tag() != core::allocator_tag::debug_system) { DEBUG_FAILUER(); }
+	if(dc.tag() != subsystem_memory_tag::debug_system) { DEBUG_FAILUER(); }
 
 	if (dc.size() != 64 KB) { DEBUG_FAILUER(); }
 
 	u32 size = parameters.memory_budget / 4;
 
-	core::memory_handle h1 = dc.allocate(size, core::memory_tag::dev);
-	core::memory_handle h2 = dc.allocate(size, core::memory_tag::ai);
-	core::memory_handle h3 = dc.allocate(size, core::memory_tag::dev);
-	core::memory_handle h4 = dc.allocate(size, core::memory_tag::ai);
+	memory_handle h1 = dc.allocate(size, memory_tag::dev);
+	memory_handle h2 = dc.allocate(size, memory_tag::ai);
+	memory_handle h3 = dc.allocate(size, memory_tag::dev);
+	memory_handle h4 = dc.allocate(size, memory_tag::ai);
 
-	if (dc.current_memory_usage(core::memory_tag::dev) != (size * 2)) { DEBUG_FAILUER(); }
-	if (dc.current_memory_usage(core::memory_tag::ai)  != (size * 2)) { DEBUG_FAILUER(); }
+	if (dc.current_memory_usage(memory_tag::dev) != (size * 2)) { DEBUG_FAILUER(); }
+	if (dc.current_memory_usage(memory_tag::ai)  != (size * 2)) { DEBUG_FAILUER(); }
 
 	return TEST_PASS;
 }

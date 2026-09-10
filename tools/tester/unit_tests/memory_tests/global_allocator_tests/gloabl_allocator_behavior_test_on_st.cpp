@@ -20,7 +20,7 @@ bool global_allocator_simple_behavior_test_on_st_1() NOEXP {
 		}
 	);
 
-	if (h1.ptr == nullptr) return TEST_FAIL;
+	if (h1.pointer() == nullptr) return TEST_FAIL;
 	if (h1.response() != allocator_response::success) return TEST_FAIL;
 
 	u64 size = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
@@ -33,7 +33,7 @@ bool global_allocator_simple_behavior_test_on_st_1() NOEXP {
 		}
 	);
 
-	if (h2.get_pointer() == nullptr) return TEST_FAIL;
+	if (h2.pointer() == nullptr) return TEST_FAIL;
 	if (h2.response() != allocator_response::success) return TEST_FAIL;
 
 	size = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
@@ -95,22 +95,22 @@ bool global_allocator_simple_behavior_test_on_st_2() NOEXP {
 
 bool global_allocator_allocate2_simple_behavior_test_on_st() NOEXP {
 
-	g_memory_handle_2 h1 = core::memory::allocate_tow(
+	same_pair<g_memory_handle> h1 = core::memory::allocate_tow(
 		g_memory_request{ .size = 32 MB , .tag = subsystem_memory_tag::debug_system },
 		g_memory_request{ .size = 32 MB , .tag = subsystem_memory_tag::debug_system }
 	);
 
-	if(h1.handle_1.response() != h1.handle_2.response()) return TEST_FAIL;
+	if(h1.first.response()  != h1.second.response() ) return TEST_FAIL;
 
 	// write to memory 
-	byte* s = (byte*)h1.handle_1.get_pointer();
-	byte* e = (byte*)h1.handle_1.get_pointer() + (32 MB);
+	byte* s = (byte*)h1.first.pointer();
+	byte* e = (byte*)h1.first.pointer()  + (32 MB);
 	write_to_memory(s,e);
 	e--;
 	if (*e != 0xFF) return TEST_FAIL;
 
-	s = (byte*)h1.handle_2.get_pointer();
-	e = (byte*)h1.handle_2.get_pointer() + (32 MB);
+	s = (byte*)h1.second.pointer() ;
+	e = (byte*)h1.second.pointer()  + (32 MB);
 	write_to_memory(s, e);
 	e--;
 	if (*e != 0xFF) return TEST_FAIL;
@@ -125,12 +125,12 @@ bool global_allocator_allocate2_simple_behavior_test_on_st() NOEXP {
 	u64 current = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 	if(current != t) return TEST_FAIL;
 
-	core::memory::deallocate(h1.handle_1);
+	core::memory::deallocate(h1.first);
 	current = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 
 	if(current != (32 MB)) return TEST_FAIL;
 
-	core::memory::deallocate(h1.handle_2);
+	core::memory::deallocate(h1.second);
 	current = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 
 	if(current != 0) return TEST_FAIL;
