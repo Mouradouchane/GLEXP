@@ -419,19 +419,19 @@ void core::dynamic_allocator::update_size_variables (
     else return this->_capacity_;
 }
 
- memory_handle allocate_on_st(memory_request const& request) NOEXP {
+ memory_handle dynamic_allocator::allocate_on_st(memory_request const& request) NOEXP {
      return memory_handle();
  }
 
- memory_handle allocate_on_mt(memory_request const& request) NOEXP {
+ memory_handle dynamic_allocator::allocate_on_mt(memory_request const& request) NOEXP {
      return memory_handle();
  }
 
- void deallocate_on_st(memory_handle const& handle) NOEXP {
+ void dynamic_allocator::deallocate_on_st(memory_handle const& handle) NOEXP {
 
  }
 
- void deallocate_on_mt(memory_handle const& handle) NOEXP {
+ void dynamic_allocator::deallocate_on_mt(memory_handle const& handle) NOEXP {
 
  }
 

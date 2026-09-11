@@ -23,7 +23,7 @@
 
 core::memory_block::memory_block(u64 size , u32 max_allowed_allocations, subsystem_memory_tag _tag_) NOEXP {
 
-	if (memory_block::min_allowed_size <= size <= memory_block::max_allowed_size) {
+	if (memory_block::min_allowed_size > size > memory_block::max_allowed_size) {
 		CORE_FATAL(
 			0, MEMORY_BLOCK_NOT_ALLOWED_SIZE, 
 			core::bytes_to_string(size) ,

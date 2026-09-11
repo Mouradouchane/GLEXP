@@ -76,7 +76,7 @@ id32 atomic_lock::try_lock() NOEXP {
 
 		// if we own the lock successfuly
 		this->unique_ownership_id.fetch_add(1, ATOMIC_RELAXED_ORDER);
-		return (id32)this->unique_ownership_id.load();
+		return (id32)new_lock.owner_id;
 	}
 	// else failed to lock
 	return atomic_lock::invalid_id;
@@ -106,8 +106,10 @@ id32 atomic_lock::wait_for_lock() NOEXP {
 
 	/*
 		cpu firendly waiting for lock , but it will take more time to sleep by simply giving cpu to other threads .
+		warning : this could cause a massive preformance hit !
 	*/
-	while (true) {
+	while (true) { 
+
 		id = this->try_lock();
 
 		if (id) return id;
@@ -125,7 +127,6 @@ bool atomic_lock::release(id32 ownership_id) NOEXP {
 	// try to unlock / give back ownership
 	// if ( this->_lock_.compare_exchange_strong(expected_lock, new_lock , ATOMIC_ACQUIRE_ORDER, ATOMIC_RELAXED_ORDER) ) {
 	if (this->_lock_.compare_exchange_strong(expected_lock, new_lock, ATOMIC_RELEASE_ORDER, ATOMIC_RELAXED_ORDER)) {
-		this->unique_ownership_id.fetch_add(1);
 		return true;
 	}
 	// else means invalid ownership id passed
