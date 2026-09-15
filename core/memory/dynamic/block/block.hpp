@@ -25,13 +25,14 @@ namespace core {
 DLL_API_CLASS memory_block {
 
 private:
+	bool alive = false;
 	core::atomic_lock lock;
 
 	g_memory_handle handle;
 	byte* start = nullptr; // block start
 	byte* end   = nullptr; // block end
 	byte* seek  = nullptr; // current free spot
-	u64   block_size = 0; // block memory size in bytes
+	u64   block_size  = 0; // block memory size in bytes
 
 #ifdef DEBUG
 	DEBUG_ONLY subsystem_memory_tag block_tag; // memory_block usage
@@ -66,6 +67,7 @@ public:
 	bool deallocate(memory_handle const& handle) NOEXP;
 
 	bool is_busy() NOEXP;
+	bool is_alive() NOEXP;
 
 	u64 size() NOEXP; // size of block memory in bytes
 	u64 free_memory() NOEXP;
@@ -111,6 +113,7 @@ private: // private helper functions
 	core::memory_block& operator = (const core::memory_block&& other) = delete;
 	core::memory_block& operator = (const core::memory_block const& other) = delete;
 
+	friend class core::dynamic_allocator;
 };
 // class memory_block end 
 

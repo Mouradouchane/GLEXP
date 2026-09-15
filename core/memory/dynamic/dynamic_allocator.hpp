@@ -12,22 +12,8 @@
 #include "core/memory/dynamic/block/block.hpp"
 #include "core/strings/string.hpp"
 
-struct dynamic_allocator_parameters {
-	DEBUG_ONLY string name;
-	DEBUG_ONLY subsystem_memory_tag tag;		
-	u64 memory_budget; // max memory this allocator can reach and operates on
-	/*
-		how many allocations each memory block can maintain
-		note: the lowest the number , the better the preformance
-	*/ 
-	u16  max_allocations_per_block;	
-	bool is_multi_thread; // is this allocator gonna be used by multiple threads/sub-system or not	
-	bool allocate_all_at_once; // allocate all memory at once
-};
 
 namespace core {
-
-
 	/*
 		- core::dynamic_allocator handle dynamic memory allocation with different size's like new/malloc .
 		- note: this allocator run on limited memory budget , if he run's out of memory in a "crash" or "nullptr" you get .
@@ -51,14 +37,13 @@ namespace core {
 	#endif
 
 		core::atomic_lock  _lock_;
-		core::memory_block _blocks_[MAX_MEMORY_BLOCKS]; // blocks array
-		bool               _blocks_status_[MAX_MEMORY_BLOCKS] = { false }; // for the status of each block
+		core::memory_block _blocks_[MAX_MEMORY_BLOCKS]; // memory blocks 
 		u8 const           _capacity_    = MAX_MEMORY_BLOCKS; // max allowed blocks
 		atomic_u8          _blocks_count_ = 0; 
 		u16                _blocks_max_allocations_ = MAX_ALLOCATIONS_PRE_BLOCK; // max allocations allowed per block
 
 		// note: this computed automatically at construction time based on the "_memory_budget_"
-		u64                _blocks_size_ = core::dynamic_allocator::min_size_allowed; 
+		u64                _blocks_size_ = core::dynamic_allocator::min_budget_allowed; 
 		// max memory this allocator allowed to use/reach
 		u64                _memory_budget_ = 0; 
 		
@@ -68,16 +53,16 @@ namespace core {
 		
 		bool _is_mt_ = false; // is this allocator for multi-threaded usage ?
 
-		// g_memory_handle _handle_;
-
 	public:
 		// public variables for usage 
-		// min/max allowed size for dynamic_allocator "blocks"
-		static const u64 min_size_allowed = 16 MB;
-		static const u64 max_size_allowed =  2 GB;
+		static const u64 min_budget_allowed =   16 MB;
+		static const u64 max_budget_allowed = 4080 MB;
 		
 		// constructor
-		dynamic_allocator( dynamic_allocator_parameters const& parameters ) NOEXP;
+		dynamic_allocator (
+			string name, u64 memory_budget, subsystem_memory_tag tag,
+			bool enable_multi_threaded_allocation, bool all_memory_in_one_block = false
+		) NOEXP;
 
 		// destructor
 		~dynamic_allocator() NOEXP;
@@ -106,7 +91,9 @@ namespace core {
 		DEBUG_ONLY string const& name() NOEXP;
 		DEBUG_ONLY subsystem_memory_tag tag() NOEXP;
 
+
 	private: // helper functions
+
 		u8 add_new_block(u32 block_size) NOEXP;
 		// INLINE void remove_block(u8  block_index) NOEXP;
 

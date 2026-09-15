@@ -23,51 +23,51 @@ namespace core {
 	constructor's
 */
 
-dynamic_allocator::dynamic_allocator(dynamic_allocator_parameters const& parameters) NOEXP {
+dynamic_allocator::dynamic_allocator(
+    string name, u64 memory_budget, subsystem_memory_tag tag,
+    bool enable_multi_threaded_allocation, bool all_memory_in_one_block = false
+) NOEXP {
     
     // check memory budget
-    if (
-        parameters.memory_budget < core::dynamic_allocator::min_size_allowed || 
-        parameters.memory_budget > core::dynamic_allocator::max_size_allowed
-    ) {
+    if (memory_budget < dynamic_allocator::min_budget_allowed || memory_budget > dynamic_allocator::max_budget_allowed) {
 
         CORE_WARN_F(
             "core::dynamic_allocator(): memory budget {}bytes not allowed , min={} , max={}!",
-            parameters.memory_budget, core::dynamic_allocator::min_size_allowed , core::dynamic_allocator::max_size_allowed
+            memory_budget, dynamic_allocator::min_budget_allowed , dynamic_allocator::max_budget_allowed
         );
 
         return;
     }
 
-    this->_memory_budget_ = parameters.memory_budget;
-    this->_blocks_size_ = u64(parameters.memory_budget / this->_capacity_);
+    this->_memory_budget_ = memory_budget;
+    this->_blocks_size_ = u64(memory_budget / this->_capacity_);
 
     // check max allocations
-    if (parameters.max_allocations_per_block > MAX_ALLOCATIONS_PRE_BLOCK) {
+    if (max_allocations_per_block > MAX_ALLOCATIONS_PRE_BLOCK) {
     #ifdef DEBUG
         CORE_WARN_F(
             "core::dynamic_allocator(): max allocations per block '{}' is higher than the maximum allowed '{}' !",
-            parameters.max_allocations_per_block , MAX_ALLOCATIONS_PRE_BLOCK
+            max_allocations_per_block , MAX_ALLOCATIONS_PRE_BLOCK
         );
         CORE_INFO(
             "core::dynamic_allocator(): auto reconfig max allocations per block from {} to {} ." ,
-            parameters.max_allocations_per_block, MAX_ALLOCATIONS_PRE_BLOCK
+            max_allocations_per_block, MAX_ALLOCATIONS_PRE_BLOCK
         );
     #endif
 
         this->_blocks_max_allocations_  = MAX_ALLOCATIONS_PRE_BLOCK;
     }
-    else this->_blocks_max_allocations_ = parameters.max_allocations_per_block | 1;
+    else this->_blocks_max_allocations_ = max_allocations_per_block | 1;
     
     // setup other variables
 #ifdef DEBUG
-    this->_tag_  = parameters.tag;
-    this->_name_ = parameters.name;
+    this->_tag_  = tag;
+    this->_name_ = name;
 #endif
 
-    this->_is_mt_ = parameters.is_multi_thread;
+    this->_is_mt_ = is_multi_thread;
 
-    if (parameters.allocate_all_at_once) {
+    if (allocate_all_at_once) {
         for (u32 i = 0; i < this->_capacity_; i++) {
             this->add_new_block(this->_blocks_size_);
         }
@@ -197,7 +197,7 @@ same_pair<memory_handle> dynamic_allocator::allocate_tow(
     for (u8 i = 0; i < this->_blocks_count_; i++) {
 
         // if block is alive
-        if (this->_blocks_status_[i]) {
+        if (this->_blocks_[i].is_alive()) {
 
             // if block not busy
             if (! this->_blocks_[i].is_busy()) {
@@ -396,12 +396,11 @@ void core::dynamic_allocator::update_size_variables (
     }
 
     if (this->_blocks_count_ < this->_capacity_) {
-        if (this->_blocks_status_[this->_blocks_count_] == false) {
+        if (this->_blocks_[this->_blocks_count_].alive == false) {
             u8 index = this->_blocks_count_;
 
             new (this->_blocks_ + index) core::memory_block(block_size, this->_blocks_max_allocations_ , this->_tag_);
 
-            this->_blocks_status_[index] = true;
             this->_size_ += block_size;
             this->_blocks_count_ += 1;
 

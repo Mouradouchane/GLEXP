@@ -62,6 +62,8 @@ core::memory_block::memory_block(u64 size , u32 max_allowed_allocations, subsyst
 	// create register's
 	this->active_list = core::memory_registry(max_allowed_allocations);
 	this->free_list   = core::memory_registry(max_allowed_allocations);
+	this->alive = true;
+
 
 	CORE_DEBUG(
 		0, "new memory_block is created for {} usage , {} .", 
@@ -96,6 +98,8 @@ core::memory_block::~memory_block() NOEXP {
 		this->seek  = nullptr;
 		this->end   = nullptr;
 	}
+
+	this->alive = false;
 
 	CORE_DEBUG(
 		0, "memory_block is destructed , {} usage , size {}bytes .", 
@@ -292,6 +296,10 @@ bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 
 bool core::memory_block::is_busy() NOEXP {
 	return this->lock.is_locked();
+}
+
+bool core::memory_block::is_alive() NOEXP {
+	return this->alive;
 }
 
 

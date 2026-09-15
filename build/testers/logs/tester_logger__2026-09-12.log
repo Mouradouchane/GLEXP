@@ -1,0 +1,14 @@
+[09/12/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[09/12/26] [tester_logger] [error] : init-logger test error 1 !
+
+[09/12/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[09/12/26] [tester_logger] [critical] : core::array<int>::array
+
+[09/12/26] [tester_logger] [critical] : __cdecl core::array<int>::array(unsigned int,const class core::dynamic_allocator &,enum memory_tag) noexcept
+
+[09/12/26] [tester_logger] [critical] : failed to allocate memory for core::array<int>
+
+[09/12/26] [tester_logger] [critical] : C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, ', 
+
