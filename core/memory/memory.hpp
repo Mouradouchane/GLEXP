@@ -34,7 +34,6 @@
 #define MEMORY_ORDER_ACQUIRE std::memory_order_acquire // when cache syncing is needed
 
 #define MAX_MEMORY_TAGS   255
-#define MAX_MEMORY_BLOCKS 255
 #define MAX_ALLOCATIONS_PRE_BLOCK 1024
 
 #define FRIENDS_TO_MEMORY_HANDLE() \

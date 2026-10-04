@@ -46,12 +46,13 @@ private:
 	core::memory_registry free_list;   // list of the current free/avalible areas in block
 
 public:
-	static const u64 min_allowed_size = 64 KB;
-	static const u64 max_allowed_size = 1024 MB;
+	static const u64 min_allowed_size =   64 KB;
+	static const u64 max_allowed_size = 4096 MB;
 
 	// constructor
 	memory_block() NOEXP = default;
-	memory_block(u64 size , u32 max_allowed_allocations , subsystem_memory_tag _tag_) NOEXP;
+	memory_block(byte* start, byte* end, u64 size_) NOEXP;
+	memory_block(u64 size , u32 max_allowed_allocations , subsystem_memory_tag tag_) NOEXP;
 
 	// destructor
 	~memory_block() NOEXP;
@@ -59,8 +60,8 @@ public:
 	/*
 		memory_block public functions
 	*/
-	memory_handle  allocate(memory_request const& request) NOEXP;
-	memory_handle  allocate(u32 size, u32 alignement, memory_tag _tag_) NOEXP;
+	memory_handle allocate(memory_request const& request) NOEXP;
+	memory_handle allocate(u32 size, u32 alignement, memory_tag _tag_) NOEXP;
 
 	same_pair<memory_handle> allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP;
 

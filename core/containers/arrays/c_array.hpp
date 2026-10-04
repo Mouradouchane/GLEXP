@@ -3,118 +3,82 @@
 #ifndef CORE_CARRAY_HPP
 #define CORE_CARRAY_HPP
 
-#include <initializer_list>
 #include "core/types.hpp"
-#include "core/assert.hpp"
+#include "core/logger/logger.hpp"
 #include "core/memory/memory.hpp"
 
+#ifdef DEBUG
+	static inline auto _carr_hpp_lgr_ = CORE_GET_LOGGER(DATA_STRUCTER_LOGGER);
+#else 
+	static inline auto _carr_hpp_lgr_ = nullptr;
+#endif
 
 namespace core {
 
-	/*
-		c-style array as struct contain array variables and few static functions
+/*
+	simple array for global usage
 
-		NOTE: - c_array is not safe , there's no check no type safety .
-		      - designed for full control and access .
-	*/
-	template<typename type> struct c_array {
-		// variables
-		core::memory_allocator* _allocator_ = nullptr;
+	NOTE: - c_array is not safe , there's no check no type safety .
+		    - designed for full control and access .
+*/
+template<typename type> class c_array {
+	private:
+		g_memory_handle handle;
 		u32   count  = NULL;
-		u32   size   = NULL;
+		u64   size   = NULL;
 		type* start  = nullptr;
 		type* end    = nullptr;
+		bool  alive  = false;
+		subsystem_memory_tag tag = subsystem_memory_tag::unkown;
+
+	public:
+		c_array( ) = default;
+		c_array(const u32 count_, subsystem_memory_tag tag_) NOEXP {
+			handle = core::memory::allocate(
+				g_memory_request{ .size = sizeof(type) * count_ , .tag = tag_ }
+			);
+
+			if (handle.response != allocator_response::success) return;
+
+			this->count = count_;
+			this->size  = sizeof(type) * count_;
+			start = (type*)handle.pointer;
+			end   = start + count;
+			tag   = tag_;
+
+			alive = true;
+		}
+
+		~c_array() {
+			if (alive) {
+				core::memory::deallocate(this->handle);
+				start = nullptr;
+				end   = nullptr;
+				alive = false;
+			}
+		}
+
+		u64 size_() NOEXP;
+		u32 elements_count() NOEXP;
+		
+		type* begin() NOEXP;
+		type* end() NOEXP;
 
 		// operator's
-		type& operator[](u32 index) {
+		type& operator[](u32 index) NOEXP {
+		#ifdef DEBUG
+			if (index < count) return *(this->start + index);
+			else {
+				CORE_ERROR_HPP(_carr_hpp_lgr_, 0, "c_array index {} out of range {} !", index , count);
+				return *(this->end + 1);
+			}
+		#else
 			return *(this->start + index);
+		#endif
+
 		}
 		
-		// note: operator = performe a move operation
-		core::c_array<type>& operator = (core::c_array<type>& other_array) {
-			CORE_WARN_IF(this->start != nullptr, "core::c_array::operator= -> array elements begin wiped in the assignement process !");
-
-			std::memcpy(this, other_array, sizeof(core::c_array<type>));
-			std::memset(other_array, NULL, sizeof(core::c_array<type>));
-		}
-
-		/*
-			static function's
-		*/ 
-
-		static core::c_array<type> create(u32 elements_count, core::memory_allocator* _allocator = nullptr) {
-
-			core::c_array<type> new_array;
-
-			new_array.count = elements_count;
-			new_array.size  = sizeof(type) * elements_count;
-
-			if (_allocator == nullptr) {
-				new_array.start = core::global_memory::allocate(new_array.size);
-				CORE_WARN("core::c_array::create() -> core::c_array<{}> allocated using core::global_memory allocator !", typeid(type).name());
-			}
-			else {
-				new_arary.start = _allocator->allocate(new_array.size);
-				new_array._allocator_ = _allocator;
-			}
-
-			new_array.end = new_array.start + new_array.count;
-
-			CORE_INFO("allocated core::c_array -> type:{} , address:&{} , size:{}", typeid(type).name(), &_array, _array.size);
-			return new_array;
-		}
-		
-		static void destroy(core::c_array<type>& _array) {
-
-			if (_array._allocator_ == nullptr) {
-				core::global_memory::deallocate(_array.start);
-			}
-			else {
-				_array._allocator_->deallocate(_array.start);
-			}
-
-			CORE_INFO("deallocated core::c_array -> type:{} , address:&{} , size:{}", typeid(type).name(), &_array, _array.size);
-			memset(_array, 0, sizeof(core::c_array<type>));
-		}
-
-		static void clear(core::c_array<type>& _array) {
-			CRASH_IF(_array.start == nullptr, "core::c_array::clear() -> null-pointer array !");
-
-			memset(_array.start, 0, _array.size);
-		}
-	
-		// todo: multi-threaded array fill
-		static void fill(core::c_array<type>& _array, type const& fill_value) noexcept {
-			CRASH_IF(_array.start == nullptr , "core::c_array::fill() -> array memory is null-pointer !");
-
-			std::fill<type>(_array.start , _array.end, fill_value);
-		}
-
-		// todo: multi-threaded copying
-		static void copy(core::c_array<type> const& source, core::c_array<type>& destination) {
-			CRASH_IF(source.start == nullptr || destination.start == nullptr, "core::c_array::copy(source={}, destination={}) : source or destination memory is null-pointer !", &source, &destination);
-			CORE_WARN_IF(source._size_ > destination._size_ , "core::c_array::copy(source={}, destination={}) : source array is bigger than the destination array !", &source, &destination);
-
-			std::memcpy(destination.start , source.start , destination._size_);
-		}
-
-		// todo: multi-threaded moving
-		static void move(core::c_array<type>& source, core::c_array<type>& destination) {
-			// copy to destination
-			std::memcpy(destination, source , sizeof(core::c_array<type>));
-			// clear source
-			std::memset(source, 0, sizeof(core::c_array<type>));
-		}
-
-		template<typename type> static void sort(
-			core::c_array<type>& _array ,
-			bool (*compare_function)(type const& a, type const& b)
-		) noexcept {
-
-			std::sort<type>(_array.start, _array.end, compare_function);
-		}
-
-	}; // struct c_array end
+	}; // calss c_array end
 
 } // namespace core end
 
