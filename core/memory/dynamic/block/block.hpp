@@ -51,7 +51,7 @@ public:
 
 	// constructor
 	memory_block() NOEXP = default;
-	memory_block(byte* start, byte* end, u64 size_) NOEXP;
+	memory_block(byte* start, byte* end, u64 size_ , subsystem_memory_tag tag_) NOEXP;
 	memory_block(u64 size , u32 max_allowed_allocations , subsystem_memory_tag tag_) NOEXP;
 
 	// destructor

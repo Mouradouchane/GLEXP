@@ -397,15 +397,15 @@ INLINE void core::memory_block::handle_registry_2(
 		*ptr_2 = ((byte*)allocation.ptr + request_1.size);
 	}
 	else {
-		*ptr_1 = nullptr;
-		*ptr_2 = nullptr;
+		*ptr_1  = nullptr;
+		*ptr_2  = nullptr;
 		index_1 = this->active_list.capacity;
 		index_2 = this->active_list.capacity;
 	}
 
 }
 
-// note[WARNING]: lock the memory_block before calling this function !
+// note[WARNING]: lock the memory_block before calling this function !!!!!!!!
 INLINE void core::memory_block::internal_allocate(
 	memory_request const& request, memory_handle& handle
 ) NOEXP {

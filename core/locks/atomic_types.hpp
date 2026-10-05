@@ -14,6 +14,9 @@ typedef std::atomic<ptr16> atomic_ptr16;
 typedef std::atomic<ptr32> atomic_ptr32;
 typedef std::atomic<ptr64> atomic_ptr64;
 
+// bool
+typedef std::atomic<bool>  atomic_bool;
+
 // uint's
 typedef std::atomic<u8>  atomic_u8;
 typedef std::atomic<u16> atomic_u16;

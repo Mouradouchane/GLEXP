@@ -23,47 +23,25 @@ namespace core {
 	constructor's
 */
 
-dynamic_allocator::dynamic_allocator(string const& name, const u64 memory_budget, subsystem_memory_tag tag) NOEXP {
-    
-    // check memory budget
-    if (memory_budget < dynamic_allocator::min_budget_allowed || memory_budget > dynamic_allocator::max_budget_allowed) {
+dynamic_allocator::dynamic_allocator(
+    string const& name, const u64 blocks_size, const u8 blocks_count, const subsystem_memory_tag tag
+) NOEXP {
 
-        CORE_WARN_F(
-            "core::dynamic_allocator(): memory budget {}bytes not allowed , min={} , max={}!",
-            memory_budget, dynamic_allocator::min_budget_allowed , dynamic_allocator::max_budget_allowed
+    if (blocks_size < min_budget_allowed || blocks_size > max_budget_allowed) {
+        CORE_ERROR(
+            0,"failed to create dynamic_allocator {} because blocks_size={} out of this range ({} , {})",
+            name, blocks_size , min_budget_allowed , max_budget_allowed
         );
-
         return;
     }
 
-    _memory_budget_ = memory_budget;
-    _budget_ = memory_budget;
+    _tag_ = tag;
+    _blocks_count_ = blocks_count ? blocks_count : 1;
 
-    // try to allocate memory budget
-    _handle_ = core::memory::allocate(
-        g_memory_request{
-            .size = memory_budget,
-            .tag  = tag
-        }
-    );
+}
 
-    if (_handle_.response() != allocator_response::success) {
-        CORE_FATAL(CORE_LOG_CONFIG_ALL, "dynamic_allocator failed to allocate memory budget {}bytes", memory_budget);
-        return;
-    }
+dynamic_allocator::dynamic_allocator(string const& name, block_description* blocks, const u8 blocks_count, const subsystem_memory_tag tag) NOEXP {
 
-    // setup memory variables
-    _start_ = (byte*)_handle_.ptr;
-    _end_   = _start_ + memory_budget;
-    _seek_  = _start_;
-
-#ifdef DEBUG
-    _tag_  = tag;
-    _name_ = name;
-#endif
-
-    // add the first block
-    add_new_block(_blocks_default_size_);
 }
 
 /*
@@ -74,15 +52,11 @@ dynamic_allocator::~dynamic_allocator() NOEXP {
 
     core::memory::deallocate(_handle_);
     
-    _start_   = nullptr;
-    _end_     = nullptr;
-    _seek_    = nullptr;
-
-    _budget_        = 0;
+    _blocks_  = nullptr;
     _blocks_count_  = 0;
     _memory_budget_ = 0;
 
-    CORE_DEBUG(0, "core::dynamic_allocator {} destructed !" , core::pointer_to_hex_string(this) );
+    CORE_DEBUG(0, "core::dynamic_allocator {} destructed !" , _name_ );
 }
 
 /*
@@ -91,20 +65,29 @@ dynamic_allocator::~dynamic_allocator() NOEXP {
 
 memory_handle dynamic_allocator::allocate(memory_request request) NOEXP {
     
-    switch (_is_mt_) {
-        case true  : { return allocate_on_mt(request); } break; //  multi-thread allocation
-        case false : { return allocate_on_st(request); } break; // single-thread allocation
-    }
-
-    // todo: move this code to mt/st functions
-    /*
     memory_handle handle;
+    bool expected = false; 
 
-    // loop over all blocks
+    // loop over all the free blocks
     for (u8 i = 0; i < _blocks_count_; i++) {
     
-        // if block is alive
-        if (_blocks_status_[i]) {
+        // if free_block parameters is good for "request"
+        if (_free_blocks_[i].index < _out_range_ && _free_blocks_[i].free_memory >= request.size) {
+
+            // try to take the block
+            if (_free_blocks_[i].lock.compare_exchange_strong(expected, true, MEMORY_ORDER_ACQUIRE)) {
+                
+                // try allocate memory
+                handle = _blocks_[ _free_blocks_[i].index ].allocate(request);
+                
+                // release block
+                _free_blocks_[i].lock = false;
+
+                if (handle.response == allocator_response::success) {
+                    break;
+                }
+            }
+            else continue;
 
             // find a "not-busy" block
             if ( ! _blocks_[i].is_busy()) {
@@ -124,11 +107,10 @@ memory_handle dynamic_allocator::allocate(memory_request request) NOEXP {
         }
 
     }
-    */
+
     /*
         else mean all the block is busy at the moment or full
     */
-    /*
     // try allocate new block if possible
     u8 index = add_new_block(request.size);
 
@@ -144,8 +126,7 @@ memory_handle dynamic_allocator::allocate(memory_request request) NOEXP {
 
     // failed to find new block or memory
     return memory_handle{ };
-    */
-
+ 
 }
 
 memory_handle dynamic_allocator::allocate(u32 size , memory_tag _tag_) NOEXP {
@@ -351,101 +332,28 @@ void core::dynamic_allocator::update_size_variables (
     // get memory from budget
     byte* s = _seek_;
     byte* e = _seek_ + target_size;
-    _seek_ = e;
 
     // update variables
+    _seek_    = e;
     _budget_ -= target_size;
+    u8 index_ = _blocks_count_.fetch_add(1, MEMORY_ORDER_ACQUIRE);
 
-    // construct new block
-    u8 index_ = _insert_index_.fetch_add(1, MEMORY_ORDER_ACQUIRE);
-    new (_blocks_ + index_) core::memory_block(s,e, target_size);
+    // create new block
+    new (_blocks_ + index_) core::memory_block(s,e, target_size , _tag_);
 
     // add new block to free list
     for (u8 i = 0; i < _out_range_; i++) {
-        if (_free_blocks_[i].index < _out_range_) {
-            _free_blocks_[i] = free_block {
-                index_ ,
-                target_size
-            };
+
+        if (_free_blocks_[i].index >= _out_range_) {
+            new (_free_blocks_ + i) free_block(index_ , target_size);
+            return i;
         }
     }
 
-
-    u32 block_size;
-
-    // check size
-    if (target_size >  _blocks_size_) block_size = target_size;
-    if (target_size <= _blocks_size_) block_size = _blocks_size_;
-    
-    // check allocator memory budget
-    if (_memory_budget_ < (_size_.load(MEMORY_ORDER_RELAXE) + block_size)) {
-        #ifdef DEBUG
-            CORE_WARN(
-                CORE_LOG_CONFIG_ALL , CORE_WARNING_OUT_OF_BUDGET  CORE_WARNINIG_RUNTIME_CRASH,
-                "core::dynamic_allocator" , _memory_budget_
-            );
-
-            DEBUG_BREAK;
-        #endif
-        return _capacity_;
-    }
-
-    if (_blocks_count_ < _capacity_) {
-        if (_blocks_[_blocks_count_].alive == false) {
-            u8 index = _blocks_count_;
-
-            new (_blocks_ + index) core::memory_block(block_size, _blocks_max_allocations_ , _tag_);
-
-            _size_ += block_size;
-            _blocks_count_ += 1;
-
-            // return new block index
-            return index;
-        }
-        else {
-            CORE_FATAL(CORE_LOG_CONFIG_ALL,
-                "core::dynamic_allocator: failed to find empty spot for new block ! this could be a bug , count={} , capacity={}",
-                _blocks_count_.load(MEMORY_ORDER_RELAXE) , _capacity_
-            );
-            return _capacity_;
-        } 
-    }
-    else return _capacity_;
+    CORE_ERROR(CORE_LOG_CONFIG_ALL, "dynamic_allocator {}: failed to find empty spot in free list for new memory_block !", _name_);
+    return _out_range_;
 }
 
- memory_handle dynamic_allocator::allocate_on_st(memory_request const& request) NOEXP {
-     return memory_handle();
- }
-
- memory_handle dynamic_allocator::allocate_on_mt(memory_request const& request) NOEXP {
-     return memory_handle();
- }
-
- void dynamic_allocator::deallocate_on_st(memory_handle const& handle) NOEXP {
-
- }
-
- void dynamic_allocator::deallocate_on_mt(memory_handle const& handle) NOEXP {
-
- }
-
-/*
-void dynamic_allocator::remove_block(u8 index) NOEXP {
-
-    if (index < _capacity_){
-
-        if (_blocks_status_[index]) {
-            _blocks_status_[index] = false;
-
-            _size_ -= (_blocks_ + index)->size();
-            
-            (_blocks_ + index)->~memory_block();
-            _blocks_count_ -= 1;
-        }
-    }
-
-}
-*/
 
 } // namespace core end
 
