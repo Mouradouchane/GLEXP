@@ -85,7 +85,7 @@ DLL_API void core::memory::init() NOEXP {
 } // init end
 
 
-DLL_API g_memory_handle core::memory::allocate(g_memory_request const& request) NOEXP {
+DLL_API memory_handle_g core::memory::allocate(memory_request_g const& request) NOEXP {
 
 	// allocate memory
 	void* ptr = new byte[request.size + 1];
@@ -114,16 +114,16 @@ DLL_API g_memory_handle core::memory::allocate(g_memory_request const& request) 
 		);
 	#endif
 
-		return g_memory_handle(allocator_response::success, request.size, request.tag, ptr);
+		return memory_handle_g(allocator_response::success, request.size, request.tag, ptr);
 	}
 	else {
 		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request.size, core::to_string(request.tag));
-		return g_memory_handle();
+		return memory_handle_g();
 	}
 
 }
 
-DLL_API same_pair<g_memory_handle> core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP {
+DLL_API same_pair<memory_handle_g> core::memory::allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP {
 	DEBUG_BREAK;
 
 	// allocate memory
@@ -164,31 +164,31 @@ DLL_API same_pair<g_memory_handle> core::memory::allocate_tow(g_memory_request c
 	#endif
 
 
-		return same_pair<g_memory_handle>{
-			g_memory_handle(allocator_response::success, request_1.size, request_1.tag, ptr1),
-			g_memory_handle(allocator_response::success, request_2.size, request_2.tag, ptr2)
+		return same_pair<memory_handle_g>{
+			memory_handle_g(allocator_response::success, request_1.size, request_1.tag, ptr1),
+			memory_handle_g(allocator_response::success, request_2.size, request_2.tag, ptr2)
 		};
 	}
 	else {
 		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_1.size, core::to_string(request_1.tag));
 		CORE_FATAL_F(GLOBAL_ALLOCATOR_FAILED, request_2.size, core::to_string(request_2.tag));
 
-		return same_pair<g_memory_handle>{
-			g_memory_handle(),
-			g_memory_handle()
+		return same_pair<memory_handle_g>{
+			memory_handle_g(),
+			memory_handle_g()
 		};
 	}
 
 }
 
-DLL_API void core::memory::deallocate(g_memory_handle const& handle) NOEXP {
+DLL_API void core::memory::deallocate(memory_handle_g const& handle) NOEXP {
 	// DEBUG_BREAK;
 
-	if (handle.ptr) {
-		u8 _tag_ = *((u8*)handle.ptr + handle._size_);
+	if (handle._ptr_) {
+		u8 _tag_ = *((u8*)handle._ptr_ + handle._size_);
 
 		// release memory
-		delete[] handle.ptr;
+		delete[] handle._ptr_;
 
 		// update internal variables
 		total_size -= handle._size_;
@@ -196,7 +196,7 @@ DLL_API void core::memory::deallocate(g_memory_handle const& handle) NOEXP {
 		sections_sizes[_tag_] -= handle._size_;
 
 		CORE_DEBUG(0, "global-allocator: memory {} is deallocated , used for {} size {}." , 
-			core::pointer_to_hex_string(handle.ptr) , core::to_string((subsystem_memory_tag)_tag_),
+			core::pointer_to_hex_string(handle._ptr_) , core::to_string((subsystem_memory_tag)_tag_),
 			core::bytes_to_string(handle._size_)
 		);
 	#endif
@@ -246,31 +246,31 @@ memory_handle::~memory_handle() NOEXP {
 
 
 /*
-	class g_memory_handle
+	class memory_handle_g
 */
-g_memory_handle::g_memory_handle(
+memory_handle_g::memory_handle_g(
 	allocator_response response_, u64 size, subsystem_memory_tag tag_, void* pointer, 
 	bool deallocate_at_destruction_time
 ) NOEXP
-	: _response_(response_), _size_(size), _tag_(tag_), ptr(pointer) , _deallocate_at_destuctor_(deallocate_at_destruction_time)
+	: _response_(response_), _size_(size), _tag_(tag_), _ptr_(pointer) , _deallocate_at_destuctor_(deallocate_at_destruction_time)
 {
 
 }
 
-g_memory_handle::~g_memory_handle() NOEXP {
-	if (this->_deallocate_at_destuctor_ && this->ptr) {
+memory_handle_g::~memory_handle_g() NOEXP {
+	if (this->_deallocate_at_destuctor_ && this->_ptr_) {
 		core::memory::deallocate(*this);
 	}
 
 #ifdef DEBUG
-	if (this->ptr) {
+	if (this->_ptr_) {
 		CORE_WARN(core::logger::log_config::dump_stack_trace, 
 			"'memory leak' posibility ! global memory handle destructed while still carrying a vaild pointer !"
 		);
 	}
 #endif
 
-	this->ptr = nullptr;
+	this->_ptr_ = nullptr;
 }
 
 /*

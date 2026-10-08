@@ -5,16 +5,15 @@
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-#include "core/locks/atomic_lock/atomic_lock.hpp"
 #include "core/locks/atomic_types.hpp"
 #include "core/memory/memory.hpp"
-#include "core/memory/dynamic/registery/registery.hpp"
 #include "core/memory/dynamic/block/block.hpp"
+#include "core/containers/arrays/c_array.hpp"
 #include "core/strings/string.hpp"
 
 struct block_description {
 	u64 size;
-	u16 max_allocations;
+	u16 max_allocations_per_block;
 	subsystem_memory_tag tag;
 };
 
@@ -47,12 +46,13 @@ private:
 	DEBUG_ONLY atomic_u32 _sections_[MAX_MEMORY_TAGS] = { 0u };
 #endif
 
-	g_memory_handle _handle_;
+	memory_handle_g _handle_;
 
 	u64 _memory_budget_ = 0; // total memory allocated
 
-	core::memory_block* _blocks_ = nullptr;
-	atomic_u8           _blocks_count_ = 0;
+	core::c_array<memory_block> _blocks_;
+	u64 _block_size_  = min_budget_allowed;
+	u8 _blocks_count_ = 0;
 
 
 public:
@@ -61,8 +61,8 @@ public:
 	static const u64 max_budget_allowed = 4096 MB;
 		
 	// constructor
-	dynamic_allocator(string const& name, const u64 blocks_size , const u8 blocks_count, const subsystem_memory_tag tag) NOEXP;
-	dynamic_allocator(string const& name, block_description* blocks, const u8 blocks_count, const subsystem_memory_tag tag) NOEXP;
+	dynamic_allocator(string const& name, const u64 blocks_size , const u8 blocks_count, const u16 max_allocations_per_block, const subsystem_memory_tag tag) NOEXP;
+	dynamic_allocator(string const& name, c_array<block_description> blocks_description, const subsystem_memory_tag tag) NOEXP;
 
 	// destructor
 	~dynamic_allocator() NOEXP;
@@ -73,10 +73,10 @@ public:
 
 	memory_handle allocate(u32 size, memory_tag tag, u8 block_index, bool wait_for_block) NOEXP;
 	memory_handle allocate(u32 size, u16 alignement, memory_tag tag, u8 block_index, bool wait_for_block) NOEXP;
-	memory_handle allocate(memory_request request, u8 block_index, bool wait_for_block) NOEXP;
+	memory_handle allocate(memory_request request) NOEXP;
 
 	// allocate 2 memory chunks next to each other in one call
-	same_pair<memory_handle> allocate_tow(memory_request const& request_1, memory_request const& request_2, u8 block_index, bool wait_for_block) NOEXP;
+	same_pair<memory_handle> allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP;
 		
 	void deallocate(memory_handle handle) NOEXP;
 		

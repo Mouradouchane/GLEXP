@@ -16,14 +16,13 @@
 namespace core {
 
 /*
-	simple array for global usage
+	c_array is a simple array used with global allocator
 
-	NOTE: - c_array is not safe , there's no check no type safety .
-		    - designed for full control and access .
+	NOTE: there is no safety use it carefuly  
 */
 template<typename type> class c_array {
 	private:
-		g_memory_handle handle;
+		memory_handle_g handle;
 		u32   count  = NULL;
 		u64   size   = NULL;
 		type* start  = nullptr;
@@ -34,14 +33,16 @@ template<typename type> class c_array {
 	public:
 		c_array( ) = default;
 		c_array(const u32 count_, subsystem_memory_tag tag_) NOEXP {
+			
+			this->count = count_;
+			this->size  = sizeof(type) * count_;
+
 			handle = core::memory::allocate(
-				g_memory_request{ .size = sizeof(type) * count_ , .tag = tag_ }
+				memory_request_g{ .size = this->size , .tag = tag_ }
 			);
 
 			if (handle.response != allocator_response::success) return;
 
-			this->count = count_;
-			this->size  = sizeof(type) * count_;
 			start = (type*)handle.pointer;
 			end   = start + count;
 			tag   = tag_;
@@ -58,24 +59,24 @@ template<typename type> class c_array {
 			}
 		}
 
-		u64 size_() NOEXP;
-		u32 elements_count() NOEXP;
+		bool is_alive() NOEXP { return alive; }
+		u64 size_() NOEXP { return size; }
+		u32 elements_count() NOEXP { return count; };
 		
-		type* begin() NOEXP;
-		type* end() NOEXP;
+		type* begin() NOEXP { return start; }
+		type* end_() NOEXP { return end; }
 
 		// operator's
 		type& operator[](u32 index) NOEXP {
-		#ifdef DEBUG
-			if (index < count) return *(this->start + index);
-			else {
-				CORE_ERROR_HPP(_carr_hpp_lgr_, 0, "c_array index {} out of range {} !", index , count);
-				return *(this->end + 1);
-			}
-		#else
-			return *(this->start + index);
-		#endif
-
+			#ifdef DEBUG
+				if (index < count) return *(this->start + index);
+				else {
+					CORE_ERROR_HPP(_carr_hpp_lgr_, 0, "c_array index {} out of range {} !", index , count);
+					return *(this->end + 1);
+				}
+			#else
+				return *(this->start + index);
+			#endif
 		}
 		
 	}; // calss c_array end

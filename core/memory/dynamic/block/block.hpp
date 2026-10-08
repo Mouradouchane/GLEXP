@@ -28,7 +28,7 @@ private:
 	bool alive = false;
 	core::atomic_lock lock;
 
-	g_memory_handle handle;
+	memory_handle_g handle;
 	byte* start = nullptr; // block start
 	byte* end   = nullptr; // block end
 	byte* seek  = nullptr; // current free spot
@@ -46,12 +46,11 @@ private:
 	core::memory_registry free_list;   // list of the current free/avalible areas in block
 
 public:
-	static const u64 min_allowed_size =   64 KB;
+	static const u64 min_allowed_size =    4 KB;
 	static const u64 max_allowed_size = 4096 MB;
 
 	// constructor
 	memory_block() NOEXP = default;
-	memory_block(byte* start, byte* end, u64 size_ , subsystem_memory_tag tag_) NOEXP;
 	memory_block(u64 size , u32 max_allowed_allocations , subsystem_memory_tag tag_) NOEXP;
 
 	// destructor

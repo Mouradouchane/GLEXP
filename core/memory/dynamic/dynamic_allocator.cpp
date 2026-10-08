@@ -24,24 +24,80 @@ namespace core {
 */
 
 dynamic_allocator::dynamic_allocator(
-    string const& name, const u64 blocks_size, const u8 blocks_count, const subsystem_memory_tag tag
+    string const& name, const u64 blocks_size, const u8 blocks_count, const u16 max_allocations_per_block , const subsystem_memory_tag tag
 ) NOEXP {
 
-    if (blocks_size < min_budget_allowed || blocks_size > max_budget_allowed) {
+    // set variables
+    _name_ = name;
+    _tag_  = tag;
+    _blocks_count_  = blocks_count ? blocks_count : 1;
+    _block_size_    = blocks_size;
+    _memory_budget_ = _block_size_ * _blocks_count_;
+
+    // check memory budget
+    if (_memory_budget_ < min_budget_allowed || _memory_budget_ > max_budget_allowed) {
         CORE_ERROR(
-            0,"failed to create dynamic_allocator {} because blocks_size={} out of this range ({} , {})",
-            name, blocks_size , min_budget_allowed , max_budget_allowed
+            0,"failed to create dynamic_allocator {} because memory budget {} is not allowed ! allowed range min={} , max={}",
+            name, _memory_budget_, min_budget_allowed , max_budget_allowed
         );
         return;
     }
 
-    _tag_ = tag;
-    _blocks_count_ = blocks_count ? blocks_count : 1;
+    // create and init memory_blocks
+    _blocks_ = core::c_array<memory_block>(_blocks_count_ , _tag_);
+
+    for (u8 i = 0; i < _blocks_.elements_count(); i++ ) {
+        new (&_blocks_[i]) memory_block(_block_size_, max_allocations_per_block, _tag_);
+    }
 
 }
 
-dynamic_allocator::dynamic_allocator(string const& name, block_description* blocks, const u8 blocks_count, const subsystem_memory_tag tag) NOEXP {
+dynamic_allocator::dynamic_allocator(
+    string const& name, c_array<block_description> blocks_description, const subsystem_memory_tag tag
+) NOEXP {
 
+    // set variables
+    _name_ = name;
+    _tag_  = tag;
+    _blocks_count_  = blocks_description.elements_count() ? blocks_description.elements_count() : 1;
+
+    // check blocks count
+    if (blocks_description.elements_count() > 255) {
+        CORE_ERROR(
+            0, "failed to create dynamic_allocator {} because {} blocks is not allowed , max=255",
+            name, blocks_description.elements_count()
+        );
+        return;
+    }
+
+    // create and init memory_blocks
+    _blocks_ = core::c_array<memory_block>(_blocks_count_, _tag_);
+
+    for (u8 i = 0; i < _blocks_.elements_count(); i++) {
+        block_description desc = blocks_description[i];
+
+        // check block size
+        if (desc.size < min_budget_allowed || desc.size > max_budget_allowed) {
+            CORE_ERROR(
+                0, "failed to create memory_block for dynamic_allocator {} because block size {} is not allowed ! allowed range min={} , max={}",
+                name, _memory_budget_, min_budget_allowed, max_budget_allowed
+            );
+        }
+
+        new (&_blocks_[i]) memory_block(_block_size_, max_allocations_per_block, _tag_);
+    }
+
+    // check memory budget
+    if (_memory_budget_ < min_budget_allowed || _memory_budget_ > max_budget_allowed) {
+        CORE_ERROR(
+            0, "failed to create dynamic_allocator {} because memory budget {} is not allowed ! allowed range min={} , max={}",
+            name, _memory_budget_, min_budget_allowed, max_budget_allowed
+        );
+
+
+
+        return;
+    }
 }
 
 /*

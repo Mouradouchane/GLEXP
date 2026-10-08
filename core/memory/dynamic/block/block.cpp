@@ -43,7 +43,7 @@ core::memory_block::memory_block(u64 size , u32 max_allowed_allocations, subsyst
 
 	// allocate memory block
 	this->handle = core::memory::allocate(
-		g_memory_request{ 
+		memory_request_g{ 
 			.size = this->block_size,
 			.tag  = this->block_tag
 		}

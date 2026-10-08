@@ -29,7 +29,7 @@ memory_registry::memory_registry() NOEXP {
 	this->size = sizeof(memory_allocation) * this->capacity;
 
 	this->handle = core::memory::allocate(
-		g_memory_request{
+		memory_request_g{
 			.size = this->size,
 			.tag = subsystem_memory_tag::memory_system
 		}
@@ -51,7 +51,7 @@ memory_registry::memory_registry(u32 register_capacity) NOEXP {
 	this->size = sizeof(memory_allocation) * this->capacity;
 
 	this->handle = core::memory::allocate(
-		g_memory_request{
+		memory_request_g{
 			.size = this->size,
 			.tag = subsystem_memory_tag::memory_system
 		}

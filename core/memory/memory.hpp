@@ -33,23 +33,23 @@
 #define MEMORY_ORDER_RELAXE  std::memory_order_relaxed // for read-only when no cache syncing is needed
 #define MEMORY_ORDER_ACQUIRE std::memory_order_acquire // when cache syncing is needed
 
-#define MAX_MEMORY_TAGS   255
+#define MAX_MEMORY_TAGS 255
 #define MAX_ALLOCATIONS_PRE_BLOCK 1024
 
 #define FRIENDS_TO_MEMORY_HANDLE() \
-		DLL_API g_memory_handle   friend core::memory::allocate(g_memory_request const& request) NOEXP; \
-		DLL_API same_pair<g_memory_handle> friend core::memory::allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP; \
-		DLL_API void              friend core::memory::deallocate(g_memory_handle const& handle) NOEXP; \
+		DLL_API memory_handle_g   friend core::memory::allocate(memory_request_g const& request) NOEXP; \
+		DLL_API same_pair<memory_handle_g> friend core::memory::allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP; \
+		DLL_API void              friend core::memory::deallocate(memory_handle_g const& handle) NOEXP; \
 		friend  DLL_API_CLASS     core::dynamic_allocator;\
 		friend  DLL_API_CLASS     core::memory_block;\
 		friend  DLL_API_CLASS     core::memory_registry;\
 
 
-struct   memory_request; // for specific allocator
-struct g_memory_request; // for global   allocator
+struct memory_request;   // for specific allocator
+struct memory_request_g; // for global allocator
 
-class    memory_handle; // given back by specific allocator like dynamic_allocator
-class  g_memory_handle; // given back by global allocator
+class  memory_handle;   // given back by specific allocator like dynamic_allocator
+class  memory_handle_g; // given back by global allocator
 
 namespace core {
 	
@@ -65,14 +65,14 @@ namespace core {
 
 		DLL_API void init() NOEXP;
 
-		DLL_API g_memory_handle allocate(g_memory_request const& request) NOEXP;
+		DLL_API memory_handle_g allocate(memory_request_g const& request) NOEXP;
 
 		// note: this function preforme tow allocation in one call but !
 		//       both allocations not guarnted to be next each other in memory :)
 		//       because of paging , multi-threading , ... .
-		DLL_API same_pair<g_memory_handle> allocate_tow(g_memory_request const& request_1, g_memory_request const& request_2) NOEXP;
+		DLL_API same_pair<memory_handle_g> allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP;
 
-		DLL_API void deallocate(g_memory_handle const& handle) NOEXP;
+		DLL_API void deallocate(memory_handle_g const& handle) NOEXP;
 
 		DLL_API u64 total_memory_usage() NOEXP;
 		DLL_API u64 current_memory_usage(subsystem_memory_tag section_tag) NOEXP;
@@ -99,7 +99,7 @@ namespace core {
 	- memory handle but for global allocator .
 	- used by allocators to allocate thier own memory to manange .
 */
-class g_memory_handle {
+DLL_API_CLASS memory_handle_g {
 private:
 	FRIENDS_TO_MEMORY_HANDLE();
 
@@ -107,31 +107,31 @@ private:
 	u64   _size_ = 0;
 	bool _deallocate_at_destuctor_ = false;
 
-	void* ptr = nullptr;
+	void* _ptr_ = nullptr;
 	allocator_response _response_ = allocator_response::busy;
 public:
 
 	// constructor's
-	g_memory_handle() NOEXP = default;
-	g_memory_handle(
+	memory_handle_g() NOEXP = default;
+	memory_handle_g(
 		allocator_response response, u64 size, subsystem_memory_tag tag_, void* pointer, bool deallocate_at_destruction_time = false
 	) NOEXP;
 
 	// destructor
-	~g_memory_handle() NOEXP;
+	~memory_handle_g() NOEXP;
 
 	// functions
-	INLINE void* pointer() NOEXP { return this->ptr; }
+	INLINE void* pointer() NOEXP { return this->_ptr_; }
 	INLINE allocator_response response() NOEXP { return this->_response_; }
 	INLINE subsystem_memory_tag tag() NOEXP { return this->_tag_; }
 
-}; // class g_memory_handle end
+}; // class memory_handle_g end
 
 
 /*
 	memory_handle used by allocators for fast allocation/deallocation memory
 */
-class memory_handle {
+DLL_API_CLASS memory_handle {
 private:
 	FRIENDS_TO_MEMORY_HANDLE();
 
@@ -157,20 +157,22 @@ public:
 	INLINE u8    block_index() NOEXP { return this->_block_index_; }
 	INLINE u32   register_index() NOEXP { return this->_register_index_; }
 
-}; // class g_memory_handle end
+}; // class memory_handle_g end
 
 
 // used by memory allocator
-struct g_memory_request {
+struct memory_request_g {
 	u64 size;
 	DEBUG_ONLY subsystem_memory_tag tag;
 };
 
 // used for dynamic allocator
 struct memory_request {
-	u64 size;
-	u64 alignement;
-	DEBUG_ONLY memory_tag tag;
+	u64  size;
+	u64  alignement;
+	memory_tag tag DEBUG_ONLY;
+	u8   block_index;
+	bool wait_for_memory_block;
 };
 
 #endif
