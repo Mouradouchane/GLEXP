@@ -46,26 +46,25 @@ private:
 	DEBUG_ONLY atomic_u32 _sections_[MAX_MEMORY_TAGS] = { 0u };
 #endif
 
-	memory_handle_g _handle_;
+	core::c_array<memory_block> _blocks_; 
 
 	u64 _memory_budget_ = 0; // total memory allocated
-
-	core::c_array<memory_block> _blocks_;
 	u64 _block_size_  = min_budget_allowed;
 	u8 _blocks_count_ = 0;
 
-
 public:
-	// public variables for usage 
+	// public config variables
+	static const u8  max_memory_blocks_allowed = 255;
 	static const u64 min_budget_allowed =   64 KB;
 	static const u64 max_budget_allowed = 4096 MB;
 		
-	// constructor
+	// constructor's
 	dynamic_allocator(string const& name, const u64 blocks_size , const u8 blocks_count, const u16 max_allocations_per_block, const subsystem_memory_tag tag) NOEXP;
 	dynamic_allocator(string const& name, c_array<block_description> blocks_description, const subsystem_memory_tag tag) NOEXP;
 
 	// destructor
 	~dynamic_allocator() NOEXP;
+
 
 	/*
 		dynamic_allocator public functions
@@ -84,6 +83,7 @@ public:
 
 	block_status get_block_status(u8 block_index) NOEXP; // retrun few info about a memory_block
 
+	u64 block_size(u8 index) NOEXP; // size of one block
 	u64 memory_budget() NOEXP; // size of all blocks
 	u64 free_memory() NOEXP;  // free memory in all blocks
 
