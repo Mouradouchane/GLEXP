@@ -41,9 +41,9 @@ template<typename type> class c_array {
 				memory_request_g{ .size = this->size , .tag = tag_ }
 			);
 
-			if (handle.response != allocator_response::success) return;
+			if (handle.response() != allocator_response::success) return;
 
-			start = (type*)handle.pointer;
+			start = (type*)handle.pointer();
 			end   = start + count;
 			tag   = tag_;
 

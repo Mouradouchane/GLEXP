@@ -16,7 +16,7 @@
 
 #define MEMORY_BLOCK_IS_REGISTRY_FULL     MEMORY_BLOCK_NAME " registry is full max {} allocation !"
 #define MEMORY_BLOCK_OUT_OF_MEMORY        MEMORY_BLOCK_NAME " is out of memory , failed to allocate {}bytes ."
-#define MEMORY_BLOCK_NOT_ALLOWED_SIZE     MEMORY_BLOCK_NAME " with size={}byte is not allowed because -> min_allowed_size={}, max_allowed_size={} ."
+#define MEMORY_BLOCK_NOT_ALLOWED_SIZE     MEMORY_BLOCK_NAME " with size={}byte is not allowed because -> min_size_allowed={}, max_size_allowed={} ."
 #define MEMORY_BLOCK_OUT_OF_RANGE_POINTER MEMORY_BLOCK_NAME " pointer {} passed to memory_block is out of range , start={} , end={} !"
 #define MEMORY_BLOCK_FAILED_TO_REGISTER_ALLOCATION MEMORY_BLOCK_NAME " failed to register new allocation !"
 
@@ -25,29 +25,28 @@ namespace core {
 DLL_API_CLASS memory_block {
 
 private:
-	bool alive = false;
-	core::atomic_lock lock;
-
-	memory_handle_g handle;
-	byte* start = nullptr; // block start
-	byte* end   = nullptr; // block end
-	byte* seek  = nullptr; // current free spot
-	u64   block_size  = 0; // block memory size in bytes
+	bool _alive_ = false;
+	core::atomic_lock _lock_;
 
 #ifdef DEBUG
-	DEBUG_ONLY subsystem_memory_tag block_tag; // memory_block usage
+	DEBUG_ONLY subsystem_memory_tag _tag_;
 #endif
 
-	/*
-		note: registry keep track of allocations count and toal size .
-				use registry functions get these information
-	*/
-	core::memory_registry active_list; // list of the current active/alive allocations in block
-	core::memory_registry free_list;   // list of the current free/avalible areas in block
+	// memory variables
+	memory_handle_g _handle_; 
+	byte*  _start_ = nullptr; 
+	byte*  _end_   = nullptr; 
+	byte*  _seek_  = nullptr;
+	u64    _size_  = 0 ; // size in bytes
+
+	// note: you can use registry functions get info about allocation
+	core::memory_registry _active_list_; // holder for memory allocations
+	core::memory_registry _free_list_;   // holder for deallocated memory/areas
 
 public:
-	static const u64 min_allowed_size =    4 KB;
-	static const u64 max_allowed_size = 4096 MB;
+	static const u64 min_size_allowed =    4 KB;
+	static const u64 max_size_allowed = 4096 MB;
+	static const u16 max_allocations_per_block = 1024;
 
 	// constructor
 	memory_block() NOEXP = default;
@@ -66,7 +65,7 @@ public:
 
 	bool deallocate(memory_handle const& handle) NOEXP;
 
-	bool is_busy() NOEXP;
+	bool is_busy()  NOEXP;
 	bool is_alive() NOEXP;
 
 	u64 size() NOEXP; // size of block memory in bytes

@@ -35,7 +35,8 @@ memory_registry::memory_registry() NOEXP {
 		}
 	);
 	
-	this->list = (memory_allocation*)this->handle.ptr;
+	// todo: this is super sus , make sure it make sense !!!
+	this->list = (memory_allocation*)this->handle._ptr_;
 	this->allocations_count = 0;
 	this->allocations_size  = 0;
 
@@ -57,7 +58,7 @@ memory_registry::memory_registry(u32 register_capacity) NOEXP {
 		}
 	);
 
-	this->list = (memory_allocation*)this->handle.ptr;
+	this->list = (memory_allocation*)this->handle._ptr_;
 	this->allocations_count = 0;
 	this->allocations_size  = 0;
 			

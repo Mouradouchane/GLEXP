@@ -82,14 +82,14 @@ struct memory_allocation {
 	void* ptr;
 	u64   size;
 
-	DEBUG_ONLY memory_tag _tag_;
+	DEBUG_ONLY memory_tag tag;
 
 	// helper function
 	void clear() NOEXP {
 		this->ptr  = nullptr;
 		this->size = 0;
 	#ifdef DEBUG
-		this->_tag_ = memory_tag::unkown;
+		this->tag = memory_tag::unkown;
 	#endif
 	}
 };
