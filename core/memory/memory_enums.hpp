@@ -72,24 +72,23 @@ enum class memory_tag : u8 {
 };
 
 
-
 /*
 	todo: move this structs to the right place
 */
 
-// used by block allocator
+// used by memory_block allocator
 struct memory_allocation {
-	void* ptr;
-	u64   size;
-
-	DEBUG_ONLY memory_tag tag;
-
+	void*      ptr;
+	u64        size;
+	// u16        alignement;
+	memory_tag tag;  DEBUG_ONLY
+	
 	// helper function
 	void clear() NOEXP {
-		this->ptr  = nullptr;
-		this->size = 0;
+		ptr  = nullptr;
+		size = 0;
 	#ifdef DEBUG
-		this->tag = memory_tag::unkown;
+		tag = memory_tag::unkown;
 	#endif
 	}
 };
@@ -97,10 +96,10 @@ struct memory_allocation {
 
 // used by registry and allocator
 struct memory_allocation_info {
-	void* ptr;
-	u64   size;
-	u32	  index;
-	DEBUG_ONLY memory_tag _tag_;
+	void*      ptr;
+	u64        size;
+	u32	       index;
+	memory_tag tag;   DEBUG_ONLY
 };
 
 // used by free list and allocator

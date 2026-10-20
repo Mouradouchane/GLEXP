@@ -20,6 +20,10 @@
 #define MEMORY_BLOCK_OUT_OF_RANGE_POINTER MEMORY_BLOCK_NAME " pointer {} passed to memory_block is out of range , start={} , end={} !"
 #define MEMORY_BLOCK_FAILED_TO_REGISTER_ALLOCATION MEMORY_BLOCK_NAME " failed to register new allocation !"
 
+#define MEMORY_HANDLE_BUSY     memory_handle(allocator_response::busy,-1,-1,nullptr)
+#define MEMORY_HANDLE_REG_FULL memory_handle(allocator_response::register_full, -1, -1, nullptr)
+#define MEMORY_HANDLE_FRAG     memory_handle(allocator_response::fragmeneted, -1, -1, nullptr)
+
 namespace core {
 
 DLL_API_CLASS memory_block {
@@ -36,12 +40,11 @@ private:
 	memory_handle_g _handle_; 
 	byte*  _start_ = nullptr; 
 	byte*  _end_   = nullptr; 
-	byte*  _seek_  = nullptr;
 	u64    _size_  = 0 ; // size in bytes
 
 	// note: you can use registry functions get info about allocation
-	core::memory_registry _active_list_; // holder for memory allocations
-	core::memory_registry _free_list_;   // holder for deallocated memory/areas
+	memory_registry _active_list_; // holder for memory allocations
+	memory_registry _free_list_;   // holder for deallocated memory/areas
 
 public:
 	static const u64 min_size_allowed =    4 KB;
@@ -50,7 +53,7 @@ public:
 
 	// constructor
 	memory_block() NOEXP = default;
-	memory_block(u64 size , u32 max_allowed_allocations , subsystem_memory_tag tag_) NOEXP;
+	memory_block(u64 size , u16 max_allowed_allocations , subsystem_memory_tag tag_) NOEXP;
 
 	// destructor
 	~memory_block() NOEXP;
@@ -59,7 +62,7 @@ public:
 		memory_block public functions
 	*/
 	memory_handle allocate(memory_request const& request) NOEXP;
-	memory_handle allocate(u32 size, u32 alignement, memory_tag _tag_) NOEXP;
+	memory_handle allocate(u32 size, u32 alignement, memory_tag tag_) NOEXP;
 
 	same_pair<memory_handle> allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP;
 
@@ -103,13 +106,13 @@ private: // private helper functions
 	/*
 		not allowed contructor's
 	*/
-	memory_block(core::memory_block&& other) = delete;
+	memory_block(core::memory_block &&     other) = delete;
 	memory_block(core::memory_block const& other) = delete;
 
 	/*
 		not allowed operator's
 	*/
-	core::memory_block& operator = (const core::memory_block&& other) = delete;
+	core::memory_block& operator = (const core::memory_block &&     other) = delete;
 	core::memory_block& operator = (const core::memory_block const& other) = delete;
 
 	friend class core::dynamic_allocator;

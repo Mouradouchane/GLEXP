@@ -161,6 +161,10 @@
 #define GB   *1073741824ull
 // ===================================================
 
-
+/*
+	few macros to convert to string
+*/
+#define BYTE_TO_STRING(BYTE_NUMBER) core::bytes_to_string(BYTE_NUMBER)
 #define PTR_TO_STRING(PTR) core::pointer_to_hex_string((void*)(PTR))
+
 #endif // MACROS_HPP

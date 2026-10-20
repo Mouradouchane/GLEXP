@@ -28,7 +28,7 @@ namespace core {
 		memory_allocation* list = nullptr; // registry memory
 
 		u32 size     = 0; // list size in byte
-		u32 capacity = 0; // lis capacity
+		u32 capacity = 0; // list max capacity
 
 		u32 allocations_count = 0; // how many allocations in register
 		u32 allocations_size  = 0; // size of all allocation in register
