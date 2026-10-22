@@ -43,8 +43,8 @@ private:
 	u64    _size_  = 0 ; // size in bytes
 
 	// note: you can use registry functions get info about allocation
-	memory_registry _active_list_; // holder for memory allocations
-	memory_registry _free_list_;   // holder for deallocated memory/areas
+	memory_registry _alloc_list_; // holder for memory allocations
+	memory_registry _free_list_;  // holder for deallocated memory/areas
 
 public:
 	static const u64 min_size_allowed =    4 KB;
@@ -62,9 +62,9 @@ public:
 		memory_block public functions
 	*/
 	memory_handle allocate(memory_request const& request) NOEXP;
-	memory_handle allocate(u32 size, u32 alignement, memory_tag tag_) NOEXP;
+	memory_handle allocate(u32 size_, u32 alignement_, memory_tag tag_, bool wait_for_block = false) NOEXP;
 
-	same_pair<memory_handle> allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP;
+	same_pair<memory_handle> allocate_tow(memory_request_2 const& request) NOEXP;
 
 	bool deallocate(memory_handle const& handle) NOEXP;
 
@@ -83,25 +83,6 @@ private: // private helper functions
 	// this function trigger's merge_free_areas function in free_list .
 	// note: this locks the entier block for that process !
 	void process_free_list() NOEXP;
-
-	// note [WARNING] : lock the block before calling this function !
-	INLINE void internal_allocate(memory_request const& request , memory_handle& handle) NOEXP;
-
-	// todo: delete or improve this function
-	INLINE u32 handle_registry(
-		void** ptr, memory_allocation_info const& allocation , memory_request const& request
-	) NOEXP;
-
-	// todo: delete or improve this function
-	INLINE void handle_registry_2(
-		void** ptr_1,
-		void** ptr_2,
-		memory_allocation_info const& allocation,
-		memory_request const& request_1,
-		memory_request const& request_2,
-		u32& index_1,
-		u32& index_2
-	) NOEXP;
 
 	/*
 		not allowed contructor's

@@ -141,20 +141,43 @@ dynamic_allocator::~dynamic_allocator() NOEXP {
     public functions
 */
 
-memory_handle dynamic_allocator::allocate(memory_request request) NOEXP {
-    
-    /*
-        todo: keep the variables updateed with each allocation/deallocation
-    */
+memory_handle dynamic_allocator::allocate(memory_request const& request) NOEXP {
+    DEBUG_BREAK;
 
-    if (request.block_index < _blocks_count_) {    
-        return _blocks_[request.block_index].allocate(request);
+    if (request.block_index < _blocks_count_) {
+        memory_handle handle;
+        u8 index = request.block_index;
+        
+        do {
+            // try allocate
+            handle = _blocks_[index].allocate(request);
+
+            // on success
+            if(handle.response == allocator_response::success) {
+                // update allocator variables
+                #ifdef DEBUG
+                    _sections_[(u8)request.tag] += request.size;
+                #endif
+                _allocated_memory_.fetch_add(request.size, MEMORY_ORDER_ACQUIRE);
+                
+                // update handle 
+                handle._block_index_ = index;
+            
+                return handle;
+            }
+
+            index = (index < _blocks_count_) ? index + 1 : 0;
+        
+        } while(request.try_other_memory_blocks);
+
     }
 
     return memory_handle{};
 }
 
-memory_handle dynamic_allocator::allocate(u32 size, memory_tag tag, u8 block_index, bool wait_for_block) NOEXP {
+memory_handle dynamic_allocator::allocate(
+    u32 size, memory_tag tag, u8 block_index, bool wait_for_block, bool try_other_memory_blocks
+) NOEXP {
 
     return this->allocate(
         memory_request{ 
@@ -169,7 +192,7 @@ memory_handle dynamic_allocator::allocate(u32 size, memory_tag tag, u8 block_ind
 }
 
 memory_handle dynamic_allocator::allocate(
-    u32 size, u16 alignement, memory_tag tag, u8 block_index, bool wait_for_block
+    u32 size, u16 alignement, memory_tag tag, u8 block_index, bool wait_for_block, bool try_other_memory_blocks
 ) NOEXP {
 
     return this->allocate(
@@ -184,18 +207,41 @@ memory_handle dynamic_allocator::allocate(
 
 }
 
-same_pair<memory_handle> dynamic_allocator::allocate_tow(
-    memory_request const& request_1, memory_request const& request_2
-) NOEXP {
+same_pair<memory_handle> dynamic_allocator::allocate_tow( memory_request_2 const& request ) NOEXP {
+    DEBUG_BREAK;
     
-    if (request_1.block_index < _blocks_count_ && request_2.block_index < _blocks_count_) {
-        return same_pair<memory_handle> {
-            .first  = _blocks_[request_1.block_index].allocate(request_1),
-            .second = _blocks_[request_2.block_index].allocate(request_2)
-        };
+    same_pair<memory_handle> pair;
+
+    if (request.block_index < _blocks_count_) {
+        u8 index = request.block_index;
+        
+        do {
+            // try allocate
+            pair = _blocks_[index].allocate_tow(request);
+
+            // on success
+            if(pair.first.response == allocator_response::success) {
+                // update allocator variables
+                #ifdef DEBUG
+                    _sections_[(u8)request.tag_1] += request.size_1;
+                    _sections_[(u8)request.tag_2] += request.size_2;
+                #endif
+                _allocated_memory_.fetch_add(request.size_1 + request.size_2, MEMORY_ORDER_ACQUIRE);
+                
+                // update handle 
+                pair.first._block_index_  = index;
+                pair.second._block_index_ = index;
+            
+                return pair;
+            }
+
+            index = (index < _blocks_count_) ? index + 1 : 0;
+        
+        } while(request.try_other_memory_blocks);
+
     }
 
-    return same_pair<memory_handle>();
+    return pair;
 }
 
 void dynamic_allocator::deallocate(memory_handle handle) NOEXP {

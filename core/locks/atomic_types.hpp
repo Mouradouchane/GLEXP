@@ -8,7 +8,6 @@
 #include "core/types.hpp"
 
 // pointers
-typedef std::atomic<ptr>   atomic_ptr;
 typedef std::atomic<ptr8>  atomic_ptr8;
 typedef std::atomic<ptr16> atomic_ptr16;
 typedef std::atomic<ptr32> atomic_ptr32;

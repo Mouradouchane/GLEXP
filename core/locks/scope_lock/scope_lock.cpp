@@ -25,15 +25,15 @@ namespace core {
 	atomic_scope_lock::atomic_scope_lock(core::atomic_lock const& target_lock) NOEXP {
 		
 		// get lock
-		this->_lock_ = (core::atomic_lock*)&target_lock;
+		_lock_ = (core::atomic_lock*)&target_lock;
 		
-		// try until its locked
-		this->id = this->_lock_->wait_for_lock();
+		// own the lock
+		_id_ = _lock_->wait_for_lock();
 
 	#ifdef DEBUG
-		CORE_FATAL_IF(
-			this->id == core::atomic_lock::invalid_id, CORE_LOG_CONFIG_ALL, CORE_SCOPE_LOCK_FAILED_LOCK ,
-			core::pointer_to_hex_string(this->_lock_) , this->id
+		CORE_ERROR_IF(
+			_id_ == core::atomic_lock::invalid_id, CORE_LOG_CONFIG_ALL, CORE_SCOPE_LOCK_FAILED_LOCK ,
+			core::pointer_to_hex_string(_lock_) , _id_
 		);
 	#endif
 	}
@@ -44,14 +44,15 @@ namespace core {
 	atomic_scope_lock::~atomic_scope_lock() NOEXP {
 
 	#ifdef DEBUG
-		bool result = this->_lock_->release(this->id);
-		CORE_ERROR_IF(!result, CORE_LOG_CONFIG_ALL , CORE_SCOPE_LOCK_FAILED_UNLOCK, this->id);
+		bool result = _lock_->release(_id_);
+		CORE_ERROR_IF(!result, CORE_LOG_CONFIG_ALL, CORE_SCOPE_LOCK_FAILED_UNLOCK, _id_);
 	#else
-		this->_lock_->unlock(this->id);
+		// give back the lock
+		_lock_->unlock(_id_);
 	#endif
 
-		this->_lock_ = nullptr;
-		this->id   = 0;
+		_lock_ = nullptr;
+		_id_   = 0;
 	}
 
 

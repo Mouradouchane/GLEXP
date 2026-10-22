@@ -48,9 +48,11 @@ private:
 
 	core::c_array<memory_block> _blocks_; 
 
-	u64 _memory_budget_ = 0; // total memory allocated
-	u64 _block_size_  = min_budget_allowed;
-	u8 _blocks_count_ = 0;
+	u64        _memory_budget_    = 0; // total memory
+	atomic_u64 _allocated_memory_ = 0; // used  memory
+
+	u8  _blocks_count_ = 0;
+	u64 _block_size_   = min_budget_allowed; // note: not right if blocks have different size's
 
 public:
 	// public config variables
@@ -70,12 +72,10 @@ public:
 		dynamic_allocator public functions
 	*/
 
-	memory_handle allocate(u32 size, memory_tag tag, u8 block_index, bool wait_for_block) NOEXP;
-	memory_handle allocate(u32 size, u16 alignement, memory_tag tag, u8 block_index, bool wait_for_block) NOEXP;
-	memory_handle allocate(memory_request request) NOEXP;
-
-	// allocate 2 memory chunks next to each other in one call
-	same_pair<memory_handle> allocate_tow(memory_request const& request_1, memory_request const& request_2) NOEXP;
+	memory_handle allocate(u32 size, memory_tag tag, u8 block_index, bool wait_for_block = false , bool try_other_memory_blocks = true) NOEXP;
+	memory_handle allocate(u32 size, u16 alignement, memory_tag tag, u8 block_index, bool wait_for_block = false, bool try_other_memory_blocks = true) NOEXP;
+	memory_handle allocate(memory_request const& request) NOEXP;
+	same_pair<memory_handle> allocate_tow(memory_request_2 const& request) NOEXP; // 2 allocations in one request
 		
 	void deallocate(memory_handle handle) NOEXP;
 		

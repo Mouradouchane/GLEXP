@@ -168,11 +168,25 @@ struct memory_request_g {
 
 // used for dynamic allocator
 struct memory_request {
-	u64  size;
-	u64  alignement;
-	memory_tag tag DEBUG_ONLY;
-	u8   block_index;
-	bool wait_for_memory_block;
+	u64        size;
+	u64        alignement;
+	memory_tag tag             DEBUG_ONLY;
+	u8         block_index;
+	bool       wait_for_memory_block;
+	bool       try_other_memory_blocks; 
+};
+
+// used for dynamic allocator
+struct memory_request_2 {
+	u64        size_1;
+	u64        size_2;
+	u64        alignement_1;
+	u64        alignement_2;
+	memory_tag tag_1             DEBUG_ONLY;
+	memory_tag tag_2             DEBUG_ONLY;
+	u8         block_index;
+	bool       wait_for_memory_block;
+	bool       try_other_memory_blocks; 
 };
 
 #endif

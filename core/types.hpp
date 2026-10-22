@@ -8,7 +8,6 @@
 #define TYPE_NAME(TYPE) typeid(TYPE).name()
 
 // pointers
-typedef void*     ptr;
 typedef uint8_t*  ptr8;
 typedef uint16_t* ptr16;
 typedef uint32_t* ptr32;

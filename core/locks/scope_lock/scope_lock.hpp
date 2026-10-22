@@ -13,7 +13,7 @@ namespace core {
 
 	private:
 		core::atomic_lock* _lock_;
-		id32 id;
+		id32 _id_;
 
 	public:
 		// constructor

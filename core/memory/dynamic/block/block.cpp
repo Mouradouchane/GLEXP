@@ -59,7 +59,7 @@ core::memory_block::memory_block(u64 size , u16 max_allowed_allocations, subsyst
 	_end_   = _start_ + _size_;
 
 	// create register's
-	_active_list_ = memory_registry(max_allowed_allocations);
+	_alloc_list_ = memory_registry(max_allowed_allocations);
 	_free_list_   = memory_registry(max_allowed_allocations);
 
 	// make memory free to use
@@ -89,8 +89,8 @@ core::memory_block::~memory_block() NOEXP {
 	id32 id = _lock_.wait_for_lock();
 
 	if (_start_) {
-		u32 active_memory      = _active_list_.get_allocations_size();
-		u32 active_allocations = _active_list_.get_allocations_count();
+		u32 active_memory      = _alloc_list_.get_allocations_size();
+		u32 active_allocations = _alloc_list_.get_allocations_count();
 
 	#ifdef DEBUG // detected memory leaks
 		if (active_memory || active_allocations) {
@@ -124,43 +124,80 @@ core::memory_block::~memory_block() NOEXP {
 */
 
 
-// todo: add support for memory alignement
 memory_handle core::memory_block::allocate(memory_request const& request) NOEXP {
 
+	memory_block::allocate(request.size, request.alignement, request.tag, request.wait_for_memory_block);
+}
+
+memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_tag tag_, bool wait_for_block) NOEXP {
+	DEBUG_BREAK;
+
 	// if the block is busy at the moment
-	if (_lock_.is_locked()) return MEMORY_HANDLE_BUSY;
+	if (_lock_.is_locked() && !wait_for_block) return MEMORY_HANDLE_BUSY;
 	
-	// lock the block
-	core::atomic_scope_lock scope_lock(_lock_);
+	// lock the block + wait for it
+	// note: becarefull you have to unlock it manualy or you get a "death-lock"
+	id32 lock_id = _lock_.wait_for_lock();
 
-	// try allocate
 	memory_handle handle;
-	internal_allocate(request, handle);
+
+	// check if memory_block is full
+	if (size_ > _size_) {
+		handle._register_index_  = -1;
+		handle.response =  allocator_response::full;
+
+		_lock_.release(lock_id);
+		return handle;
+	}
+
+	// check if registry is full
+	if (_alloc_list_.get_allocations_count() >= (_alloc_list_.get_capacity() - 1)) {
+		CORE_WARN(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_IS_REGISTRY_FULL, _alloc_list_.get_capacity());
+
+		handle.response = allocator_response::register_full;
+		handle._register_index_ = -1;
+
+		_lock_.release(lock_id);
+		return handle;
+	}
+
+	// try to find free memory in free list , "first fit"
+	memory_allocation_info allocation = _free_list_.get_allocation_with_size(size_);
+	
+	if (allocation.ptr) {
+		// take free memory
+		_free_list_.cut(allocation.index);
+
+		// register new allocation
+		handle._register_index_ = _alloc_list_.insert(allocation.ptr, size_, tag_);
+
+		// if some free memory left
+		if (size_ < allocation.size) {
+			_free_list_.insert((byte*)allocation.ptr + size_, allocation.size - size_, allocation.tag);
+		}
+
+		handle.ptr = allocation.ptr;	
+		handle.response = allocator_response::success;
+
+		_lock_.release(lock_id);
+		return handle;
+	}
+	
+	/*
+		failed to find free memory for allocation because block is "too fragmeneted" or "full"
+	*/ 
+
+	_lock_.release(lock_id);
+	process_free_list(); // todo[IMPORTANT]: put this in different thread --> pass it to the work_system
+
+	handle.ptr = nullptr;
+	handle._register_index_ = -1;
+	handle.response = allocator_response::fragmeneted;
 
 	return handle;
 }
 
-memory_handle core::memory_block::allocate(u32 size, u32 alignement, memory_tag tag_) NOEXP {
-
-	// if the block is busy at the moment
-	if (_lock_.is_locked()) return MEMORY_HANDLE_BUSY;
-
-	// lock the block
-	core::atomic_scope_lock scope_lock(_lock_);
-
-	// try allocate
-	memory_handle handle;
-	internal_allocate(
-		memory_request{ .size = size, .alignement = alignement , .tag = tag_ }, 
-		handle
-	);
-
-	return handle;
-}
-
-same_pair<memory_handle> core::memory_block::allocate_tow(
-	memory_request const& request_1, memory_request const& request_2
-) NOEXP {
+same_pair<memory_handle> core::memory_block::allocate_tow( memory_request_2 const& request ) NOEXP {
 
 	memory_handle handle_1;
 	memory_handle handle_2;
@@ -181,7 +218,7 @@ same_pair<memory_handle> core::memory_block::allocate_tow(
 	/*
 		check if active registry is full
 	*/ 
-	if (_active_list_.get_allocations_count() >= (_active_list_.get_capacity() - 2)) {
+	if (_alloc_list_.get_allocations_count() >= (_alloc_list_.get_capacity() - 2)) {
 		CORE_ERROR(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_FAILED_TO_REGISTER_ALLOCATION);
 
 		return same_pair<memory_handle> {
@@ -197,7 +234,7 @@ same_pair<memory_handle> core::memory_block::allocate_tow(
 
 	u32 reg_index_1 = -1;
 	u32 reg_index_2 = -1;
-	u32 reg_cap = _active_list_.get_capacity();
+	u32 reg_cap = _alloc_list_.get_capacity();
 
 	handle_registry_2(&pointer_1, &pointer_2, allocation, request_1, request_2 , reg_index_1, reg_index_2);
 
@@ -209,8 +246,8 @@ same_pair<memory_handle> core::memory_block::allocate_tow(
 	}
 	else {
 		// if one allocation failed "roll-back"
-		_active_list_.cut(reg_index_1);
-		_active_list_.cut(reg_index_2);
+		_alloc_list_.cut(reg_index_1);
+		_alloc_list_.cut(reg_index_2);
 	}
 
 	/*
@@ -231,7 +268,7 @@ same_pair<memory_handle> core::memory_block::allocate_tow(
 // faster
 bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 	
-	memory_allocation allocation = _active_list_.cut(handle.ptr , handle._register_index_);
+	memory_allocation allocation = _alloc_list_.cut(handle.ptr , handle._register_index_);
 
 	if (allocation.ptr) {
 		_free_list_.insert(allocation);
@@ -252,7 +289,6 @@ bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 	return false;
 }
 
-
 bool core::memory_block::is_busy() NOEXP {
 	return _lock_.is_locked();
 }
@@ -260,7 +296,6 @@ bool core::memory_block::is_busy() NOEXP {
 bool core::memory_block::is_alive() NOEXP {
 	return _alive_;
 }
-
 
 u64 core::memory_block::size() NOEXP {
 	return _size_;
@@ -275,12 +310,12 @@ u64 core::memory_block::free_memory() NOEXP {
 u64 core::memory_block::allocated_memory() NOEXP {
 	core::atomic_scope_lock scope_lock(_lock_);
 
-	return _active_list_.get_allocations_size();
+	return _alloc_list_.get_allocations_size();
 }
 
 memory_allocation core::memory_block::get_allocation_info(memory_handle const& handle) NOEXP {
 
-	memory_allocation info = _active_list_.get_allocation_info(handle._register_index_);
+	memory_allocation info = _alloc_list_.get_allocation_info(handle._register_index_);
 
 	if (handle.ptr == info.ptr) return info;
 	
@@ -294,34 +329,6 @@ memory_allocation core::memory_block::get_allocation_info(memory_handle const& h
 /*
 	private helper functions
 */
-
-INLINE u32 core::memory_block::handle_registry (
-	void** ptr, memory_allocation_info const& allocation, memory_request const& request
-) NOEXP {
-
-	if (allocation.ptr) {
-
-		// remove from free_list
-		_free_list_.cut(allocation.index);
-
-		// "allocate" by move it to active_list 
-		u32 index = _active_list_.insert(allocation.ptr, request.size, request.tag);
-
-		// if memory left but it back in free_list
-		if (request.size < allocation.size) {
-			_free_list_.insert((byte*)allocation.ptr + request.size, allocation.size - request.size, request.tag);
-		}
-
-		*ptr = allocation.ptr;
-		return index;
-	}
-	else {
-		*ptr = nullptr;
-		return _active_list_.capacity;
-	}
-
-}
-
 
 INLINE void core::memory_block::handle_registry_2(
 	void** ptr_1,
@@ -339,8 +346,8 @@ INLINE void core::memory_block::handle_registry_2(
 		_free_list_.remove(allocation.index);
 
 		// "allocate" by move it to active_list 
-		index_1 = _active_list_.insert(allocation.ptr, request_1.size, request_1.tag);
-		index_2 = _active_list_.insert((byte*)allocation.ptr + request_1.size, request_2.size, request_2.tag);
+		index_1 = _alloc_list_.insert(allocation.ptr, request_1.size, request_1.tag);
+		index_2 = _alloc_list_.insert((byte*)allocation.ptr + request_1.size, request_2.size, request_2.tag);
 
 		// if memory left put it back in free_list
 		if ((request_1.size + request_2.size) < allocation.size) {
@@ -357,57 +364,14 @@ INLINE void core::memory_block::handle_registry_2(
 	else {
 		*ptr_1  = nullptr;
 		*ptr_2  = nullptr;
-		index_1 = _active_list_.capacity;
-		index_2 = _active_list_.capacity;
+		index_1 = _alloc_list_.capacity;
+		index_2 = _alloc_list_.capacity;
 	}
-
-}
-
-// note[WARNING]: lock the memory_block before calling this function !!!!!!!!
-INLINE void core::memory_block::internal_allocate(
-	memory_request const& request, memory_handle& handle
-) NOEXP {
-
-	// check if registry is full
-	if (_active_list_.get_allocations_count() >= (_active_list_.get_capacity() - 1)) {
-		CORE_WARN(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_IS_REGISTRY_FULL, _active_list_.get_capacity());
-
-		handle.ptr = nullptr;
-		handle.response = allocator_response::register_full;
-		handle._register_index_ = -1;
-
-		return;
-	}
-
-	void* pointer = nullptr;
-
-	// 1 - try to find empty allocation in free list , "first fit"
-	memory_allocation_info allocation = _free_list_.get_allocation_with_size(request.size);
-	u32 index = handle_registry(&pointer, allocation, request);
-
-	if (pointer && (index < _active_list_.capacity)) {
-		handle.ptr = pointer;
-		handle._register_index_ = index;
-		handle.response =  allocator_response::success;
-
-		return;
-	}
-
-	// 2 - failed to find empty place for allocation because block is "too fragmeneted" or "full" .
-
-	// todo[IMPORTANT]: put this in different thread ---> pass it to the work_system .
-	// note: becarefull with scope lock status , try not to bug it !!!
-	process_free_list();
-
-	handle.ptr = nullptr;
-	handle.response =  allocator_response::fragmeneted;
-
-	return;
 
 }
 
 void core::memory_block::process_free_list() NOEXP {
-	core::atomic_scope_lock scope_lock(_lock_);
+	atomic_scope_lock scope_lock(_lock_);
 	
 	_free_list_.merge_free_areas();
 }
