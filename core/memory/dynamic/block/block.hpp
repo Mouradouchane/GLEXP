@@ -66,7 +66,7 @@ public:
 
 	same_pair<memory_handle> allocate_tow(memory_request_2 const& request) NOEXP;
 
-	bool deallocate(memory_handle const& handle) NOEXP;
+	void deallocate(memory_handle const& handle) NOEXP;
 
 	bool is_busy()  NOEXP;
 	bool is_alive() NOEXP;
@@ -83,6 +83,12 @@ private: // private helper functions
 	// this function trigger's merge_free_areas function in free_list .
 	// note: this locks the entier block for that process !
 	void process_free_list() NOEXP;
+
+	INLINE void handle_registry_2 (
+		void** ptr_1, void** ptr_2,
+		memory_allocation_info const& allocation, memory_request_2 const& request,
+		u32& index_1, u32& index_2
+	) NOEXP;
 
 	/*
 		not allowed contructor's

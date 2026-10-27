@@ -119,7 +119,7 @@ u32 memory_registry::insert(void* ptr, u32 size, memory_tag _tag_) NOEXP {
 }
 
 u32 memory_registry::insert(memory_allocation allocation) NOEXP {
-	return this->insert(allocation.ptr, allocation.size, allocation._tag_);
+	return this->insert(allocation.ptr, allocation.size, allocation.tag);
 }
 
 void memory_registry::remove(u32 index) NOEXP {
@@ -204,7 +204,7 @@ memory_allocation_info memory_registry::get_allocation_with_size(u32 target_size
 				.ptr   = this->list[i].ptr,
 				.size  = this->list[i].size,
 				.index = i,
-				._tag_   = this->list[i]._tag_
+				.tag   = this->list[i].tag
 			};
 		}
 

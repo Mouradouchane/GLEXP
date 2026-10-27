@@ -126,7 +126,7 @@ core::memory_block::~memory_block() NOEXP {
 
 memory_handle core::memory_block::allocate(memory_request const& request) NOEXP {
 
-	memory_block::allocate(request.size, request.alignement, request.tag, request.wait_for_memory_block);
+	return memory_block::allocate(request.size, request.alignement, request.tag, request.wait_for_memory_block);
 }
 
 memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_tag tag_, bool wait_for_block) NOEXP {
@@ -198,22 +198,17 @@ memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_ta
 }
 
 same_pair<memory_handle> core::memory_block::allocate_tow( memory_request_2 const& request ) NOEXP {
+	DEBUG_BREAK;
 
-	memory_handle handle_1;
-	memory_handle handle_2;
-
-	// if memory block is busy at the moment
-	if (_lock_.is_locked()) {
+	// if busy + no wait
+	if (_lock_.is_locked() && !request.wait_for_memory_block ) {
 		return same_pair<memory_handle> { 
 			MEMORY_HANDLE_BUSY,
 			MEMORY_HANDLE_BUSY
 		};
 	}
-
+	
 	core::atomic_scope_lock scope_lock(_lock_);
-
-	void* pointer_1 = nullptr;
-	void* pointer_2 = nullptr;
 
 	/*
 		check if active registry is full
@@ -230,13 +225,15 @@ same_pair<memory_handle> core::memory_block::allocate_tow( memory_request_2 cons
 	/*
 		try to allocate from free list
 	*/ 
-	memory_allocation_info allocation = _free_list_.get_allocation_with_size(request_1.size + request_2.size);
+	memory_allocation_info allocation = _free_list_.get_allocation_with_size(request.size_1 + request.size_2);
 
+	void* pointer_1 = nullptr;
+	void* pointer_2 = nullptr;
 	u32 reg_index_1 = -1;
 	u32 reg_index_2 = -1;
 	u32 reg_cap = _alloc_list_.get_capacity();
 
-	handle_registry_2(&pointer_1, &pointer_2, allocation, request_1, request_2 , reg_index_1, reg_index_2);
+	handle_registry_2(&pointer_1, &pointer_2, allocation, request , reg_index_1, reg_index_2);
 
 	if (reg_index_1 < reg_cap && reg_index_2 < reg_cap) {
 		return same_pair<memory_handle> {
@@ -266,8 +263,11 @@ same_pair<memory_handle> core::memory_block::allocate_tow( memory_request_2 cons
 }
 
 // faster
-bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
-	
+// todo: put deallocation task in sepearated thread and return imediatly 
+void core::memory_block::deallocate(memory_handle const& handle) NOEXP {
+	DEBUG_BREAK;
+
+	atomic_scope_lock scope_lock(_lock_);
 	memory_allocation allocation = _alloc_list_.cut(handle.ptr , handle._register_index_);
 
 	if (allocation.ptr) {
@@ -279,14 +279,13 @@ bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 			core::to_string(allocation.tag)
 		);
 	
-		return true;
+		return;
 	}
 	// else failed to deallocate
 	CORE_WARN_F(
 		"memory_block failed to deallocate {} passed in invalid memory_handle !", 
 		core::pointer_to_hex_string(handle.ptr)
 	);
-	return false;
 }
 
 bool core::memory_block::is_busy() NOEXP {
@@ -334,8 +333,7 @@ INLINE void core::memory_block::handle_registry_2(
 	void** ptr_1,
 	void** ptr_2,
 	memory_allocation_info const& allocation,
-	memory_request const& request_1,
-	memory_request const& request_2,
+	memory_request_2 const& request,
 	u32& index_1,
 	u32& index_2
 ) NOEXP {
@@ -346,20 +344,20 @@ INLINE void core::memory_block::handle_registry_2(
 		_free_list_.remove(allocation.index);
 
 		// "allocate" by move it to active_list 
-		index_1 = _alloc_list_.insert(allocation.ptr, request_1.size, request_1.tag);
-		index_2 = _alloc_list_.insert((byte*)allocation.ptr + request_1.size, request_2.size, request_2.tag);
+		index_1 = _alloc_list_.insert(allocation.ptr, request.size_1, request.tag_1);
+		index_2 = _alloc_list_.insert((byte*)allocation.ptr + request.size_1, request.size_2, request.tag_2);
 
 		// if memory left put it back in free_list
-		if ((request_1.size + request_2.size) < allocation.size) {
+		if ((request.size_1 + request.size_2) < allocation.size) {
 			_free_list_.insert(
-				(byte*)allocation.ptr + (request_1.size + request_2.size),
-				allocation.size - (request_1.size + request_2.size),
+				(byte*)allocation.ptr + (request.size_1 + request.size_2),
+				allocation.size - (request.size_1 + request.size_2),
 				memory_tag::unkown
 			);
 		}
 
 		*ptr_1 = allocation.ptr;
-		*ptr_2 = ((byte*)allocation.ptr + request_1.size);
+		*ptr_2 = ((byte*)allocation.ptr + request.size_1);
 	}
 	else {
 		*ptr_1  = nullptr;
