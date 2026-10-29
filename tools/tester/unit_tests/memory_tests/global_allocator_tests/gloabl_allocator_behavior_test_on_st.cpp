@@ -13,8 +13,8 @@ void write_to_memory(byte* s, byte* e) NOEXP;
 
 bool global_allocator_simple_behavior_test_on_st_1() NOEXP {
 
-	g_memory_handle h1 = core::memory::allocate(
-		g_memory_request{ 
+	memory_handle_g h1 = core::memory::allocate(
+		memory_request_g{ 
 			.size = 32 MB , 
 			.tag = subsystem_memory_tag::debug_system
 		}
@@ -26,8 +26,8 @@ bool global_allocator_simple_behavior_test_on_st_1() NOEXP {
 	u64 size = core::memory::current_memory_usage(subsystem_memory_tag::debug_system);
 	if (size != (32 MB)) return TEST_FAIL;
 
-	g_memory_handle h2 = core::memory::allocate(
-		g_memory_request{
+	memory_handle_g h2 = core::memory::allocate(
+		memory_request_g{
 			.size = 32 MB ,
 			.tag = subsystem_memory_tag::debug_system
 		}
@@ -58,12 +58,12 @@ bool global_allocator_simple_behavior_test_on_st_1() NOEXP {
 
 bool global_allocator_simple_behavior_test_on_st_2() NOEXP {
 
-	g_memory_handle handles[12]  = { g_memory_handle{} };
+	memory_handle_g handles[12]  = { memory_handle_g{} };
 
 	// allocate memory
 	for (u8 i = 0; i < 12; i++) {
 		handles[i] = core::memory::allocate(
-			g_memory_request{
+			memory_request_g{
 				.size = 8 MB,
 				.tag  = (subsystem_memory_tag)i,
 			}
@@ -95,9 +95,9 @@ bool global_allocator_simple_behavior_test_on_st_2() NOEXP {
 
 bool global_allocator_allocate2_simple_behavior_test_on_st() NOEXP {
 
-	same_pair<g_memory_handle> h1 = core::memory::allocate_tow(
-		g_memory_request{ .size = 32 MB , .tag = subsystem_memory_tag::debug_system },
-		g_memory_request{ .size = 32 MB , .tag = subsystem_memory_tag::debug_system }
+	same_pair<memory_handle_g> h1 = core::memory::allocate_tow(
+		memory_request_g{ .size = 32 MB , .tag = subsystem_memory_tag::debug_system },
+		memory_request_g{ .size = 32 MB , .tag = subsystem_memory_tag::debug_system }
 	);
 
 	if(h1.first.response()  != h1.second.response() ) return TEST_FAIL;

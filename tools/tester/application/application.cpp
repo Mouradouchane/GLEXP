@@ -32,7 +32,7 @@ static auto _tester_app_cpp_logger_ = CORE_GET_LOGGER(UNIT_TESTER_LOGGER);
 	- todo: add memory allocator for the arrays tests
 */ 
 // #include "tools/tester/unit_tests/arrays/dynamic_array_tests.hpp"
-// #include "tools/tester/unit_tests/memory_tests/dynamic_allocator_tests/behavior_on_st.hpp"
+#include "tools/tester/unit_tests/memory_tests/dynamic_allocator_tests/behavior_on_st.hpp"
 #include "tools/tester/unit_tests/memory_tests/global_allocator_tests/gloabl_allocator_behavior_test_on_st.hpp"
 #include "tools/tester/unit_tests/arrays/array_tests.hpp"
 
@@ -92,34 +92,13 @@ namespace tester {
 				TESTER_ADD_TEST(array_t_array_clear_function)
 			})
 		);
-		/*
 		add_group(
-			group("core::dynamic_array tests", {
-				TESTER_ADD_TEST(dynamic_arr_t_construction_basics),
-				TESTER_ADD_TEST(vialdynamic_arr_t_push_and_resize_trivial),
-				TESTER_ADD_TEST(trivial_stringdynamic_arr_t_push_and_resize_nontrivial),
-				TESTER_ADD_TEST(ynamic_arr_t_pop_basics_trivial),
-				TESTER_ADD_TEST(al_stringdynamic_arr_t_pop_basics_nontrivial),
-				TESTER_ADD_TEST(trivialdynamic_arr_t_copy_assignment_nontrivial),
-				TESTER_ADD_TEST(ynamic_arr_t_empty_pop_handling),
-				TESTER_ADD_TEST(e_and_begin_enddynamic_arr_t_construct_count_size_and_begin_end),
-				TESTER_ADD_TEST(r_indexdynamic_arr_t_get_set_and_operator_index),
-				TESTER_ADD_TEST(edynamic_arr_t_push_and_auto_resize),
-				TESTER_ADD_TEST(dynamic_arr_t_nontrivial_push_pop),
-				TESTER_ADD_TEST(mic_arr_t_copy_assignment),
-				TESTER_ADD_TEST(mic_arr_t_move_assignment)
+			group("core::dynamic_allocator tests", {
+				TESTER_ADD_TEST(dynamic_allocator_simple_behavior_test_1),
+				TESTER_ADD_TEST(dynamic_allocator_all_blocks_same_size),
+				TESTER_ADD_TEST(dynamic_allocator_blocks_with_different_sizes),
 			})
 		);
-
-		add_group(
-			group("core::dynamic_array tests", {
-				TESTER_ADD_TEST(dynamic_allocator_simple_usage_on_st_test_1),
-				TESTER_ADD_TEST(dynamic_allocator_simple_usage_on_st_test_2),
-				TESTER_ADD_TEST(dynamic_allocate_memory_1),
-				TESTER_ADD_TEST(dynamic_allocate_memory_2),
-			})
-		);
-		*/
 		add_group(
 			group("core::memory 'global-allocator' tests", {
 				TESTER_ADD_TEST(global_allocator_simple_behavior_test_on_st_1),

@@ -257,6 +257,50 @@ memory_handle_g::memory_handle_g(
 
 }
 
+memory_handle_g::memory_handle_g(memory_handle_g&& other) NOEXP {
+	  
+	// clean up if memory allocated
+    if (_deallocate_at_destuctor_ && _ptr_) {
+        core::memory::deallocate(*this);
+    }
+
+	// move
+    _tag_      = other._tag_;
+    _size_     = other._size_;
+    _ptr_      = other._ptr_;
+    _response_ = other._response_;
+    _deallocate_at_destuctor_ = other._deallocate_at_destuctor_;
+
+    // clean other
+    other._ptr_ = nullptr;
+    other._deallocate_at_destuctor_ = false;
+
+}
+
+memory_handle_g& memory_handle_g::operator=(memory_handle_g&& other) NOEXP {
+
+	if (this != &other) {
+        
+		// clean up if memory allocated
+        if (_deallocate_at_destuctor_ && _ptr_) {
+            core::memory::deallocate(*this);
+        }
+
+		// move
+        _tag_      = other._tag_;
+        _size_     = other._size_;
+        _ptr_      = other._ptr_;
+        _response_ = other._response_;
+        _deallocate_at_destuctor_ = other._deallocate_at_destuctor_;
+
+        // clean other
+        other._ptr_ = nullptr;
+        other._deallocate_at_destuctor_ = false;
+    }
+
+    return *this;
+}
+
 memory_handle_g::~memory_handle_g() NOEXP {
 	if (this->_deallocate_at_destuctor_ && this->_ptr_) {
 		core::memory::deallocate(*this);

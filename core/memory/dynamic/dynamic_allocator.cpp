@@ -38,7 +38,7 @@ dynamic_allocator::dynamic_allocator(
     if (_memory_budget_ < min_budget_allowed || _memory_budget_ > max_budget_allowed) {
         CORE_ERROR(
             0,"failed to create dynamic_allocator {} because memory budget {} is not allowed ! allowed range min={} , max={}",
-            name, _memory_budget_, min_budget_allowed , max_budget_allowed
+            name, BYTE_TO_STRING(_memory_budget_), BYTE_TO_STRING(min_budget_allowed), BYTE_TO_STRING(max_budget_allowed)
         );
         return;
     }
@@ -282,11 +282,20 @@ u64 dynamic_allocator::free_memory() NOEXP {
     return free_mem;
 }
 
+u64 dynamic_allocator::block_size(u8 index) NOEXP {
+
+    if (index < _blocks_count_) {
+        return _blocks_[index].size();
+    }
+
+    return 0;
+}
+
 /*
     todo: implement these functions
 */
 u64 dynamic_allocator::current_memory_usage() NOEXP {
-    return 0;
+    return _allocated_memory_;
 }
 
 u64 dynamic_allocator::current_memory_usage(memory_tag section_tag) NOEXP {

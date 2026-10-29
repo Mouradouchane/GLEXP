@@ -105,7 +105,7 @@ private:
 
 	subsystem_memory_tag _tag_ = subsystem_memory_tag::unkown;
 	u64   _size_ = 0;
-	bool _deallocate_at_destuctor_ = false;
+	bool _deallocate_at_destuctor_ = true;
 
 	void* _ptr_ = nullptr;
 	allocator_response _response_ = allocator_response::busy;
@@ -114,8 +114,12 @@ public:
 	// constructor's
 	memory_handle_g() NOEXP = default;
 	memory_handle_g(
-		allocator_response response, u64 size, subsystem_memory_tag tag_, void* pointer, bool deallocate_at_destruction_time = false
+		allocator_response response, u64 size, subsystem_memory_tag tag_, void* pointer, bool deallocate_at_destruction_time = true
 	) NOEXP;
+
+	// move
+	memory_handle_g(memory_handle_g && other) NOEXP;
+	memory_handle_g& operator=(memory_handle_g && other) NOEXP;
 
 	// destructor
 	~memory_handle_g() NOEXP;
@@ -124,6 +128,10 @@ public:
 	INLINE void* pointer() NOEXP { return this->_ptr_; }
 	INLINE allocator_response response() NOEXP { return this->_response_; }
 	INLINE subsystem_memory_tag tag() NOEXP { return this->_tag_; }
+
+private: // not allowed	
+	memory_handle_g(memory_handle_g const& copy) NOEXP = delete;
+	memory_handle_g& operator=(memory_handle_g const& copy) NOEXP = delete;
 
 }; // class memory_handle_g end
 

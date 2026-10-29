@@ -22,21 +22,29 @@ namespace core {
 /*
 		constructor
 */ 
-
+/*
 memory_registry::memory_registry() NOEXP {
-
-	this->capacity = memory_registry::default_register_capacity;
+	
+	// setup variables
+	// this->capacity = memory_registry::default_register_capacity;
+	this->capacity = 512;
 	this->size = sizeof(memory_allocation) * this->capacity;
 
-	this->handle = core::memory::allocate(
+	// allocate list memory
+	memory_handle_g ghand = core::memory::allocate(
 		memory_request_g{
 			.size = this->size,
 			.tag = subsystem_memory_tag::memory_system
 		}
 	);
 	
-	// todo: this is super sus , make sure it make sense !!!
+	this->handle = ghand;
+
+	// fill list
 	this->list = (memory_allocation*)this->handle._ptr_;
+	// std::memset(this->list, 0, this->size);
+
+	// update variables
 	this->allocations_count = 0;
 	this->allocations_size  = 0;
 
@@ -45,12 +53,15 @@ memory_registry::memory_registry() NOEXP {
 	}
 
 }
+*/
 
 memory_registry::memory_registry(u32 register_capacity) NOEXP {
-
+	
+	// set variables
 	this->capacity = (register_capacity) ? register_capacity : memory_registry::default_register_capacity;
 	this->size = sizeof(memory_allocation) * this->capacity;
 
+	// allocate list memory
 	this->handle = core::memory::allocate(
 		memory_request_g{
 			.size = this->size,
@@ -58,7 +69,9 @@ memory_registry::memory_registry(u32 register_capacity) NOEXP {
 		}
 	);
 
+	// fill list
 	this->list = (memory_allocation*)this->handle._ptr_;
+	
 	this->allocations_count = 0;
 	this->allocations_size  = 0;
 			
@@ -178,11 +191,11 @@ u32 memory_registry::exist(void* ptr) NOEXP {
 	return this->search(this->hash_pointer(ptr), ptr);
 }
 
-u32 memory_registry::get_size() NOEXP {
+u64 memory_registry::get_size() NOEXP {
 	return this->size;
 }
 
-u32 memory_registry::get_capacity() NOEXP {
+u64 memory_registry::get_capacity() NOEXP {
 	return this->capacity;
 }
 

@@ -57,7 +57,7 @@ private:
 public:
 	// public config variables
 	static const u8  max_memory_blocks_allowed = 255;
-	static const u64 min_budget_allowed =   64 KB;
+	static const u64 min_budget_allowed =    4 KB;
 	static const u64 max_budget_allowed = 4096 MB;
 		
 	// constructor's

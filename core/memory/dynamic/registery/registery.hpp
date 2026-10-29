@@ -27,8 +27,8 @@ namespace core {
 		memory_handle_g    handle;
 		memory_allocation* list = nullptr; // registry memory
 
-		u32 size     = 0; // list size in byte
-		u32 capacity = 0; // list max capacity
+		u64 size     = 0; // list size in byte
+		u64 capacity = 0; // list max capacity
 
 		u32 allocations_count = 0; // how many allocations in register
 		u32 allocations_size  = 0; // size of all allocation in register
@@ -37,7 +37,7 @@ namespace core {
 		static const u32 default_register_capacity = 512; 
 		static const u32 register_max_allowed_capacity = 1024;
 		// constructor
-		memory_registry() NOEXP;
+		memory_registry() NOEXP = default;
 		memory_registry(u32 register_capacity) NOEXP;
 
 		// destructor
@@ -45,7 +45,7 @@ namespace core {
 
 		// public functions
 
-		u32 insert(void* ptr, u32 size, memory_tag _tag_) NOEXP;
+		u32 insert(void* ptr, u32 size, memory_tag tag_) NOEXP;
 		u32 insert(memory_allocation allocation) NOEXP;
 
 		// cut allocation from registry if founded
@@ -63,8 +63,8 @@ namespace core {
 		// note: this could be a linear-search O(N)
 		u32 exist(void* ptr) NOEXP; 
 
-		u32 get_size() NOEXP; // registry size in bytes
-		u32 get_capacity() NOEXP; // registry capacity
+		u64 get_size() NOEXP; // registry size in bytes
+		u64 get_capacity() NOEXP; // registry capacity
 
 		u32 get_allocations_size()  NOEXP; // total size of all allocation in register
 		u32 get_allocations_count() NOEXP; // how many allocation in register
