@@ -71,6 +71,7 @@ memory_registry::memory_registry(u32 register_capacity) NOEXP {
 
 	// fill list
 	this->list = (memory_allocation*)this->handle._ptr_;
+	std::memset(this->list, 0, this->size);
 	
 	this->allocations_count = 0;
 	this->allocations_size  = 0;

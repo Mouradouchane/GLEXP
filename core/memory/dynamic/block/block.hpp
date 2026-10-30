@@ -66,7 +66,7 @@ public:
 
 	same_pair<memory_handle> allocate_tow(memory_request_2 const& request) NOEXP;
 
-	void deallocate(memory_handle const& handle) NOEXP;
+	bool deallocate(memory_handle const& handle) NOEXP;
 
 	bool is_busy()  NOEXP;
 	bool is_alive() NOEXP;

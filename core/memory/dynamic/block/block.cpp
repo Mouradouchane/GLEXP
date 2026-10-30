@@ -59,8 +59,8 @@ core::memory_block::memory_block(u64 size , u16 max_allowed_allocations, subsyst
 	_end_   = _start_ + _size_;
 
 	// create register's
-	_alloc_list_  = memory_registry(max_allowed_allocations);
-	_free_list_   = memory_registry(max_allowed_allocations);
+	new (&_alloc_list_) memory_registry(max_allowed_allocations);
+	new (&_free_list_ ) memory_registry(max_allowed_allocations);
 
 	// make memory free to use
 	_free_list_.insert( 
@@ -264,7 +264,7 @@ same_pair<memory_handle> core::memory_block::allocate_tow( memory_request_2 cons
 
 // faster
 // todo: put deallocation task in sepearated thread and return immediately 
-void core::memory_block::deallocate(memory_handle const& handle) NOEXP {
+bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 	DEBUG_BREAK;
 	atomic_scope_lock scope_lock(_lock_);
 
@@ -274,14 +274,14 @@ void core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 	// "deallocate"
 	if (allocation.ptr) { 
 		_free_list_.insert(allocation);
-	
+
 		CORE_DEBUG(
 			0, "memory_block deallocate memory {} , size {} , used for {} .", 
 			core::pointer_to_hex_string(allocation.ptr) , BYTE_TO_STRING(allocation.size) , 
 			core::to_string(allocation.tag)
 		);
 	
-		return;
+		return true;
 	}
 
 	// otherwise failed to deallocate
@@ -289,6 +289,7 @@ void core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 		"memory_block failed to deallocate {} passed in invalid memory_handle !", 
 		core::pointer_to_hex_string(handle.ptr)
 	);
+	return false;
 }
 
 bool core::memory_block::is_busy() NOEXP {

@@ -44,13 +44,13 @@ dynamic_allocator::dynamic_allocator(
     }
 
     // create and init memory_blocks
-    _blocks_ = core::c_array<memory_block>(_blocks_count_ , _tag_);
+    new (&_blocks_) c_array<memory_block>(_blocks_count_ , _tag_);
 
     for (u8 i = 0; i < _blocks_.elements_count(); i++ ) {
         new (&_blocks_[i]) memory_block(_block_size_, max_allocations_per_block, _tag_);
     }
 
-}
+}  
 
 dynamic_allocator::dynamic_allocator(
     string const& name, c_array<block_description> blocks_description, const subsystem_memory_tag tag
@@ -73,7 +73,7 @@ dynamic_allocator::dynamic_allocator(
     /*
         setup memory_blocks
     */
-    _blocks_ = core::c_array<memory_block>(_blocks_count_, _tag_);
+    new (&_blocks_) c_array<memory_block>(_blocks_count_, _tag_);
     u8 i = 0;
     bool rollback = false;
 
@@ -248,16 +248,28 @@ void dynamic_allocator::deallocate(memory_handle handle) NOEXP {
 
 #ifdef DEBUG
     if (handle._block_index_ < _blocks_count_) {
-        _blocks_[handle._block_index_].deallocate(handle);
+        
+        // get handle info 
+        memory_allocation info = _blocks_[handle._block_index_].get_allocation_info(handle);
+
+        if (info.ptr){
+            // deallocate
+            _blocks_[handle._block_index_].deallocate(handle);
+            
+            // update variables
+            _sections_[(u8)info.tag] -= info.size;
+            _allocated_memory_       -= info.size;
+
+        }
+
         return;
     }
 
     CORE_ERROR(CORE_LOG_CONFIG_ALL, "attempt to deallocate invalid handle using dynamic_allocator {}" , _name_);
     CORE_WARN(0, CORE_WARNINIG_RUNTIME_CRASH);
+
 #else
-
-    _blocks_[handle._block_index_].deallocate(handle);
-
+    if(_blocks_[handle._block_index_].deallocate(handle)) _allocated_memory_ -= info.size;
 #endif
 
 }

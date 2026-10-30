@@ -134,7 +134,7 @@ bool atomic_lock::release(id32 ownership_id) NOEXP {
 }
 
 bool atomic_lock::is_locked() NOEXP {
-	return (bool)this->_lock_.load(ATOMIC_RELEASE_ORDER).status;
+	return (bool)this->_lock_.load(ATOMIC_RELAXED_ORDER).status;
 }
 
 // not: this function just for spdlog and std to use them
