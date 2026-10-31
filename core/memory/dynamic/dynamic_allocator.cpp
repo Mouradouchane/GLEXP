@@ -142,7 +142,6 @@ dynamic_allocator::~dynamic_allocator() NOEXP {
 */
 
 memory_handle dynamic_allocator::allocate(memory_request const& request) NOEXP {
-    DEBUG_BREAK;
 
     if (request.block_index < _blocks_count_) {
         memory_handle handle;
@@ -208,7 +207,6 @@ memory_handle dynamic_allocator::allocate(
 }
 
 same_pair<memory_handle> dynamic_allocator::allocate_tow( memory_request_2 const& request ) NOEXP {
-    DEBUG_BREAK;
     
     same_pair<memory_handle> pair;
 

@@ -39,7 +39,7 @@
 #define FRIENDS_TO_MEMORY_HANDLE() \
 		DLL_API memory_handle_g   friend core::memory::allocate(memory_request_g const& request) NOEXP; \
 		DLL_API same_pair<memory_handle_g> friend core::memory::allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP; \
-		DLL_API void              friend core::memory::deallocate(memory_handle_g const& handle) NOEXP; \
+		DLL_API void              friend core::memory::deallocate(memory_handle_g& handle) NOEXP; \
 		friend  DLL_API_CLASS     core::dynamic_allocator;\
 		friend  DLL_API_CLASS     core::memory_block;\
 		friend  DLL_API_CLASS     core::memory_registry;\
@@ -72,7 +72,7 @@ namespace core {
 		//       because of paging , multi-threading , ... .
 		DLL_API same_pair<memory_handle_g> allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP;
 
-		DLL_API void deallocate(memory_handle_g const& handle) NOEXP;
+		DLL_API void deallocate(memory_handle_g& handle) NOEXP;
 
 		DLL_API u64 total_memory_usage() NOEXP;
 		DLL_API u64 current_memory_usage(subsystem_memory_tag section_tag) NOEXP;

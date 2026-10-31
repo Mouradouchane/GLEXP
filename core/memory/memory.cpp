@@ -88,16 +88,12 @@ DLL_API void core::memory::init() NOEXP {
 DLL_API memory_handle_g core::memory::allocate(memory_request_g const& request) NOEXP {
 
 	// allocate memory
-	void* ptr = new byte[request.size + 1];
+	void* ptr = new byte[request.size];
 
 	if (ptr) {
 
+		// update variables
 	#ifdef DEBUG
-		// tag memory
-		u8* tptr = ((u8*)ptr + request.size);
-		*tptr = (u8)request.tag;
-
-		// update list
 		sections_sizes[(u8)request.tag] += request.size;
 	#endif
 
@@ -124,24 +120,16 @@ DLL_API memory_handle_g core::memory::allocate(memory_request_g const& request) 
 }
 
 DLL_API same_pair<memory_handle_g> core::memory::allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP {
-	DEBUG_BREAK;
 
 	// allocate memory
-	void* ptr1 = new byte[request_1.size + 1];
-	void* ptr2 = new byte[request_2.size + 1];
+	void* ptr1 = new byte[request_1.size];
+	void* ptr2 = new byte[request_2.size];
 
 	// try mark the memory with tag
-	if ((ptr1 && ptr2) && (u8)request_1.tag < MAX_MEMORY_TAGS && (u8)request_2.tag < MAX_MEMORY_TAGS) {
+	if ((u8)request_1.tag < MAX_MEMORY_TAGS && (u8)request_2.tag < MAX_MEMORY_TAGS) {
 	
 	#ifdef DEBUG
-		// tag memory
-		u8* tptr1 = ((u8*)ptr1 + request_1.size);
-		*tptr1 = (u8)request_1.tag;
-
-		u8* tptr2 = ((u8*)ptr2 + request_2.size);
-		*tptr2 = (u8)request_2.tag;
-
-		// update list
+		// update variables
 		sections_sizes[(u8)request_1.tag] += request_1.size;
 		sections_sizes[(u8)request_2.tag] += request_2.size;
 	#endif
@@ -154,17 +142,13 @@ DLL_API same_pair<memory_handle_g> core::memory::allocate_tow(memory_request_g c
 			GLOBAL_ALLOCATOR_HIGH_MEMORY_USAGE_WARN();
 		}
 
-		CORE_DEBUG(0, "global-allocator: new memory allocated {} for {}.",
-			core::bytes_to_string(request_1.size), core::to_string(request_1.tag)
-		);
-
-		CORE_DEBUG(0, "global-allocator: new memory allocated {} for {}.",
-			core::bytes_to_string(request_2.size), core::to_string(request_2.tag)
+		CORE_DEBUG(0, "global-allocator: new pair memory allocated {} for {} and {}.",
+			core::bytes_to_string(request_1.size + request_2.size), 
+			core::to_string(request_1.tag), core::to_string(request_2.tag)
 		);
 	#endif
 
-
-		return same_pair<memory_handle_g>{
+		return same_pair<memory_handle_g> {
 			memory_handle_g(allocator_response::success, request_1.size, request_1.tag, ptr1),
 			memory_handle_g(allocator_response::success, request_2.size, request_2.tag, ptr2)
 		};
@@ -181,26 +165,35 @@ DLL_API same_pair<memory_handle_g> core::memory::allocate_tow(memory_request_g c
 
 }
 
-DLL_API void core::memory::deallocate(memory_handle_g const& handle) NOEXP {
-	// DEBUG_BREAK;
+DLL_API void core::memory::deallocate(memory_handle_g& handle) NOEXP {
 
 	if (handle._ptr_) {
-		u8 _tag_ = *((u8*)handle._ptr_ + handle._size_);
 
-		// release memory
+		// deallocate memory
 		delete[] handle._ptr_;
 
-		// update internal variables
+		// update allocator variables
 		total_size -= handle._size_;
-	#ifdef DEBUG 
-		sections_sizes[_tag_] -= handle._size_;
 
-		CORE_DEBUG(0, "global-allocator: memory {} is deallocated , used for {} size {}." , 
-			core::pointer_to_hex_string(handle._ptr_) , core::to_string((subsystem_memory_tag)_tag_),
-			core::bytes_to_string(handle._size_)
-		);
+	#ifdef DEBUG 
+		if( (u8)handle._tag_ < MAX_MEMORY_TAGS ){
+			sections_sizes[(u8)handle._tag_] -= handle._size_;
+
+			CORE_DEBUG(0, "global-allocator: memory {} is deallocated , used for {} size {}." , 
+				core::pointer_to_hex_string(handle._ptr_), core::to_string(handle._tag_),
+				core::bytes_to_string(handle._size_)
+			);
+		}
+		else {
+			CORE_WARN(0,"global-allocator: memory {} have invalid tag {} " , 
+				core::pointer_to_hex_string(handle._ptr_), core::to_string(handle._tag_)
+			);
+		}
 	#endif
 
+		// make handle invalid
+		handle._ptr_ = nullptr;
+		
 		return;
 	}
 

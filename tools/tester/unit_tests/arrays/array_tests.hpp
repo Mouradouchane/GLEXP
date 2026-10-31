@@ -188,7 +188,8 @@ bool array_t_array_basic_construction() {
 
 // Test constructor using raw pointer input (non-trivial types, tests placement new)
 bool array_t_array_constructor_from_pointer_nontrivial() {
-	core::array<std::string> arr(3, allocator, memory_tag::dev);
+	core::array<string> arr(3, allocator, memory_tag::dev);
+
 	arr[0] = "A";
 	arr[1] = "B";
 	arr[2] = "C";

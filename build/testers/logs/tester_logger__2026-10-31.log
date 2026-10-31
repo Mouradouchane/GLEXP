@@ -1,0 +1,287 @@
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [error] : core::dynamic_allocator::deallocate
+
+[10/31/26] [tester_logger] [error] : void __cdecl core::dynamic_allocator::deallocate(class memory_handle) noexcept
+
+[10/31/26] [tester_logger] [error] : attempt to deallocate invalid handle using dynamic_allocator tester global allocator
+
+[10/31/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, 
+, 
+
+[10/31/26] [tester_logger] [error] : core::array<int>::move_elements
+
+[10/31/26] [tester_logger] [error] : void __cdecl core::array<int>::move_elements(class core::array<int> &,class core::array<int> &) noexcept
+
+[10/31/26] [tester_logger] [error] :  [BUG] source 0x00000064698DC940 bigger than destination 0x00000064698DC9C0 !
+
+[10/31/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, l, 
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [error] : core::dynamic_allocator::deallocate
+
+[10/31/26] [tester_logger] [error] : void __cdecl core::dynamic_allocator::deallocate(class memory_handle) noexcept
+
+[10/31/26] [tester_logger] [error] : attempt to deallocate invalid handle using dynamic_allocator tester global allocator
+
+[10/31/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, 
+, 
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [error] : core::dynamic_allocator::deallocate
+
+[10/31/26] [tester_logger] [error] : void __cdecl core::dynamic_allocator::deallocate(class memory_handle) noexcept
+
+[10/31/26] [tester_logger] [error] : attempt to deallocate invalid handle using dynamic_allocator tester global allocator
+
+[10/31/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, 
+, 
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[10/31/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[10/31/26] [tester_logger] [error] : init-logger test error 1 !
+
+[10/31/26] [tester_logger] [critical] : init-logger test critical 1 !
+

@@ -130,7 +130,6 @@ memory_handle core::memory_block::allocate(memory_request const& request) NOEXP 
 }
 
 memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_tag tag_, bool wait_for_block) NOEXP {
-	DEBUG_BREAK;
 
 	// if the block is busy at the moment
 	if (_lock_.is_locked() && !wait_for_block) return MEMORY_HANDLE_BUSY;
@@ -198,7 +197,6 @@ memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_ta
 }
 
 same_pair<memory_handle> core::memory_block::allocate_tow( memory_request_2 const& request ) NOEXP {
-	DEBUG_BREAK;
 
 	// if busy + no wait
 	if (_lock_.is_locked() && !request.wait_for_memory_block ) {
@@ -265,7 +263,7 @@ same_pair<memory_handle> core::memory_block::allocate_tow( memory_request_2 cons
 // faster
 // todo: put deallocation task in sepearated thread and return immediately 
 bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
-	DEBUG_BREAK;
+
 	atomic_scope_lock scope_lock(_lock_);
 
 	// get allocation
