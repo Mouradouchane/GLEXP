@@ -1,0 +1,176 @@
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [error] : core::dynamic_allocator::deallocate
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::dynamic_allocator::deallocate(class memory_handle) noexcept
+
+[11/02/26] [tester_logger] [error] : attempt to deallocate invalid handle using dynamic_allocator tester global allocator
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, 
+, 
+
+[11/02/26] [tester_logger] [error] : core::array<int>::move_elements
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::array<int>::move_elements(class core::array<int> &,class core::array<int> &) noexcept
+
+[11/02/26] [tester_logger] [error] :  [BUG] source 0x0000003A1EADCC60 bigger than destination 0x0000003A1EADCCE0 !
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, l, 
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [error] : core::dynamic_allocator::deallocate
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::dynamic_allocator::deallocate(class memory_handle) noexcept
+
+[11/02/26] [tester_logger] [error] : attempt to deallocate invalid handle using dynamic_allocator tester global allocator
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, 
+, 
+
+[11/02/26] [tester_logger] [error] : core::array<int>::move_elements
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::array<int>::move_elements(class core::array<int> &,class core::array<int> &) noexcept
+
+[11/02/26] [tester_logger] [error] :  [BUG] source 0x00000023D11CC610 bigger than destination 0x00000023D11CC690 !
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, l, 
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [error] : core::dynamic_allocator::deallocate
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::dynamic_allocator::deallocate(class memory_handle) noexcept
+
+[11/02/26] [tester_logger] [error] : attempt to deallocate invalid handle using dynamic_allocator tester global allocator
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, 
+, 
+
+[11/02/26] [tester_logger] [error] : core::array<int>::move_elements
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::array<int>::move_elements(class core::array<int> &,class core::array<int> &) noexcept
+
+[11/02/26] [tester_logger] [error] :  [BUG] source 0x000000625F66C5F0 bigger than destination 0x000000625F66C670 !
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, l, 
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [error] : core::dynamic_allocator::deallocate
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::dynamic_allocator::deallocate(class memory_handle) noexcept
+
+[11/02/26] [tester_logger] [error] : attempt to deallocate invalid handle using dynamic_allocator tester global allocator
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, 
+, 
+
+[11/02/26] [tester_logger] [error] : core::array<int>::move_elements
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::array<int>::move_elements(class core::array<int> &,class core::array<int> &) noexcept
+
+[11/02/26] [tester_logger] [error] :  [BUG] source 0x00000054FB45CB90 bigger than destination 0x00000054FB45CC10 !
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, l, 
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [error] : core::dynamic_allocator::deallocate
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::dynamic_allocator::deallocate(class memory_handle) noexcept
+
+[11/02/26] [tester_logger] [error] : attempt to deallocate invalid handle using dynamic_allocator tester global allocator
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, 
+, 
+
+[11/02/26] [tester_logger] [error] : core::array<int>::move_elements
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::array<int>::move_elements(class core::array<int> &,class core::array<int> &) noexcept
+
+[11/02/26] [tester_logger] [error] :  [BUG] source 0x0000003D6F31C590 bigger than destination 0x0000003D6F31C610 !
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, l, 
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [warning] : init-logger test warn 1 !
+
+[11/02/26] [tester_logger] [error] : init-logger test error 1 !
+
+[11/02/26] [tester_logger] [critical] : init-logger test critical 1 !
+
+[11/02/26] [tester_logger] [error] : core::dynamic_allocator::deallocate
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::dynamic_allocator::deallocate(class memory_handle) noexcept
+
+[11/02/26] [tester_logger] [error] : attempt to deallocate invalid handle using dynamic_allocator tester global allocator
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\memory\dynamic\dynamic_allocator.cpp, 
+, 
+
+[11/02/26] [tester_logger] [error] : core::array<int>::move_elements
+
+[11/02/26] [tester_logger] [error] : void __cdecl core::array<int>::move_elements(class core::array<int> &,class core::array<int> &) noexcept
+
+[11/02/26] [tester_logger] [error] :  [BUG] source 0x0000007DAA40CA60 bigger than destination 0x0000007DAA40CAE0 !
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, l, 
+
+[11/02/26] [tester_logger] [error] : core::array<int>::operator []
+
+[11/02/26] [tester_logger] [error] : int &__cdecl core::array<int>::operator [](const unsigned int &) noexcept
+
+[11/02/26] [tester_logger] [error] :  [BUG] index 0 passed to core::array<{}> is out of range !
+
+[11/02/26] [tester_logger] [error] : C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, C:\Users\cppdev\Desktop\projects\GLEXP\core\containers\arrays\array_impl.hpp, ¬, 
+

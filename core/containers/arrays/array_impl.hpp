@@ -45,10 +45,10 @@ core::array<type>::array(u32 elements_count, core::dynamic_allocator const& _all
 
 	/*
 	// construct elements
+	*/
 	for (type* ptr = this->_begin_; ptr != this->_end_; ptr++) {
 		new (ptr) type();
 	}
-	*/
 
 	CORE_DEBUG_HPP(_arr_hpp_lgr_,0, "new core::array< {} >[{}] created for {} with size {}.", this->_typename_, this->_capacity_, core::to_string(tag_), this->_size_);
 }

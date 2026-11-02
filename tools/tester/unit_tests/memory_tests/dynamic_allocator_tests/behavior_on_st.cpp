@@ -49,9 +49,39 @@ bool dynamic_allocator_simple_behavior_test_1() {
 	return TEST_PASS;
 }
 
+struct test_struct {
+	u32  x , y , z;
+};
 
 bool dynamic_allocator_all_blocks_same_size() {
-	return false;
+
+	core::dynamic_allocator dc("tester allocator:all block same size",4 KB,2,16,subsystem_memory_tag::debug_system);
+
+	memory_handle handles[16] = { };
+
+	// allocate memory
+	for (u8 i = 0; i < 16; i += 1) {
+		handles[i] = dc.allocate(sizeof(test_struct),(memory_tag)i,0,false,true);
+		test_struct* ptr = (test_struct*)handles[i].pointer();
+		*ptr = test_struct{1,2,3};
+	}
+
+	// check allocated size
+	if (dc.current_memory_usage() != (sizeof(test_struct) * 16)) {
+		DEBUG_FAILUER();
+	}
+
+	// check elements in memory
+	for (u8 i = 0; i < 16; i += 1) {
+		test_struct* ptr = (test_struct*)handles[i].pointer();
+		test_struct st = *ptr;
+
+		if (st.x != 1 && st.y != 2 && st.z != 3) {
+			DEBUG_FAILUER();
+		}
+	}
+
+	return TEST_PASS;
 }
 
 bool dynamic_allocator_blocks_with_different_sizes() {

@@ -190,7 +190,7 @@ bool array_t_array_basic_construction() {
 bool array_t_array_constructor_from_pointer_nontrivial() {
 	core::array<string> arr(3, allocator, memory_tag::dev);
 
-	arr[0] = "A";
+	arr[0] = string("A");
 	arr[1] = "B";
 	arr[2] = "C";
 

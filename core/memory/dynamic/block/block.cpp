@@ -150,7 +150,7 @@ memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_ta
 	}
 
 	// check if registry is full
-	if (_alloc_list_.get_allocations_count() >= (_alloc_list_.get_capacity() - 1)) {
+	if (_alloc_list_.get_allocations_count() >= _alloc_list_.get_capacity()) {
 		CORE_WARN(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_IS_REGISTRY_FULL, _alloc_list_.get_capacity());
 
 		handle.response = allocator_response::register_full;
@@ -211,7 +211,7 @@ same_pair<memory_handle> core::memory_block::allocate_tow( memory_request_2 cons
 	/*
 		check if active registry is full
 	*/ 
-	if (_alloc_list_.get_allocations_count() >= (_alloc_list_.get_capacity() - 2)) {
+	if (_alloc_list_.get_allocations_count() > (_alloc_list_.get_capacity() - 2)) {
 		CORE_ERROR(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_FAILED_TO_REGISTER_ALLOCATION);
 
 		return same_pair<memory_handle> {
