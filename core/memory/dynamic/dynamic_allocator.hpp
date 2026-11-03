@@ -46,7 +46,7 @@ private:
 	DEBUG_ONLY atomic_u32 _sections_[MAX_MEMORY_TAGS] = { 0u };
 #endif
 
-	core::c_array<memory_block> _blocks_; 
+	core::global_array<memory_block> _blocks_; 
 
 	u64        _memory_budget_    = 0; // total memory
 	atomic_u64 _allocated_memory_ = 0; // used  memory
@@ -62,7 +62,7 @@ public:
 		
 	// constructor's
 	dynamic_allocator(string const& name, const u64 blocks_size , const u8 blocks_count, const u16 max_allocations_per_block, const subsystem_memory_tag tag) NOEXP;
-	dynamic_allocator(string const& name, c_array<block_description> blocks_description, const subsystem_memory_tag tag) NOEXP;
+	dynamic_allocator(string const& name, global_array<block_description> blocks_description, const subsystem_memory_tag tag) NOEXP;
 
 	// destructor
 	~dynamic_allocator() NOEXP;

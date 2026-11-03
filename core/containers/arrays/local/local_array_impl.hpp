@@ -56,7 +56,6 @@ core::array<type>::array(u32 elements_count, core::dynamic_allocator const& _all
 // copy constructor
 template<typename type>
 core::array<type>::array(core::array<type> const& array_to_copy, core::dynamic_allocator const& _allocator) NOEXP {
-	this->allocate = &_allocator;
 
 	if (this == &array_to_copy) {
 		CORE_WARN_HPP(
@@ -68,14 +67,18 @@ core::array<type>::array(core::array<type> const& array_to_copy, core::dynamic_a
 		return;
 	}
 
-	this->_capacity_ = array_to_copy._capacity_ ? array_to_copy._capacity_ : 1;
+	// remove old elements
+	this->_allocator_->deallocate(_handle_);
+
+	// copy variables
+	this->_allocator_ = &_allocator;
+	this->_capacity_  = array_to_copy._capacity_ ? array_to_copy._capacity_ : 1;
 	this->_size_ = sizeof(type) * this->_capacity_;
-	this->_tag_  = array_to_copy._tag_;
 
 	// allocate memory
 	this->_handle_ = this->_allocator_->allocate(
 		memory_request{
-			.alignement = 0 , .size = this->_size_ , ._tag_ = this->_tag_
+			.alignement = 0 , .size = this->_size_ , ._tag_ = array_to_copy._handle_.tag()
 		}
 	);
 
@@ -83,7 +86,8 @@ core::array<type>::array(core::array<type> const& array_to_copy, core::dynamic_a
 		CORE_FATAL_HPP(_arr_hpp_lgr_, CORE_LOG_CONFIG_ALL, "failed to allocate memory for core::array<{}>", this->_typename_);
 		return;
 	}
-
+	
+	// get array memory range
 	this->_begin_ = (type*)_handle_.pointer();
 	this->_end_   = this->_begin_ + this->_capacity_;
 
@@ -103,7 +107,7 @@ core::array<type>::array(core::array<type> const& array_to_copy, core::dynamic_a
 
 // move constructor 
 template<typename type>
-core::array<type>::array(core::array<type>& array_to_move) NOEXP {
+core::array<type>::array(core::array<type> && array_to_move) NOEXP {
 
 	if (this == &array_to_move) {
 		CORE_WARN_HPP(

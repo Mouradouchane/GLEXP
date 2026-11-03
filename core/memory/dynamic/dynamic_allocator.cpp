@@ -44,7 +44,7 @@ dynamic_allocator::dynamic_allocator(
     }
 
     // create and init memory_blocks
-    new (&_blocks_) c_array<memory_block>(_blocks_count_ , _tag_);
+    new (&_blocks_) global_array<memory_block>(_blocks_count_ , _tag_);
 
     for (u8 i = 0; i < _blocks_.elements_count(); i++ ) {
         new (&_blocks_[i]) memory_block(_block_size_, max_allocations_per_block, _tag_);
@@ -53,7 +53,7 @@ dynamic_allocator::dynamic_allocator(
 }  
 
 dynamic_allocator::dynamic_allocator(
-    string const& name, c_array<block_description> blocks_description, const subsystem_memory_tag tag
+    string const& name, global_array<block_description> blocks_description, const subsystem_memory_tag tag
 ) NOEXP {
 
     // set variables
@@ -73,7 +73,7 @@ dynamic_allocator::dynamic_allocator(
     /*
         setup memory_blocks
     */
-    new (&_blocks_) c_array<memory_block>(_blocks_count_, _tag_);
+    new (&_blocks_) global_array<memory_block>(_blocks_count_, _tag_);
     u8 i = 0;
     bool rollback = false;
 

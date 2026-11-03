@@ -12,10 +12,9 @@
 #include "core/assert.hpp"
 #include "core/memory/dynamic/dynamic_allocator.hpp"
 
-#define CORE_ARRAY_DEFAULT_RESIZE_VALUE 1
+#define CORE_ARRAY_DEFAULT_RESIZE_VALUE 16
 
 namespace core {
-
 /*
 	core::array : - is a hybird array you can use it as a fixed size array , or dynamic resizable array .
 	              - array resize is manual and not automatic .
@@ -28,15 +27,11 @@ private:
 	core::dynamic_allocator* _allocator_ = nullptr;
 	memory_handle             _handle_;
 
-	u64 _size_         = 0;
-	u32 _capacity_     = 0;
-	u32 _resize_value_ = CORE_ARRAY_DEFAULT_RESIZE_VALUE;
-	type* _begin_      = nullptr;
-	type* _end_        = nullptr;
-
-#ifdef DEBUG
-	memory_tag _tag_ = memory_tag::unkown;
-#endif
+	u64   _size_         = 0;
+	u32   _capacity_     = 0;
+	u32   _resize_value_ = CORE_ARRAY_DEFAULT_RESIZE_VALUE;
+	type* _begin_        = nullptr;
+	type* _end_          = nullptr;
 
 public:
 	/*
@@ -45,7 +40,7 @@ public:
 	array() NOEXP = default;
 	array(u32 elements_count, core::dynamic_allocator const& _allocator, memory_tag _tag) NOEXP;
 	array(core::array<type> const& array_to_copy, core::dynamic_allocator const& _allocator) NOEXP; // copy constructor
-	array(core::array<type>& array_to_move) NOEXP; // move constructor 
+	array(core::array<type> && array_to_move) NOEXP; // move constructor 
 
 	/*
 		destructor
