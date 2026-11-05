@@ -9,7 +9,7 @@
 #include "core/logger/logger.hpp"
 #include "core/strings/string.hpp"
 #include "core/memory/dynamic/dynamic_allocator.hpp"
-#include "core/containers/arrays/dynamic_array.hpp"
+#include "core/containers/arrays/local/local_array.hpp"
 
 #ifdef DEBUG
 	static auto _event_dispatcher_hpp_logger_ = CORE_GET_LOGGER( EVENT_SYSTEM_LOGGER );

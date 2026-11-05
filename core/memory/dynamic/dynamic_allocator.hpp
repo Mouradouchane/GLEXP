@@ -8,7 +8,7 @@
 #include "core/locks/atomic_types.hpp"
 #include "core/memory/memory.hpp"
 #include "core/memory/dynamic/block/block.hpp"
-#include "core/containers/arrays/c_array.hpp"
+#include "core/containers/arrays/global/global_array.hpp"
 #include "core/strings/string.hpp"
 
 struct block_description {
