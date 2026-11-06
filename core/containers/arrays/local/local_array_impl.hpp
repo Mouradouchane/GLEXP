@@ -22,6 +22,7 @@
 /*
 	constructor's
 */
+
 template<typename type>
 core::local_array<type>::local_array(u32 elements_count, core::dynamic_allocator const& allocator, memory_tag tag) NOEXP {
 
@@ -29,7 +30,7 @@ core::local_array<type>::local_array(u32 elements_count, core::dynamic_allocator
 	_size_     = (_capacity_ * sizeof(type));
 
 	// allocate memory
-	_handle_ = _allocator_->allocate(
+	_handle_ = allocator->allocate(
 		memory_request{
 			.size = _size_ , 
 			.alignement = 0 , 
@@ -44,9 +45,7 @@ core::local_array<type>::local_array(u32 elements_count, core::dynamic_allocator
 
 	_begin_ = (type*)_handle_.pointer();
 
-	/*
-		construct elements
-	*/
+	// construct elements
 	for (type* ptr = _begin_; ptr != _end_; ptr++) {
 		new (ptr) type();
 	}
@@ -54,32 +53,27 @@ core::local_array<type>::local_array(u32 elements_count, core::dynamic_allocator
 	CORE_DEBUG_HPP(_arr_hpp_lgr_,0, "new core::local_array< {} >[{}] created for {} with size {}.", _typename_, _capacity_, core::to_string(tag), _size_);
 }
 
-// copy constructor
-template<typename type>
-core::local_array<type>::local_array(core::local_array<type> const& array_to_copy, core::dynamic_allocator const& allocator_) NOEXP {
+template<typename type> // copy constructor
+core::local_array<type>::local_array(core::local_array<type> const& array_to_copy, core::dynamic_allocator const& allocator) NOEXP {
 
+	// self assing not allowed
 	if (this == &array_to_copy) {
-		CORE_WARN_HPP(
-			_arr_hpp_lgr_,0,
-			CORE_SELF_ASSIGN_BUG,
-			core::pointer_to_hex_string(&array_to_copy),
-			core::pointer_to_hex_string(this)
+		CORE_ERROR_HPP(
+			_arr_hpp_lgr_ , 0 , CORE_SELF_ASSIGN_BUG ,
+			core::pointer_to_hex_string(&array_to_copy), core::pointer_to_hex_string(this)
 		);
 		return;
 	}
 
-	// remove old elements
-	_allocator_->deallocate(_handle_);
+	// copy array variables
+	_capacity_     = array_to_copy._capacity_ ? array_to_copy._capacity_ : 1;
+	_size_         = sizeof(type) * _capacity_;
+	_resize_value_ = array_to_copy._resize_value_;
 
-	// copy variables
-	_allocator_ = &_allocator;
-	_capacity_  = array_to_copy._capacity_ ? array_to_copy._capacity_ : 1;
-	_size_ = sizeof(type) * _capacity_;
-
-	// allocate memory
-	_handle_ = _allocator_->allocate(
+	// allocate new array memory 
+	_handle_ = allocator->allocate(
 		memory_request{
-			.alignement = 0 , .size = _size_ , ._tag_ = array_to_copy._handle_.tag()
+			.alignement = 0 , .size = _size_ , .tag = array_to_copy._handle_.tag()
 		}
 	);
 
@@ -88,16 +82,16 @@ core::local_array<type>::local_array(core::local_array<type> const& array_to_cop
 		return;
 	}
 	
-	// get array memory range
 	_begin_ = (type*)_handle_.pointer();
-	_end_   = _begin_ + _capacity_;
 
-	// todo: add multi-thread copying for large data !
+	/*
+		copy elements
+	*/
 	if constexpr (std::is_trivially_copyable<type>::value) {
-		// copy elements if copyable 
+		// todo: add multi-thread copying for large data !
 		std::memcpy(_begin_, array_to_copy._begin_, _size_);
 	}
-	else { // or copy construct
+	else { // or copy via constructor
 		for (u32 i = 0; i < _capacity_; i++) {
 			new (_begin_ + i) type(array_to_copy._begin_[i]);
 		}
@@ -106,10 +100,57 @@ core::local_array<type>::local_array(core::local_array<type> const& array_to_cop
 	CORE_DEBUG_HPP(_arr_hpp_lgr_,0,"new core::local_array<{}>[{}] created for {} with size {}.", _typename_, _capacity_, core::to_string(_tag_), _size_);
 }
 
-// move constructor 
-template<typename type>
+template<typename type> // copy constructor
+core::local_array<type>::local_array(core::local_array<type> const& array_to_copy) NOEXP {
+
+	// self assing not allowed
+	if (this == &array_to_copy) {
+		CORE_ERROR_HPP(
+			_arr_hpp_lgr_ , 0 , CORE_SELF_ASSIGN_BUG ,
+			core::pointer_to_hex_string(&array_to_copy), core::pointer_to_hex_string(this)
+		);
+		return;
+	}
+
+	// copy array variables
+	_capacity_     = array_to_copy._capacity_ ? array_to_copy._capacity_ : 1;
+	_size_         = sizeof(type) * _capacity_;
+	_resize_value_ = array_to_copy._resize_value_;
+
+	// allocate new array memory 
+	_handle_ = array_to_copy._handle_.allocator()->allocate(
+		memory_request{
+			.alignement = 0 , .size = _size_ , .tag = array_to_copy._handle_.tag()
+		}
+	);
+
+	if (_handle_.response != allocator_response::success) {
+		CORE_FATAL_HPP(_arr_hpp_lgr_, CORE_LOG_CONFIG_ALL, "failed to allocate memory for core::local_array<{}>", _typename_);
+		return;
+	}
+	
+	_begin_ = (type*)_handle_.pointer();
+
+	/*
+		copy elements
+	*/
+	if constexpr (std::is_trivially_copyable<type>::value) {
+		// todo: add multi-thread copying for large data !
+		std::memcpy(_begin_, array_to_copy._begin_, _size_);
+	}
+	else { // or copy via constructor
+		for (u32 i = 0; i < _capacity_; i++) {
+			new (_begin_ + i) type(array_to_copy._begin_[i]);
+		}
+	}
+
+	CORE_DEBUG_HPP(_arr_hpp_lgr_,0,"new core::local_array<{}>[{}] created for {} with size {}.", _typename_, _capacity_, core::to_string(_tag_), _size_);
+}
+
+template<typename type> // move constructor 
 core::local_array<type>::local_array(core::local_array<type> && array_to_move) NOEXP {
 
+	// self assing not allowed
 	if (this == &array_to_move) {
 		CORE_WARN_HPP(
 			_arr_hpp_lgr_,0,
@@ -121,19 +162,15 @@ core::local_array<type>::local_array(core::local_array<type> && array_to_move) N
 	}
 
 	// move ownership
-	_allocator_ = array_to_move._allocator_;
-	_begin_     = array_to_move._begin_;
-	_end_       = array_to_move._end_;
-	_size_      = array_to_move._size_;
-	_capacity_  = array_to_move._capacity_;
-	_tag_       = array_to_move._tag_;
+	_handle_       = array_to_move._handle_;
+	_begin_        = array_to_move._begin_;
+	_size_         = array_to_move._size_;
+	_capacity_     = array_to_move._capacity_;
+	_resize_value_ = array_to_move._resize_value_;
 
 	// clear other array
-	array_to_move._allocator_ = nullptr;
-	array_to_move._begin_    = nullptr;
-	array_to_move._end_      = nullptr;
-	array_to_move._size_     = 0;
-	array_to_move._capacity_    = 0;
+	array_to_move._handle_ = memory_handle_g{ 0 };
+	array_to_move._begin_  = nullptr;
 
 	CORE_DEBUG_HPP(_arr_hpp_lgr_, 0, "moved ownership to new core::local_array< {} >[{}] created for {} with size {} .", _typename_, _capacity_, core::to_string(_tag_), _size_);
 }
@@ -145,7 +182,7 @@ template<typename type>
 core::local_array<type>::~array() NOEXP {
 
 	// destroy all elements in array is destructable
-	if (_begin_ != nullptr) {
+	if (_begin_) {
 
 		if constexpr (!std::is_trivially_destructible<type>::value) {
 			for (type* ptr = _begin_; ptr != _end_; ptr++) {
@@ -154,11 +191,10 @@ core::local_array<type>::~array() NOEXP {
 		}
 
 	}
-
-	// deallocate array memory
-	if (_begin_) {
-		_allocator_->deallocate(_handle_);
-	}
+	
+	/*
+		note: handle destructor will deallocate memory automatically
+	*/ 
 
 	CORE_DEBUG_HPP(_arr_hpp_lgr_,0, "destructed core::local_array< {} >[{}] used for {} .", _typename_, _capacity_, core::to_string(_tag_));
 }
@@ -170,16 +206,112 @@ core::local_array<type>::~array() NOEXP {
 
 template<typename type>
 type& core::local_array<type>::operator[](u32 const& index) NOEXP {
-
-	if (index < _capacity_) return *(_begin_ + index);
-	
 	#ifdef DEBUG
-		CORE_ERROR_HPP(_arr_hpp_lgr_, CORE_LOG_CONFIG_ALL , CORE_INDEX_OUT_OF_RANGE, index, "core::local_array<{}>", _typename_);
+		if (index < _capacity_ && _begin_) return *(_begin_ + index);
+		
+		if (!_begin_) {
+			CORE_ERROR_HPP(_arr_hpp_lgr_, CORE_LOG_CONFIG_ALL , "attempt to access global_array but it's memory nullptr !");
+		}
+		else {
+			CORE_ERROR_HPP(_arr_hpp_lgr_, CORE_LOG_CONFIG_ALL , CORE_INDEX_OUT_OF_RANGE, index, "core::local_array<{}>", _typename_);
+		}
 		CORE_WARN_HPP(_arr_hpp_lgr_,0,CORE_WARNINIG_RUNTIME_CRASH);
-	#endif
 
-	return *(_begin_ + _capacity_); // access out of range value
+		return *(_begin_ + _capacity_); // access out of range value
+	#else
+		return *(_begin_ + index);
+	#endif
 }
+
+/*
+	note: copying will replace current elements in the array , "this is not insert or append operation"
+*/
+template<typename type>
+type& core::local_array<type>::operator= (core::local_array<type> const& array_to_copy) NOEXP {
+	
+	// self assing not allowed
+	if(this == &array_to_copy){
+		CORE_ERROR_HPP(_carr_hpp_lgr_, core::logger::log_config::dump_stack_trace, "core::local_array self copy not allowed !");
+		return *this;
+	}
+
+	// destruct/remove current elements
+	if(_begin_){
+		if constexpr (!std::is_trivially_destructible<type>::value) {
+			for (u64 i = 0; i < _capacity_; i++) {
+				(_begin_ + i)->~type();
+			} 
+		}
+	}
+
+	// resize array if needed
+	if (_capacity_ < array_to_copy._capacity_) {
+		_handle_.~memory_handle_g(); 
+
+		// update array size 
+		_capacity_ =  array_to_copy._capacity_;
+		_size_     = sizeof(type) * _capacity_;
+
+		_handle_ = array_to_copy._handle_.allocator()->allocate( 
+			memory_request{ 
+				.size = _size_,
+				.alignement = 0,
+				.tag  = array_to_copy._handle_.tag() 
+			}
+		);
+
+		if (_handle_.response() != allocator_response::success){
+			CORE_ERROR_HPP("core::local_array failed to allocate memory !");
+			return;
+		}
+	}
+
+	// copy elements
+	_begin_ = (type*)_handle_.pointer();
+	
+	for(u32 i = 0; i < array_to_copy._capacity_; i++ ) {
+		// note: your "type" should support "copy via constructor"
+		new (_begin_ + i) type(array_to_copy[i]);
+	}
+}
+
+
+/*
+	note: moving will replace current elements in the array , "this is not insert or append operation"
+*/
+template<typename type> // move ownership
+type& core::local_array<type>::operator= (core::local_array<type>&& array_to_move) NOEXP {
+	
+	// self assing is not allowed
+	if(this == &array_to_move){
+		CORE_WARN_HPP(_carr_hpp_lgr_, core::logger::log_config::dump_stack_trace, "core::local_array self moving not allowed !");
+		return *this;
+	}
+
+	// destruct/remove current elements
+	if(_begin_){
+		if constexpr (!std::is_trivially_destructible<type>::value) {
+			for (u64 i = 0; i < _capacity_; i++) {
+				(_begin_ + i)->~type();
+			}
+		}
+
+		// deallocate current memory
+		_handle_.~memory_handle();
+	}
+
+	// move ownership
+	_handle_   = array_to_move._handle_;
+	_begin_    = array_to_move._begin_;
+	_capacity_ = array_to_move._capacity_;
+	_size_     = sizeof(type) * _capacity_;
+
+	array_to_move._handle_ = memory_handle{ 0 };
+	array_to_move._begin_  = nullptr;
+
+	return *this;
+}
+
 
 /*
 	array public functions
@@ -191,29 +323,27 @@ type* core::local_array<type>::begin() NOEXP {
 }
 
 template<typename type>
-const type* core::local_array<type>::begin() const NOEXP {
-	return _begin_;
-}
-
-template<typename type>
 type* core::local_array<type>::end() NOEXP {
-	return _end_;
-}
-
-template<typename type>
-const type* core::local_array<type>::end() const NOEXP {
-	return _end_;
+	return (_begin_ + _capacity_);
 }
 
 template<typename type>
 void core::local_array<type>::clear() NOEXP {
 	if (_begin_) {
-		std::memset(_begin_, 0, _size_);
+
+		if constexpr (!std::is_trivially_destructible<type>::value) {
+			type* end = _begin_ + _capacity_;
+			for (type* ptr = _begin_; ptr != end; ptr++) {
+				ptr->~type();
+			}
+		}
+
+		std::memset(_begin_ , 0 , _size_);
 	}
 }
 
 template<typename type>
-u32 core::local_array<type>::elements_count() NOEXP {
+u64 core::local_array<type>::capacity() NOEXP {
 	return _capacity_;
 }
 
@@ -221,7 +351,6 @@ template<typename type>
 u64 core::local_array<type>::size() NOEXP {
 	return _size_;
 }
-
 
 template<typename type>
 bool core::local_array<type>::resize() NOEXP {

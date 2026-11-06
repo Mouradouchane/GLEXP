@@ -48,8 +48,12 @@ public:
 	*/ 
 	type& operator[](u32 const& index) NOEXP;
 
-	type& operator= (core::local_array<type> const& array_to_copy) NOEXP; // assing copy
-	type& operator= (core::local_array<type> &&     array_to_move) NOEXP; // assing move
+
+	/*
+		note: moving/copying will replace current elements in the array , "this is not insert or append operation"
+	*/
+	type& operator= (core::local_array<type> const& array_to_copy) NOEXP;
+	type& operator= (core::local_array<type> &&     array_to_move) NOEXP; // move ownership
 
 	/*
 		array public functions
@@ -57,7 +61,7 @@ public:
 	type* begin() NOEXP;
 	type* end()   NOEXP;
 
-	u32  capacity() NOEXP; // elements count
+	u64  capacity() NOEXP; // elements count
 	u64  size()     NOEXP; // size of array in bytes
 		
 	void clear()  NOEXP;

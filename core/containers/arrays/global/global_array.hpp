@@ -16,9 +16,9 @@ template<typename type> class global_array {
 		inline static const string _typename_ = TYPE_NAME(type);
 
 		memory_handle_g _handle_;
-		u32   _count_ = NULL;
-		u64   _size_  = NULL;
-		type* _begin_ = nullptr;
+		u64   _capacity_ = 0;
+		u64   _size_     = 0;
+		type* _begin_    = nullptr;
 
 	public:
 		// constructor
@@ -29,15 +29,15 @@ template<typename type> class global_array {
 
 		// operators
 		type& operator[] (u32 index) NOEXP;
-
-		type& operator= (global_array<type> const& array_to_copy) NOEXP; // assign copy
-		type& operator= (global_array<type> &&     array_to_move) NOEXP; // assign move
+		type& operator= (global_array<type> const& array_to_copy) NOEXP; 
+		// note: move ownership not elements
+		type& operator= (global_array<type> && array_to_move) NOEXP; 
 		
 		// destructor
 		~global_array();
 		
 		// functions
-		u32   capacity() NOEXP;
+		u64   capacity() NOEXP;
 		u64   size()     NOEXP;
 		
 		type* begin()    NOEXP;
