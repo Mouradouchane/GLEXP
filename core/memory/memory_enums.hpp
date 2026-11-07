@@ -6,6 +6,7 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
+
 // returned by the allocators to tell you about the status of thier response !
 enum class allocator_response : u8 {
 	success = 0,

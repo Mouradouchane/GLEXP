@@ -9,6 +9,7 @@
 #include "core/pair/pair.hpp"
 
 #include "memory_enums.hpp"
+#include "core/memory/global_memory_handle/global_memory_handle.hpp"
 
 /*
 	few macros for memory allocators errors and warnings
@@ -36,20 +37,8 @@
 #define MAX_MEMORY_TAGS 255
 #define MAX_ALLOCATIONS_PRE_BLOCK 1024
 
-#define FRIENDS_TO_MEMORY_HANDLE() \
-		DLL_API memory_handle_g   friend core::memory::allocate(memory_request_g const& request) NOEXP; \
-		DLL_API same_pair<memory_handle_g> friend core::memory::allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP; \
-		DLL_API void              friend core::memory::deallocate(memory_handle_g& handle) NOEXP; \
-		friend  DLL_API_CLASS     core::dynamic_allocator;\
-		friend  DLL_API_CLASS     core::memory_block;\
-		friend  DLL_API_CLASS     core::memory_registry;\
-
-
 struct memory_request;   // for specific allocator
 struct memory_request_g; // for global allocator
-
-class  memory_handle;   // given back by specific allocator like dynamic_allocator
-class  memory_handle_g; // given back by global allocator
 
 namespace core {
 	
@@ -65,7 +54,7 @@ namespace core {
 
 		DLL_API void init() NOEXP;
 
-		DLL_API memory_handle_g allocate(memory_request_g const& request) NOEXP;
+		template<typename type> memory_handle_g<type> allocate(memory_request_g const& request) NOEXP;
 
 		// note: this function preforme tow allocation in one call but !
 		//       both allocations not guarnted to be next each other in memory :)
@@ -89,83 +78,6 @@ namespace core {
 	DLL_API string bytes_to_string(u64 bytes_count) NOEXP;
 } 
 // namespace core end
-
-
-/*
-	memory handles
-*/
-
-/*
-	- memory handle but for global allocator .
-	- used by allocators to allocate thier own memory to manange .
-*/
-DLL_API_CLASS memory_handle_g {
-private:
-	FRIENDS_TO_MEMORY_HANDLE();
-
-	subsystem_memory_tag _tag_ = subsystem_memory_tag::unkown;
-	u64   _size_ = 0;
-	bool _deallocate_at_destuctor_ = true;
-
-	void* _ptr_ = nullptr;
-	allocator_response _response_ = allocator_response::busy;
-public:
-
-	// constructor's
-	memory_handle_g() NOEXP = default;
-	memory_handle_g(
-		allocator_response response, u64 size, subsystem_memory_tag tag_, void* pointer, bool deallocate_at_destruction_time = true
-	) NOEXP;
-
-	// move
-	memory_handle_g(memory_handle_g && other) NOEXP;
-	memory_handle_g& operator=(memory_handle_g && other) NOEXP;
-
-	// destructor
-	~memory_handle_g() NOEXP;
-
-	// functions
-	INLINE void* pointer() NOEXP { return this->_ptr_; }
-	INLINE allocator_response response() NOEXP { return this->_response_; }
-	INLINE subsystem_memory_tag tag() NOEXP { return this->_tag_; }
-
-private: // not allowed	
-	memory_handle_g(memory_handle_g const& copy) NOEXP = delete;
-	memory_handle_g& operator=(memory_handle_g const& copy) NOEXP = delete;
-
-}; // class memory_handle_g end
-
-
-/*
-	memory_handle used by allocators for fast allocation/deallocation memory
-*/
-DLL_API_CLASS memory_handle {
-private:
-	FRIENDS_TO_MEMORY_HANDLE();
-
-	// internal variables for fast memory management
-	u8  _block_index_ = (u8)-1;
-	u32 _register_index_ = (u32)-1;
-	u32 _magic_ = NULL; // for "future" reallocation
-	core::dynamic_allocator* allocator; // allocator of this memory
-
-	void* ptr = nullptr;
-public:
-	allocator_response response = allocator_response::full;
-
-	// constructor's
-	memory_handle() NOEXP = default;
-	memory_handle(allocator_response response, u8 b_index, u32 reg_index, void* pointer) NOEXP;
-
-	// destructor
-	~memory_handle() NOEXP;
-
-	// functions
-	INLINE void* pointer() NOEXP { return this->ptr; }
-	INLINE u8    block_index() NOEXP { return this->_block_index_; }
-	INLINE u32   register_index() NOEXP { return this->_register_index_; }
-
-}; // class memory_handle_g end
 
 
 // used by memory allocator
@@ -194,7 +106,7 @@ struct memory_request_2 {
 	memory_tag tag_2             DEBUG_ONLY;
 	u8         block_index;
 	bool       wait_for_memory_block;
-	bool       try_other_memory_blocks; 
+	bool       try_other_memory_blocks;
 };
 
 #endif

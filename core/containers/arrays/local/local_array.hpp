@@ -64,9 +64,11 @@ public:
 	u64  capacity() NOEXP; // elements count
 	u64  size()     NOEXP; // size of array in bytes
 		
-	void clear()  NOEXP;
+	void clear(bool call_destructors) NOEXP;
 	bool resize() NOEXP;
-	void set_resize_value(u32 elements_count);
+	void set_resize_value(u32 elements_count) NOEXP;
+
+	memory_tag tag() NOEXP;
 
 public:
 
@@ -74,11 +76,6 @@ public:
 		static public functions for array
 	*/ 
 
-	// note: copying will replace current elements in array
-	// note: there's no checks or safety against overlapped arrays .
-	static void copy_elements(core::local_array<type> const& source, core::local_array<type>& destination) NOEXP;
-	static void move_elements(core::local_array<type>& source, core::local_array<type>& destination) NOEXP;
-	static void move_ownership(core::local_array<type>& source, core::local_array<type>& destination) NOEXP;
 	static void fill(core::local_array<type>& array_, type const& fill_value) NOEXP;
 	static void sort(core::local_array<type>& array_, bool (*compare_function)(type const& a, type const& b) ) NOEXP;
 	static void reallocate(core::local_array<type>& array_, bool destruct_elements) NOEXP;

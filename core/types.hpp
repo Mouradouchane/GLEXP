@@ -8,10 +8,13 @@
 
 // few types to get info about types
 #define TYPE_NAME(TYPE) typeid(TYPE).name()
-#define IF_TYPE_COPYABLE(TYPE) if(std::is_trivially_copyable<TYPE>)
-#define IF_TYPE_MOVEABLE(TYPE) if(std::is_trivially_move_constructible<TYPE>)
-#define IF_TYPE_CONSTRUCTABLE(TYPE) if(std::is_trivially_constructible_v<TYPE>)
-#define IF_TYPE_DESTRUCTABLE(TYPE)  if(std::is_trivially_constructible_v<TYPE>)
+
+// few macros for type checking
+#define IF_TYPE_CONSTRUCTABLE(TYPE) if constexpr (!std::is_trivially_constructible_v<TYPE>)
+#define IF_TYPE_DESTRUCTABLE(TYPE)  if constexpr (!std::is_trivially_destructible_v<TYPE>)
+// note: check only for constructor not "assign operator ="
+#define IF_TYPE_COPYABLE(TYPE) if constexpr (!std::is_trivially_copy_constructible_v<TYPE>)
+#define IF_TYPE_MOVEABLE(TYPE) if constexpr (!std::is_trivially_move_constructible_v<TYPE>)
 
 // pointers
 typedef uint8_t*  ptr8;

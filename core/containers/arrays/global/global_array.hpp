@@ -43,7 +43,7 @@ template<typename type> class global_array {
 		type* begin()    NOEXP;
 		type* end()      NOEXP;
 
-		subsystem_memory_tag tag() NOEXP { return _handle_.tag(); }
+		subsystem_memory_tag tag() NOEXP;
 
 	}; // calss global_array end
 

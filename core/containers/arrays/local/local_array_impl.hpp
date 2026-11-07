@@ -290,7 +290,7 @@ type& core::local_array<type>::operator= (core::local_array<type>&& array_to_mov
 
 	// destruct/remove current elements
 	if(_begin_){
-		if constexpr (!std::is_trivially_destructible<type>::value) {
+		IF_TYPE_DESTRUCTABLE(type) {
 			for (u64 i = 0; i < _capacity_; i++) {
 				(_begin_ + i)->~type();
 			}
@@ -328,13 +328,16 @@ type* core::local_array<type>::end() NOEXP {
 }
 
 template<typename type>
-void core::local_array<type>::clear() NOEXP {
+void core::local_array<type>::clear(bool call_destructors) NOEXP {
+	
 	if (_begin_) {
 
-		if constexpr (!std::is_trivially_destructible<type>::value) {
-			type* end = _begin_ + _capacity_;
-			for (type* ptr = _begin_; ptr != end; ptr++) {
-				ptr->~type();
+		if (call_destructors) {
+			IF_TYPE_DESTRUCTABLE(type) {
+				type* end = _begin_ + _capacity_;
+				for (type* ptr = _begin_; ptr != end; ptr++) {
+					ptr->~type();
+				}
 			}
 		}
 
@@ -355,18 +358,21 @@ u64 core::local_array<type>::size() NOEXP {
 template<typename type>
 bool core::local_array<type>::resize() NOEXP {
 
-	type* new_buffer = nullptr;
-	u32   new_count  = _count_ + _resize_value_;
-	u32   new_size   = sizeof(type) * new_count;
+	type* new_buffer   = nullptr;
+	u32   new_capacity = _capacity_ + _resize_value_;
+	u32   new_size     = sizeof(type) * new_capacity;
+
+	core::dynamic_allocator* allocator = _handle_.allocator();
 
 	// allocate new memory
-	memory_handle new_handle = _allocator_->allocate(
+	memory_handle new_handle = allocator->allocate(
 		memory_request{
-			.alignement = 0,
 			.size = new_size,
-			.tag  = _tag_
+			.alignement = 0,
+			.tag  = _handle_.tag()
 		}
 	);
+
 	// "roll-back if failed to get new memory !
 	if (new_handle.response != allocator_response::success) {
 		return false;
@@ -375,193 +381,46 @@ bool core::local_array<type>::resize() NOEXP {
 	new_buffer = (type*)new_handle.pointer();
 
 	// move elements to new memory
-	if constexpr (std::is_trivially_copyable<type>::value) {
-		std::memmove(new_buffer, _begin_, size);
-	}
-	else {
-		// copying none trivial elements using 'placement new'
-		for (u32 i = 0; i < _count_; i++) {
+	IF_TYPE_COPYABLE(type) {
+		for (u32 i = 0; i < _capacity_; i++) {
 			new (new_buffer + i) type(_begin_[i]);
 		}
 	}
+	else {
+		std::memmove(new_buffer, _begin_, size);
+	}
 
 	// deallocate old memory
-	_allocator_->deallocate(_handle_);
+	allocator->deallocate(_handle_);
 	
-	// update variables
-	_handle_ = new_handle;
-	_count_  = new_count;
-	_size_   = new_size;
-	_begin_  = new_buffer;
-	_end_    = _begin_ + _count_;
+	// update array variables
+	_handle_   = new_handle;
+	_begin_    = new_buffer;
+	_size_     = new_size;
+	_capacity_ = new_capacity;
 
 	return true;
 }
 
 template<typename type>
-void core::local_array<type>::set_resize_value(u32 elements_count) {
+void core::local_array<type>::set_resize_value(u32 elements_count) NOEXP {
 	_resize_value_ = elements_count ? elements_count : 1;
 }
 
+template<typename type>
+memory_tag core::local_array<type>::tag() NOEXP {
+	return _handle_.tag();
+}
 
 /*
 		array static public functions
 */
 
-template<typename type> 
-void core::local_array<type>::copy_elements(core::local_array<type> const& source, core::local_array<type>& destination) NOEXP {
-
-	if ((&source) == (&destination)) {
-	#ifdef DEBUG
-		CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_SELF_ASSIGN_BUG, PTR_TO_STRING(&source), PTR_TO_STRING(&destination));
-		CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_WARNINIG_RUNTIME_CRASH);
-
-		DEBUG_BREAK;
-	#endif
-
-		return;
-	}
-
-	if (source._begin_ && destination._begin_) {
-
-		// note: source > destination will get handled as a bug
-		if (source._size_ > destination._size_) {
-		#ifdef DEBUG
-			CORE_ERROR_HPP(
-				_arr_hpp_lgr_, CORE_LOG_CONFIG_ALL,
-				CORE_SRC_BIGGER_THAN_DEST, PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
-			);
-			CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_WARNINIG_RUNTIME_CRASH);
-
-			DEBUG_BREAK;
-		#else
-			CORE_FATAL_HPP(
-				_arr_hpp_lgr_, 0, CORE_SRC_BIGGER_THAN_DEST,
-				PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
-			);
-		#endif
-
-			return;
-		}
-
-		// todo: multi-threaded copying
-		if constexpr (std::is_trivially_copyable<type>::value) {
-			std::memcpy(destination._begin_, source._begin_, source._size_);
-		}
-		else {
-			for (u32 i = 0; i < source._capacity_; i++) {
-				new (destination._begin_ + i) type(source._begin_[i]);
-			}
-		}
-
-	}
-	else {
-	#ifdef DEBUG
-		CORE_ERROR_HPP(
-			_arr_hpp_lgr_, 0,
-			CORE_NULLPTR_BUG, "core::array::copy_elements"
-		);
-
-		CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_WARNINIG_RUNTIME_CRASH);
-		DEBUG_BREAK;
-	#else 
-		CORE_FATAL_F(CORE_NULLPTR_BUG, "core::array::copy_elements");
-	#endif
-	}
-
-}
-
-// todo : add option for multi-threaded moving elements later
-template<typename type>
-void core::local_array<type>::move_elements(core::local_array<type>& source, core::local_array<type>& destination) NOEXP {
-
-	if ((&source) == (&destination)) {
-	#ifdef DEBUG
-		CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_SELF_ASSIGN_BUG, PTR_TO_STRING(&source), PTR_TO_STRING(&destination));
-		CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_WARNINIG_RUNTIME_CRASH);
-
-		DEBUG_BREAK;
-	#endif
-
-		return;
-	}
-
-
-	if (source._begin_ && destination._begin_) {
-
-		// note: source > destination will get handled as a bug
-		if (source._size_ > destination._size_) {
-		#ifdef DEBUG
-			CORE_ERROR_HPP(
-				_arr_hpp_lgr_, CORE_LOG_CONFIG_ALL,
-				CORE_SRC_BIGGER_THAN_DEST, PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
-			);
-			CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_WARNINIG_RUNTIME_CRASH);
-
-			DEBUG_BREAK;
-		#else
-			CORE_FATAL_HPP(
-				_arr_hpp_lgr_, 0, CORE_SRC_BIGGER_THAN_DEST,
-				PTR_TO_STRING(&source), PTR_TO_STRING(&destination)
-			);
-		#endif
-
-			return;
-		}
-
-		// todo: multi-threaded moving
-		if constexpr (std::is_trivially_copyable<type>::value) {
-			std::memmove(destination._begin_, source._begin_, source._size_);
-		}
-		else {
-			for (u32 i = 0; i < source._capacity_; i++) {
-				new (destination._begin_ + i) type(source._begin_[i]);
-			}
-			std::memset(source._begin_, 0, source._size_);
-		}
-
-	}
-	else {
-	#ifdef DEBUG
-		CORE_ERROR_HPP(
-			_arr_hpp_lgr_, 0,
-			CORE_NULLPTR_BUG, "core::array::move_elements"
-		);
-
-		CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_WARNINIG_RUNTIME_CRASH);
-		DEBUG_BREAK;
-	#else 
-		CORE_FATAL_F(CORE_NULLPTR_BUG, "core::array::move_elements");
-	#endif
-	}
-
-}
-
-template<typename type>
-void core::local_array<type>::move_ownership(core::local_array<type>& source, core::local_array<type>& destination) NOEXP {
-
-	if ((&source) == (&destination)) {
-	#ifdef DEBUG
-		CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_SELF_ASSIGN_BUG, PTR_TO_STRING(&source), PTR_TO_STRING(&destination) );
-	#endif
-
-		return;
-	}
-
-	if (source._begin_ && destination._begin_) {
-		destination._allocator_->deallocate(destination._handle_);
-
-		std::memmove(&destination, &source, sizeof(core::local_array<type>));
-		std::memset(&source, 0, sizeof(core::local_array<type>));
-	}
-
-}
-
 // todo : add option for multi-threaded filling later
 template<typename type>
-void core::local_array<type>::fill(core::local_array<type>& _array_, type const& fill_value) NOEXP {
+void core::local_array<type>::fill(core::local_array<type>& array_, type const& fill_value) NOEXP {
 
-	if (_array_._begin_ == nullptr) {
+	if (array_._begin_ == nullptr) {
 	#ifdef DEBUG
 		CORE_WARN_HPP(_arr_hpp_lgr_, 0, CORE_NULLPTR_BUG , "core::array::fill");
 		DEBUG_BREAK;
@@ -570,42 +429,42 @@ void core::local_array<type>::fill(core::local_array<type>& _array_, type const&
 		return;
 	}
 
-	std::fill(_array_._begin_, _array_._end_, fill_value);
+	std::fill(array_._begin_, array_._end_, fill_value);
 }
 
 template<typename type>
-INLINE void core::local_array<type>::sort(
-	core::local_array<type>& _array_, bool (*compare_function)(type const& a, type const& b)
+void core::local_array<type>::sort(
+	core::local_array<type>& array_, bool (*compare_function)(type const& a, type const& b)
 ) NOEXP {
 
-	if (_array_._begin_) {
-		std::sort(_array_._begin_, _array_._end_ , compare_function);
+	if (array_._begin_) {
+		std::sort(array_._begin_, array_._end_ , compare_function);
 	}
 }
 
 template<typename type>
-void core::local_array<type>::reallocate(core::local_array<type>& _array_, bool destruct_elements) NOEXP {
+void core::local_array<type>::reallocate(core::local_array<type>& array_, bool destruct_elements) NOEXP {
+
+	core::dynamic_allocator* allocator = array_._handle_.allocator();
 
 	// allocate new memory
-	memory_handle new_handle = _array_._allocator_->allocate(
+	memory_handle new_handle = allocator->allocate(
 		memory_request{
-			.size = _array_._size_,
+			.size = array_._size_,
 			.alignement = 0,
-			.tag  = _array_._tag_
+			.tag  = array_._handle_.tag()
 		}
 	);
 
 	// move elements to new memory
-	std::memmove(new_handle.pointer(), _array_._begin_, _array_._size_);
+	std::memmove(new_handle.pointer(), array_._begin_, array_._size_);
 
 	// deallocate old memory
-	_array_._allocator_->deallocate(_array_._handle_);
+	allocator->deallocate(array_._handle_);
 
 	// update array variables
-	_array_._handle_ = new_handle;
-	_array_._begin_  = (type*)new_handle.pointer();
-	_array_._end_    = _array_._begin_ + _array_._capacity_;
-
+	array_._handle_ = new_handle;
+	array_._begin_  = (type*)new_handle.pointer();
 }
 
 
