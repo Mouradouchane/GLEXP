@@ -7,6 +7,32 @@
 #include "core/types.hpp"
 
 
+/*
+	few macros for memory allocators errors and warnings
+*/
+#define ZERO_SIZE_MEMORY            "0 size memory allocation is not allowed ."
+#define ZERO_SIZE_ALLOCATION        "0 size allocation is not allowed ."
+#define TO_BIG_ALLOCATION           "allocation with size={} , is bigger than allocator size={} ."
+#define NOT_ALLOWED_ALLOCATION_LIST "allocation-list size={} , is not in allowed range min={} , max={} ."
+#define NOT_ALLOWED_ALLOCATOR_SIZE  "memory allocator size={} , not in allowed range min={} , max={} ."
+#define MEMORY_ALLOCATOR_IS_FULL    "memory allocator with name={} reach his maximunm allocations ({}/{}) ."
+#define GLOBAL_ALLOCATOR_FAILED     "global allocator failed to allocate memory size={} , tag={} ."
+
+#define ALLOCATOR_FAILED            "memory allocator {} failed to allocate {}bytes of memory for {} usage ."
+#define ALLOCATOR_FAILED_2          "memory allocator {} failed to allocate_tow {} bytes of memory for {} & {} usage ."
+#define FAILED_TO_CREATE_ALLOCATOR  "failed to create memory-allocator : name={} , size={} ."
+#define ALLOCATOR_SIZE_NOT_ALLOWED  "requested size {}byte for allocator name={} is not allowed : min_allowed={} , max_allowed={} ."
+#define ALLOCATOR_FAILED_TO_GET_INFO "memory allocator {} failed to obtain info about his internal memory !"
+
+#define HIGH_MEMORY_USAGE_DETECTED "high memory usage detected at {} , {}bytes !"
+#define INVALID_MEMORY_HANLDE      "invalid memory handle passed to {} !"
+ 
+#define MEMORY_ORDER_RELAXE  std::memory_order_relaxed // for read-only when no cache syncing is needed
+#define MEMORY_ORDER_ACQUIRE std::memory_order_acquire // when cache syncing is needed
+
+#define MAX_MEMORY_TAGS 255
+#define MAX_ALLOCATIONS_PRE_BLOCK 1024
+
 // returned by the allocators to tell you about the status of thier response !
 enum class allocator_response : u8 {
 	success = 0,

@@ -62,7 +62,7 @@ memory_registry::memory_registry(u32 register_capacity) NOEXP {
 	this->size = sizeof(memory_allocation) * this->capacity;
 
 	// allocate list memory
-	this->handle = core::memory::allocate(
+	this->handle = core::global_allocator::allocate(
 		memory_request_g{
 			.size = this->size,
 			.tag = subsystem_memory_tag::memory_system
@@ -88,7 +88,7 @@ memory_registry::memory_registry(u32 register_capacity) NOEXP {
 memory_registry::~memory_registry() NOEXP {
 
 	// [WARNNING] : any allocations left registred in register will be lost !
-	core::memory::deallocate(this->handle);
+	core::global_allocator::deallocate(this->handle);
 
 	this->size     = 0;
 	this->capacity = 0;

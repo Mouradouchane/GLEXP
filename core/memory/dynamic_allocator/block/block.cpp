@@ -42,7 +42,7 @@ core::memory_block::memory_block(u64 size , u16 max_allowed_allocations, subsyst
 #endif
 
 	// allocate memory
-	_handle_ = core::memory::allocate(
+	_handle_ = core::global_allocator::allocate(
 		memory_request_g{ 
 			.size = _size_,
 			.tag  = _tag_
@@ -100,7 +100,7 @@ core::memory_block::~memory_block() NOEXP {
 	#endif
 
 		// free memory block
-		core::memory::deallocate(_handle_);
+		core::global_allocator::deallocate(_handle_);
 		
 		_start_ = nullptr;
 		_end_   = nullptr;

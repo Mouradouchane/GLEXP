@@ -22,7 +22,7 @@ namespace core {
 		network,
 
 		file,
-		memory,
+		global_allocator,
 
 	}; // enum event-category end
 

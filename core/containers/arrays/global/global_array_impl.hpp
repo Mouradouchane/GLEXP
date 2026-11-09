@@ -22,7 +22,7 @@ global_array<type>::global_array(const u32 elements_count, subsystem_memory_tag 
 	_capacity_ = elements_count ? elements_count : 1;
 	_size_  = sizeof(type) * _capacity_;
 
-	_handle_ = core::memory::allocate( memory_request_g{ .size = _size_ , .tag = tag } );
+	_handle_ = core::global_allocator::allocate( memory_request_g{ .size = _size_ , .tag = tag } );
 
 	if (_handle_.response() != allocator_response::success){
 		CORE_ERROR_HPP(_carr_hpp_lgr_, core::logger::log_config::dump_stack_trace ,"core::global_array self assing detected !");
@@ -46,7 +46,7 @@ global_array<type>::global_array(global_array<type> const& array_to_copy) NOEXP 
 	_capacity_ = array_to_copy._capacity_;
 	_size_  = sizeof(type) * _capacity_;
 
-	_handle_ = core::memory::allocate( memory_request_g{ .size = _size_ , .tag = array_to_copy._handle_.tag() } );
+	_handle_ = core::global_allocator::allocate( memory_request_g{ .size = _size_ , .tag = array_to_copy._handle_.tag() } );
 	
 	if (_handle_.response() != allocator_response::success){
 		CORE_ERROR_HPP(_carr_hpp_lgr_, core::logger::log_config::dump_stack_trace,"core::global_array failed to allocate memory !");
@@ -134,7 +134,7 @@ type& global_array<type>::operator=(global_array<type> const& array_to_copy) NOE
 		_capacity_ = array_to_copy._capacity_;
 		_size_  = sizeof(type) * _capacity_;
 
-		_handle_ = core::memory::allocate( 
+		_handle_ = core::global_allocator::allocate( 
 			memory_request_g{ 
 				.size = _size_,
 				.tag  = array_to_copy._handle_.tag() 

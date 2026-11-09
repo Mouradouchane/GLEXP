@@ -6,8 +6,11 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 #include "core/locks/atomic_types.hpp"
-#include "core/memory/memory.hpp"
-#include "core/memory/dynamic/block/block.hpp"
+
+#include "core/memory/dynamic_allocator/io/dynamic_allocator_io.hpp"
+#include "core/memory/global_allocator/global_allocator.hpp"
+#include "core/memory/dynamic_allocator/block/block.hpp"
+
 #include "core/containers/arrays/global/global_array.hpp"
 #include "core/strings/string.hpp"
 
@@ -71,13 +74,17 @@ public:
 	/*
 		dynamic_allocator public functions
 	*/
-
-	memory_handle allocate(u32 size, memory_tag tag, u8 block_index, bool wait_for_block = false , bool try_other_memory_blocks = true) NOEXP;
-	memory_handle allocate(u32 size, u16 alignement, memory_tag tag, u8 block_index, bool wait_for_block = false, bool try_other_memory_blocks = true) NOEXP;
-	memory_handle allocate(memory_request const& request) NOEXP;
-	same_pair<memory_handle> allocate_tow(memory_request_2 const& request) NOEXP; // 2 allocations in one request
+	memory_handle<void> allocate(u32 size, memory_tag tag, u8 block_index, bool wait_for_block = false , bool try_other_memory_blocks = true) NOEXP;
+	memory_handle<void> allocate(u32 size, u16 alignement, memory_tag tag, u8 block_index, bool wait_for_block = false, bool try_other_memory_blocks = true) NOEXP;
+	memory_handle<void> allocate(memory_request const& request) NOEXP;
+	
+	// 2 allocations in one request
+	same_pair<memory_handle<void>> allocate_tow(memory_request_2 const& request) NOEXP; 
 		
-	void deallocate(memory_handle handle) NOEXP;
+	void deallocate(memory_handle<void>& handle) NOEXP;
+	template<typename type> void deallocate(memory_handle<type>& handle) NOEXP {
+		deallocate<void>(handle);
+	}
 		
 	u32 blocks_count() NOEXP;
 
@@ -97,11 +104,12 @@ private: // helper functions
 
 	// not allowed contructor's
 	dynamic_allocator() = delete;
+	dynamic_allocator(dynamic_allocator &      other) = delete;
 	dynamic_allocator(dynamic_allocator &&     other) = delete;
 	dynamic_allocator(dynamic_allocator const& other) = delete;
 
 	// not allowed operator's
-	dynamic_allocator& operator = (const dynamic_allocator        other) = delete;
+	dynamic_allocator& operator = (const dynamic_allocator &      other) = delete;
 	dynamic_allocator& operator = (const dynamic_allocator &&     other) = delete;
 	dynamic_allocator& operator = (const dynamic_allocator const& other) = delete;
 

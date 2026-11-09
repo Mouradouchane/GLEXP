@@ -5,25 +5,26 @@
 
 #include "core/logger/logger.hpp"
 #include "core/bitset.hpp"
-#include "memory.hpp"
+#include "core/memory/global_allocator/io/global_allocator_io.hpp"
+#include "global_allocator.hpp"
 
 static std::shared_ptr<spdlog::logger> _core_global_alloc_logger_ = nullptr;
 #define _LOGGER_ _core_global_alloc_logger_
 
 #define GLOBAL_ALLOCATOR_NAME "global allocator"
 #define GLOBAL_ALLOCATOR_HIGH_MEMORY_USAGE_WARN() \
-		CORE_WARN(0, HIGH_MEMORY_USAGE_DETECTED , GLOBAL_ALLOCATOR_NAME , peak_size);
+		CORE_WARN(0, HIGH_MEMORY_USAGE_DETECTED, GLOBAL_ALLOCATOR_NAME, peak_size);
 
 #ifdef DEBUG // to keep track with each sub-system memory usage
 	static u64 sections_sizes[MAX_MEMORY_TAGS] = { 0u };
 #endif
 
-	static u64 total_size = 0; // size of all sections
-	static u64 peak_size  = 0; // max memory we reach
+static u64 total_size = 0; // size of all sections
+static u64 peak_size  = 0; // max memory we reach
 
 static bool is_init = false;
 
-DLL_API void core::memory::init() NOEXP {
+DLL_API void core::global_allocator::init() NOEXP {
 	if (!is_init) {
 	#ifdef DEBUG
 		_core_global_alloc_logger_ = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
@@ -84,8 +85,7 @@ DLL_API void core::memory::init() NOEXP {
 
 } // init end
 
-
-DLL_API memory_handle_g core::memory::allocate(memory_request_g const& request) NOEXP {
+DLL_API memory_handle_g core::global_allocator::allocate(memory_request_g const& request) NOEXP {
 
 	// allocate memory
 	void* ptr = new byte[request.size];
@@ -119,7 +119,7 @@ DLL_API memory_handle_g core::memory::allocate(memory_request_g const& request) 
 
 }
 
-DLL_API same_pair<memory_handle_g> core::memory::allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP {
+DLL_API same_pair<memory_handle_g> core::global_allocator::allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP {
 
 	// allocate memory
 	void* ptr1 = new byte[request_1.size];
@@ -165,7 +165,7 @@ DLL_API same_pair<memory_handle_g> core::memory::allocate_tow(memory_request_g c
 
 }
 
-DLL_API void core::memory::deallocate(memory_handle_g& handle) NOEXP {
+DLL_API void core::global_allocator::deallocate(memory_handle_g& handle) NOEXP {
 
 	if (handle._ptr_) {
 
@@ -201,11 +201,11 @@ DLL_API void core::memory::deallocate(memory_handle_g& handle) NOEXP {
 }
 
 
-DLL_API u64 core::memory::total_memory_usage() NOEXP {
+DLL_API u64 core::global_allocator::current_memory_usage() NOEXP {
 	return total_size;
 }
 
-DLL_API u64 core::memory::current_memory_usage(subsystem_memory_tag section_tag) NOEXP {
+DLL_API u64 core::global_allocator::current_memory_usage(subsystem_memory_tag section_tag) NOEXP {
 #ifdef DEBUG
 	u8 index = (u8)section_tag;
 	return ( index < MAX_MEMORY_TAGS) ? sections_sizes[ index ] : 0;
@@ -214,100 +214,12 @@ DLL_API u64 core::memory::current_memory_usage(subsystem_memory_tag section_tag)
 #endif
 }
 
-DLL_API u64 core::memory::peak_memory_usage() NOEXP {
+DLL_API u64 core::global_allocator::peak_memory_usage() NOEXP {
 #ifdef DEBUG
 	return peak_size;
 #else
 	return 0;
 #endif
-}
-
-
-/*
-	class memory_handle
-*/
-
-memory_handle::memory_handle(allocator_response response_, u8 b_index, u32 reg_index, void* pointer) NOEXP
-	: response(response_), _block_index_(b_index), _register_index_(reg_index), ptr(pointer) 
-{
-};
-
-memory_handle::~memory_handle() NOEXP {
-
-	this->ptr = nullptr;
-}
-
-
-/*
-	class memory_handle_g
-*/
-memory_handle_g::memory_handle_g(
-	allocator_response response_, u64 size, subsystem_memory_tag tag_, void* pointer, 
-	bool deallocate_at_destruction_time
-) NOEXP
-	: _response_(response_), _size_(size), _tag_(tag_), _ptr_(pointer) , _deallocate_at_destuctor_(deallocate_at_destruction_time)
-{
-
-}
-
-memory_handle_g::memory_handle_g(memory_handle_g&& other) NOEXP {
-	  
-	// clean up if memory allocated
-    if (_deallocate_at_destuctor_ && _ptr_) {
-        core::memory::deallocate(*this);
-    }
-
-	// move
-    _tag_      = other._tag_;
-    _size_     = other._size_;
-    _ptr_      = other._ptr_;
-    _response_ = other._response_;
-    _deallocate_at_destuctor_ = other._deallocate_at_destuctor_;
-
-    // clean other
-    other._ptr_ = nullptr;
-    other._deallocate_at_destuctor_ = false;
-
-}
-
-memory_handle_g& memory_handle_g::operator=(memory_handle_g&& other) NOEXP {
-
-	if (this != &other) {
-        
-		// clean up if memory allocated
-        if (_deallocate_at_destuctor_ && _ptr_) {
-            core::memory::deallocate(*this);
-        }
-
-		// move
-        _tag_      = other._tag_;
-        _size_     = other._size_;
-        _ptr_      = other._ptr_;
-        _response_ = other._response_;
-        _deallocate_at_destuctor_ = other._deallocate_at_destuctor_;
-
-        // clean other
-        other._ptr_ = nullptr;
-        other._deallocate_at_destuctor_ = false;
-    }
-
-    return *this;
-}
-
-memory_handle_g::~memory_handle_g() NOEXP {
-	if (this->_deallocate_at_destuctor_ && this->_ptr_) {
-		core::memory::deallocate(*this);
-	}
-
-#ifdef DEBUG
-	if (this->_ptr_) {
-		CORE_WARN(core::logger::log_config::dump_stack_trace, 
-			"'memory leak' posibility ! global memory handle destructed while still carrying a vaild pointer !"
-		);
-	}
-#endif
-
-	this->_ptr_ = nullptr;
 }
 
 /*
@@ -319,32 +231,32 @@ memory_handle_g::~memory_handle_g() NOEXP {
 DLL_API string core::to_string(memory_tag _tag_) NOEXP {
 	
 	switch (_tag_) {
-		MEMORY_TAG_TO_STRING_CASE(unkown		);
-		MEMORY_TAG_TO_STRING_CASE(general		);
-		MEMORY_TAG_TO_STRING_CASE(registry		);
-		MEMORY_TAG_TO_STRING_CASE(event			);
-		MEMORY_TAG_TO_STRING_CASE(thread_worker	);
-		MEMORY_TAG_TO_STRING_CASE(entity		);
-		MEMORY_TAG_TO_STRING_CASE(mesh			);
-		MEMORY_TAG_TO_STRING_CASE(node			);
-		MEMORY_TAG_TO_STRING_CASE(gui_element	);
-		MEMORY_TAG_TO_STRING_CASE(gui_text		);
-		MEMORY_TAG_TO_STRING_CASE(normal		);
-		MEMORY_TAG_TO_STRING_CASE(texture		);
-		MEMORY_TAG_TO_STRING_CASE(material		);
-		MEMORY_TAG_TO_STRING_CASE(physics		);
-		MEMORY_TAG_TO_STRING_CASE(collision		);
-		MEMORY_TAG_TO_STRING_CASE(skeleton		);
-		MEMORY_TAG_TO_STRING_CASE(ai			);
-		MEMORY_TAG_TO_STRING_CASE(audio			);
-		MEMORY_TAG_TO_STRING_CASE(stdcpp		);
-		MEMORY_TAG_TO_STRING_CASE(file			);
-		MEMORY_TAG_TO_STRING_CASE(config		);
-		MEMORY_TAG_TO_STRING_CASE(timer			);
-		MEMORY_TAG_TO_STRING_CASE(debugger		);
+		MEMORY_TAG_TO_STRING_CASE( unkown		 );
+		MEMORY_TAG_TO_STRING_CASE( general		 );
+		MEMORY_TAG_TO_STRING_CASE( registry		 );
+		MEMORY_TAG_TO_STRING_CASE( event		 );
+		MEMORY_TAG_TO_STRING_CASE( thread_worker );
+		MEMORY_TAG_TO_STRING_CASE( entity		 );
+		MEMORY_TAG_TO_STRING_CASE( mesh			 );
+		MEMORY_TAG_TO_STRING_CASE( node			 );
+		MEMORY_TAG_TO_STRING_CASE( gui_element	 );
+		MEMORY_TAG_TO_STRING_CASE( gui_text		 );
+		MEMORY_TAG_TO_STRING_CASE( normal		 );
+		MEMORY_TAG_TO_STRING_CASE( texture		 );
+		MEMORY_TAG_TO_STRING_CASE( material		 );
+		MEMORY_TAG_TO_STRING_CASE( physics		 );
+		MEMORY_TAG_TO_STRING_CASE( collision	 );
+		MEMORY_TAG_TO_STRING_CASE( skeleton		 );
+		MEMORY_TAG_TO_STRING_CASE( ai			 );
+		MEMORY_TAG_TO_STRING_CASE( audio		 );
+		MEMORY_TAG_TO_STRING_CASE( stdcpp		 );
+		MEMORY_TAG_TO_STRING_CASE( file			 );
+		MEMORY_TAG_TO_STRING_CASE( config		 );
+		MEMORY_TAG_TO_STRING_CASE( timer		 );
+		MEMORY_TAG_TO_STRING_CASE( debugger		 );
 
 	#ifdef DEBUG
-		MEMORY_TAG_TO_STRING_CASE(dev           );
+		MEMORY_TAG_TO_STRING_CASE( dev           );
 	#endif
 	};
 
@@ -356,20 +268,20 @@ DLL_API string core::to_string(memory_tag _tag_) NOEXP {
 DLL_API string core::to_string(subsystem_memory_tag _tag_) NOEXP {
 	
 	switch (_tag_) {
-		ALLOCATOR_TAG_TO_STRING_CASE(unkown				 );
-		ALLOCATOR_TAG_TO_STRING_CASE(memory_system		 );
-		ALLOCATOR_TAG_TO_STRING_CASE(assets_system		 );
-		ALLOCATOR_TAG_TO_STRING_CASE(entity_system		 );
-		ALLOCATOR_TAG_TO_STRING_CASE(events_system		 );
-		ALLOCATOR_TAG_TO_STRING_CASE(physics_system		 );
-		ALLOCATOR_TAG_TO_STRING_CASE(graphics_system	 );
-		ALLOCATOR_TAG_TO_STRING_CASE(collision_system	 );
-		ALLOCATOR_TAG_TO_STRING_CASE(animation_system	 );
-		ALLOCATOR_TAG_TO_STRING_CASE(work_system		 );
-		ALLOCATOR_TAG_TO_STRING_CASE(gui_system          );
+		ALLOCATOR_TAG_TO_STRING_CASE( unkown			 );
+		ALLOCATOR_TAG_TO_STRING_CASE( memory_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE( assets_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE( entity_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE( events_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE( physics_system	 );
+		ALLOCATOR_TAG_TO_STRING_CASE( graphics_system	 );
+		ALLOCATOR_TAG_TO_STRING_CASE( collision_system	 );
+		ALLOCATOR_TAG_TO_STRING_CASE( animation_system	 );
+		ALLOCATOR_TAG_TO_STRING_CASE( work_system		 );
+		ALLOCATOR_TAG_TO_STRING_CASE( gui_system         );
 
 	#ifdef DEBUG
-		ALLOCATOR_TAG_TO_STRING_CASE(debug_system        );
+		ALLOCATOR_TAG_TO_STRING_CASE( debug_system       );
 	#endif
 	};
 

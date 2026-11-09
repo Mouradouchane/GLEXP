@@ -46,7 +46,7 @@ dynamic_allocator::dynamic_allocator(
     // create and init memory_blocks
     new (&_blocks_) global_array<memory_block>(_blocks_count_ , _tag_);
 
-    for (u8 i = 0; i < _blocks_.elements_count(); i++ ) {
+    for (u8 i = 0; i < _blocks_.capacity(); i++ ) {
         new (&_blocks_[i]) memory_block(_block_size_, max_allocations_per_block, _tag_);
     }
 
@@ -59,13 +59,13 @@ dynamic_allocator::dynamic_allocator(
     // set variables
     _name_ = name;
     _tag_  = tag;
-    _blocks_count_  = blocks_description.elements_count() ? blocks_description.elements_count() : 1;
+    _blocks_count_  = blocks_description.capacity() ? blocks_description.capacity() : 1;
 
     // check blocks count
-    if (blocks_description.elements_count() > max_memory_blocks_allowed) {
+    if (blocks_description.capacity() > max_memory_blocks_allowed) {
         CORE_ERROR(
             0, "failed to create dynamic_allocator {} because {} blocks is not allowed , max=255",
-            name, blocks_description.elements_count()
+            name, blocks_description.capacity()
         );
         return;
     }
@@ -77,7 +77,7 @@ dynamic_allocator::dynamic_allocator(
     u8 i = 0;
     bool rollback = false;
 
-    for (  ; i < _blocks_.elements_count(); i++) {
+    for (  ; i < _blocks_.capacity(); i++) {
         block_description desc = blocks_description[i];
 
         // check block size

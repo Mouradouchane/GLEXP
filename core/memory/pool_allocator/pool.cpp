@@ -7,7 +7,7 @@
 
 namespace core {
 
-	namespace memory {
+	namespace global_allocator {
 		// todo: implement memory::pool allocator
 
 
