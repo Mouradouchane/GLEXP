@@ -6,10 +6,9 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
-#include "core/memory/memory.hpp"
+#include "core/memory/global_allocator/global_allocator.hpp"
 
 namespace core {
-
 
 	/*
 		memory pool is fixed size allocator , also fast for allocate/deallocate memory

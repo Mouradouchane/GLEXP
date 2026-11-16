@@ -8,6 +8,7 @@
 #include "core/pair/pair.hpp"
 #include "core/strings/string.hpp"
 #include "core/memory/memory_enums.hpp"
+#include "core/memory/global_allocator/handles/ga_handles.hpp"
 
 struct        memory_request_g;
 DLL_API_CLASS memory_handle_g;

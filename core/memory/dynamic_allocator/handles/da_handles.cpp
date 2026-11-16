@@ -1,10 +1,11 @@
 #pragma once
 
-#ifndef CORE_DYNAMIC_ALLOCATOR_IO_IMPL_HPP
-#define CORE_DYNAMIC_ALLOCATOR_IO_IMPL_HPP
+#ifndef CORE_DYNAMIC_ALLOCATOR_HANDLES_CPP
+#define CORE_DYNAMIC_ALLOCATOR_HANDLES_CPP
 
 #include "core/logger/logger.hpp"
-#include "dynamic_allocator_io.hpp"
+#include "da_handles.hpp"
+#include "core/memory/dynamic_allocator/dynamic_allocator.hpp"
 
 #ifdef DEBUG
 static inline auto da_io_impl_hpp = CORE_GET_LOGGER(MEMORY_ALLOCATOR_LOGGER);
@@ -17,9 +18,8 @@ static inline auto daii_lgr = nullptr;
 	constructor's
 */
 
-template<typename type> 
-memory_handle<type>::memory_handle(
-	allocator_response response_, u8 b_index_, u32 reg_index_, type* pointer_,
+memory_handle::memory_handle(
+	allocator_response response_, u8 b_index_, u32 reg_index_, void* pointer_,
 	memory_tag tag_, core::dynamic_allocator* allocator_
 ) NOEXP
 	: _response_(response_), _block_index_(b_index_), _register_index_(reg_index_), _ptr_(pointer_) , 
@@ -32,18 +32,17 @@ memory_handle<type>::memory_handle(
 	destructor
 */
 
-template<typename type> 
-memory_handle<type>::~memory_handle() NOEXP {
+memory_handle::~memory_handle() NOEXP {
 
-	if (ptr) {
+	if (_ptr_) {
 		_allocator_->deallocate(*this);
 	}
 
-	ptr = nullptr;
+	_ptr_ = nullptr;
 }
 
-template<typename type> // move ownership
-memory_handle<type>::memory_handle(memory_handle<type>&& handle_to_move) NOEXP {
+ // move ownership
+memory_handle::memory_handle(memory_handle&& handle_to_move) NOEXP {
 	  
 	// deallocate memory if we have
     if (_ptr_) {
@@ -63,8 +62,8 @@ memory_handle<type>::memory_handle(memory_handle<type>&& handle_to_move) NOEXP {
 
 } 
 
-template<typename type> // move ownership
-memory_handle<type>::memory_handle(memory_handle<type>& handle_to_move) NOEXP {
+ // move ownership
+memory_handle::memory_handle(memory_handle& handle_to_move) NOEXP {
 		  
 	// deallocate memory if we have
     if (_ptr_) {
@@ -88,8 +87,8 @@ memory_handle<type>::memory_handle(memory_handle<type>& handle_to_move) NOEXP {
 /*
 	operator's
 */
-template<typename type> // move ownership
-memory_handle<type>& memory_handle<type>::operator= (memory_handle<type>&& handle_to_move) NOEXP{
+ // move ownership
+memory_handle& memory_handle::operator= (memory_handle&& handle_to_move) NOEXP{
 		  
 	// deallocate memory if we have
     if (_ptr_) {
@@ -107,10 +106,11 @@ memory_handle<type>& memory_handle<type>::operator= (memory_handle<type>&& handl
 	// cleanup passed handle
     handle_to_move = 0;
 
+	return *this;
 }
 
-template<typename type> // move ownership
-memory_handle<type>& memory_handle<type>::operator= (memory_handle<type>& handle_to_move) NOEXP{
+ // move ownership
+memory_handle& memory_handle::operator= (memory_handle& handle_to_move) NOEXP{
 		  
 	// deallocate memory if we have
     if (_ptr_) {
@@ -128,10 +128,11 @@ memory_handle<type>& memory_handle<type>::operator= (memory_handle<type>& handle
 	// cleanup passed handle
     handle_to_move = 0;
 
+	return *this;
 }
 
-template<typename type> // cleanup the handle
-memory_handle<type>& memory_handle<type>::operator= (int) NOEXP {
+ // cleanup the handle
+memory_handle& memory_handle::operator= (int) NOEXP {
 	
 	// deallocate
 	if (_ptr_) {
@@ -143,14 +144,14 @@ memory_handle<type>& memory_handle<type>::operator= (int) NOEXP {
 	_tag_            = memory_tag::unkown;
 	_block_index_    = (u8)-1;
 	_register_index_ = (u32)-1;
-	_magic_          = NULL;   
 	_ptr_            = nullptr;
 	_allocator_      = nullptr;
 
+	return *this;
 }
 
-template<typename type> 
-type* memory_handle<type>::operator -> () NOEXP {
+/*
+void* memory_handle::operator -> () NOEXP {
 
 #ifdef DEBUG
 	if(_ptr_) return _ptr_;
@@ -167,8 +168,8 @@ type* memory_handle<type>::operator -> () NOEXP {
 
 }
 
-template<typename type> 
-type& memory_handle<type>::operator * () NOEXP {
+ 
+type& memory_handle::operator* () NOEXP {
 
 #ifdef DEBUG
 	if(_ptr_) return *_ptr_;
@@ -184,6 +185,6 @@ type& memory_handle<type>::operator * () NOEXP {
 #endif
 
 }
-
+*/
 
 #endif

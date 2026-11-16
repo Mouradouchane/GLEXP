@@ -6,7 +6,6 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
-
 /*
 	few macros for memory allocators errors and warnings
 */

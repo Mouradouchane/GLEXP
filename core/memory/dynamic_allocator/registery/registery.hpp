@@ -6,7 +6,7 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
-#include "core/memory/memory.hpp"
+#include "core/memory/global_allocator/global_allocator.hpp"
 
 // few errors/warnings for registry
 #define REGISTRY_ZERO_SIZE_NOT_ALLOWED "zero size registry is not allowed , auto adjust to default size ."

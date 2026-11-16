@@ -4,7 +4,7 @@
 #define CORE_GLOBAL_ARRAY_HPP
 
 #include "core/types.hpp"
-#include "core/memory/memory.hpp"
+#include "core/memory/global_allocator/global_allocator.hpp"
 
 namespace core {
 /*

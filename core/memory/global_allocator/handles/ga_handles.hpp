@@ -1,16 +1,28 @@
 #pragma once
 
-#ifndef CORE_MEMORY_IO_HPP
-#define CORE_MEMORY_IO_HPP
+#ifndef CORE_GA_HANDLES_HPP
+#define CORE_GA_HANDLES_HPP
 
 #include "core/macros.hpp"
 #include "core/types.hpp"
-#include "core/memory/global_allocator/global_allocator.hpp"
+#include "core/pair/pair.hpp"
+#include "core/memory/memory_enums.hpp"
+
+struct memory_request_g;
+DLL_API_CLASS memory_handle_g;
+
+namespace core {
+namespace global_allocator {
+	DLL_API same_pair<memory_handle_g> allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP;
+	DLL_API memory_handle_g allocate(memory_request_g const& request) NOEXP;
+	DLL_API void deallocate(memory_handle_g& handle) NOEXP;
+}
+}
 
 // used to allocate memory from global allocator core::global_allocator
 struct memory_request_g {
 	u64 size;
-	subsystem_memory_tag tag; DEBUG_ONLY 
+	DEBUG_ONLY subsystem_memory_tag tag;  
 };
 
 
@@ -60,9 +72,9 @@ public:
 
 private: 
 	// friends who can access handle internally
-	DLL_API friend same_pair<memory_handle_g> core::global_allocator::allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP;
-	DLL_API friend memory_handle_g core::global_allocator::allocate(memory_request_g const& request) NOEXP;
-	DLL_API friend void core::global_allocator::deallocate(memory_handle_g& handle) NOEXP;
+	friend DLL_API same_pair<memory_handle_g> core::global_allocator::allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP;
+	friend DLL_API memory_handle_g core::global_allocator::allocate(memory_request_g const& request) NOEXP;
+	friend DLL_API void core::global_allocator::deallocate(memory_handle_g& handle) NOEXP;
 
 	/*
 		handle copying is not allowed 

@@ -1,10 +1,10 @@
 #pragma once
 
-#ifndef CORE_MEMORY_IO_CPP
-#define CORE_MEMORY_IO_CPP
+#ifndef CORE_GA_CPP
+#define CORE_GA_CPP
 
 #include "core/logger/logger.hpp"
-#include "global_allocator_io.hpp"
+#include "ga_handles.hpp"
 
 #ifdef DEBUG
 static std::shared_ptr<spdlog::logger> _core_global_alloc_handle_logger_ = CORE_GET_LOGGER( MEMORY_ALLOCATOR_LOGGER );
@@ -30,7 +30,7 @@ memory_handle_g::memory_handle_g(memory_handle_g&& handle_to_move) NOEXP {
 	  
 	// clean up if memory allocated
     if (_ptr_) {
-        core::global_allocator::deallocate(*this);
+        core::global_allocator::deallocate((memory_handle_g&)*this);
     }
 
 	// move

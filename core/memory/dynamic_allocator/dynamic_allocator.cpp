@@ -1,8 +1,8 @@
 #if 1
 #pragma once 
 
-#ifndef CORE_MEMORY_ALLOCATOR_CPP
-#define CORE_MEMORY_ALLOCATOR_CPP
+#ifndef CORE_DYNAMIC_MEMORY_ALLOCATOR_CPP
+#define CORE_DYNAMIC_MEMORY_ALLOCATOR_CPP
 
 #include "core/logger/logger.hpp"
 #include "core/locks/scope_lock/scope_lock.hpp"
@@ -152,7 +152,7 @@ memory_handle dynamic_allocator::allocate(memory_request const& request) NOEXP {
             handle = _blocks_[index].allocate(request);
 
             // on success
-            if(handle.response == allocator_response::success) {
+            if(handle._response_ == allocator_response::success) {
                 // update allocator variables
                 #ifdef DEBUG
                     _sections_[(u8)request.tag] += request.size;
@@ -218,7 +218,7 @@ same_pair<memory_handle> dynamic_allocator::allocate_tow( memory_request_2 const
             pair = _blocks_[index].allocate_tow(request);
 
             // on success
-            if(pair.first.response == allocator_response::success) {
+            if(pair.first._response_ == allocator_response::success) {
                 // update allocator variables
                 #ifdef DEBUG
                     _sections_[(u8)request.tag_1] += request.size_1;
@@ -242,7 +242,7 @@ same_pair<memory_handle> dynamic_allocator::allocate_tow( memory_request_2 const
     return pair;
 }
 
-void dynamic_allocator::deallocate(memory_handle handle) NOEXP {
+void dynamic_allocator::deallocate(memory_handle& handle) NOEXP {
 
 #ifdef DEBUG
     if (handle._block_index_ < _blocks_count_) {

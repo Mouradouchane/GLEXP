@@ -55,7 +55,7 @@ core::memory_block::memory_block(u64 size , u16 max_allowed_allocations, subsyst
 	}
 
 	// setup variables
-	_start_ = (byte*)_handle_._ptr_;
+	_start_ = (byte*)_handle_.pointer();
 	_end_   = _start_ + _size_;
 
 	// create register's
@@ -143,7 +143,7 @@ memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_ta
 	// check if memory_block is full
 	if (size_ > _size_) {
 		handle._register_index_  = -1;
-		handle.response =  allocator_response::full;
+		handle._response_ = allocator_response::full;
 
 		_lock_.release(lock_id);
 		return handle;
@@ -153,7 +153,7 @@ memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_ta
 	if (_alloc_list_.get_allocations_count() >= _alloc_list_.get_capacity()) {
 		CORE_WARN(CORE_LOG_CONFIG_ALL, MEMORY_BLOCK_IS_REGISTRY_FULL, _alloc_list_.get_capacity());
 
-		handle.response = allocator_response::register_full;
+		handle._response_ = allocator_response::register_full;
 		handle._register_index_ = -1;
 
 		_lock_.release(lock_id);
@@ -175,8 +175,8 @@ memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_ta
 			_free_list_.insert((byte*)allocation.ptr + size_, allocation.size - size_, allocation.tag);
 		}
 
-		handle.ptr = allocation.ptr;	
-		handle.response = allocator_response::success;
+		handle._ptr_ = allocation.ptr;	
+		handle._response_ = allocator_response::success;
 
 		_lock_.release(lock_id);
 		return handle;
@@ -189,9 +189,9 @@ memory_handle core::memory_block::allocate(u32 size_, u32 alignement_, memory_ta
 	_lock_.release(lock_id);
 	process_free_list(); // todo[IMPORTANT]: put this in different thread --> pass it to the work_system
 
-	handle.ptr = nullptr;
+	handle._ptr_ = nullptr;
 	handle._register_index_ = -1;
-	handle.response = allocator_response::fragmeneted;
+	handle._response_ = allocator_response::fragmeneted;
 
 	return handle;
 }
@@ -235,8 +235,8 @@ same_pair<memory_handle> core::memory_block::allocate_tow( memory_request_2 cons
 
 	if (reg_index_1 < reg_cap && reg_index_2 < reg_cap) {
 		return same_pair<memory_handle> {
-			memory_handle(allocator_response::success, 0, reg_index_1, pointer_1),
-			memory_handle(allocator_response::success, 0, reg_index_2, pointer_2)
+			memory_handle(allocator_response::success, 0, reg_index_1, pointer_1,request.tag_1,nullptr),
+			memory_handle(allocator_response::success, 0, reg_index_2, pointer_2,request.tag_2,nullptr)
 		};
 	}
 	else {
@@ -267,7 +267,7 @@ bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 	atomic_scope_lock scope_lock(_lock_);
 
 	// get allocation
-	memory_allocation allocation = _alloc_list_.cut(handle.ptr , handle._register_index_);
+	memory_allocation allocation = _alloc_list_.cut(handle._ptr_ , handle._register_index_);
 
 	// "deallocate"
 	if (allocation.ptr) { 
@@ -285,7 +285,7 @@ bool core::memory_block::deallocate(memory_handle const& handle) NOEXP {
 	// otherwise failed to deallocate
 	CORE_WARN_F(
 		"memory_block failed to deallocate {} passed in invalid memory_handle !", 
-		core::pointer_to_hex_string(handle.ptr)
+		core::pointer_to_hex_string(handle._ptr_)
 	);
 	return false;
 }
@@ -318,7 +318,7 @@ memory_allocation core::memory_block::get_allocation_info(memory_handle const& h
 
 	memory_allocation info = _alloc_list_.get_allocation_info(handle._register_index_);
 
-	if (handle.ptr == info.ptr) return info;
+	if (handle._ptr_ == info.ptr) return info;
 	
 	CORE_WARN( CORE_LOG_CONFIG_ALL, 
 		"invalid handle passed to memory_block.get_allocation_info function , handle not matching with what in registry !" , 

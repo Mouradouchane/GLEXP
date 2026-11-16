@@ -8,9 +8,10 @@
 #include "core/macros.hpp"
 #include "core/types.hpp"
 
-#include "core/memory/memory.hpp"
+#include "core/memory/global_allocator/global_allocator.hpp"
+#include "core/memory/dynamic_allocator/handles/da_handles.hpp"
 #include "core/locks/atomic_lock/atomic_lock.hpp"
-#include "core/memory/dynamic/registery/registery.hpp"
+#include "core/memory/dynamic_allocator/registery/registery.hpp"
 
 #define MEMORY_BLOCK_NAME "memory_block"
 
@@ -20,9 +21,9 @@
 #define MEMORY_BLOCK_OUT_OF_RANGE_POINTER MEMORY_BLOCK_NAME " pointer {} passed to memory_block is out of range , start={} , end={} !"
 #define MEMORY_BLOCK_FAILED_TO_REGISTER_ALLOCATION MEMORY_BLOCK_NAME " failed to register new allocation !"
 
-#define MEMORY_HANDLE_BUSY     memory_handle(allocator_response::busy,-1,-1,nullptr)
-#define MEMORY_HANDLE_REG_FULL memory_handle(allocator_response::register_full, -1, -1, nullptr)
-#define MEMORY_HANDLE_FRAG     memory_handle(allocator_response::fragmeneted, -1, -1, nullptr)
+#define MEMORY_HANDLE_BUSY     memory_handle(allocator_response::busy,-1,-1,nullptr,memory_tag::unkown,nullptr)
+#define MEMORY_HANDLE_REG_FULL memory_handle(allocator_response::register_full,-1,-1,nullptr,memory_tag::unkown,nullptr)
+#define MEMORY_HANDLE_FRAG     memory_handle(allocator_response::fragmeneted,-1,-1,nullptr,memory_tag::unkown,nullptr)
 
 namespace core {
 

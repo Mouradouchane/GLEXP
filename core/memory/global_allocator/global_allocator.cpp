@@ -5,7 +5,8 @@
 
 #include "core/logger/logger.hpp"
 #include "core/bitset.hpp"
-#include "core/memory/global_allocator/io/global_allocator_io.hpp"
+#include "core/memory/global_allocator/handles/ga_handles.hpp"
+
 #include "global_allocator.hpp"
 
 static std::shared_ptr<spdlog::logger> _core_global_alloc_logger_ = nullptr;

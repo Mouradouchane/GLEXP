@@ -3,7 +3,7 @@
 #ifndef CORE_MEMORY_ARENA_HPP
 #define CORE_MEMORY_ARENA_HPP
 
-#include "core/memory/memory.hpp"
+#include "core/memory/global_allocator/global_allocator.hpp"
 
 namespace core {
 
