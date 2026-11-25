@@ -202,11 +202,11 @@ DLL_API void core::global_allocator::deallocate(memory_handle_g& handle) NOEXP {
 }
 
 
-DLL_API u64 core::global_allocator::current_memory_usage() NOEXP {
+DLL_API u64 core::global_allocator::allocated_memory() NOEXP {
 	return total_size;
 }
 
-DLL_API u64 core::global_allocator::current_memory_usage(subsystem_memory_tag section_tag) NOEXP {
+DLL_API u64 core::global_allocator::allocated_memory(subsystem_memory_tag section_tag) NOEXP {
 #ifdef DEBUG
 	u8 index = (u8)section_tag;
 	return ( index < MAX_MEMORY_TAGS) ? sections_sizes[ index ] : 0;

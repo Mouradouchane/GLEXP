@@ -13,17 +13,25 @@
 #include "core/locks/atomic_lock/atomic_lock.hpp"
 #include "core/memory/dynamic_allocator/registery/registery.hpp"
 
-#define MEMORY_BLOCK_NAME "memory_block"
+// memory block error's
+#define MBE001(CONFIG, REG_SIZE) CORE_ERROR(CONFIG,"memory_block: registry is full max {} allocation !",REG_SIZE);
+#define MBE002(CONFIG, MEM_SIZE) CORE_ERROR(CONFIG,"memory_block: is out of memory , failed to allocate {}.", BYTE_TO_STRING(MEM_SIZE));
+#define MBE003(CONFIG, MEM_SIZE, MIN, MAX) CORE_ERROR(CONFIG,"memory_block: this size {} is not allowed ! allowed range (min={}, max={}).", BYTE_TO_STRING(MEM_SIZE),BYTE_TO_STRING(MIN),BYTE_TO_STRING(MAX));
+#define MBE005(CONFIG) CORE_ERROR(CONFIG,"memory_block: failed to register new allocation !");
 
-#define MEMORY_BLOCK_IS_REGISTRY_FULL     MEMORY_BLOCK_NAME " registry is full max {} allocation !"
-#define MEMORY_BLOCK_OUT_OF_MEMORY        MEMORY_BLOCK_NAME " is out of memory , failed to allocate {}bytes ."
-#define MEMORY_BLOCK_NOT_ALLOWED_SIZE     MEMORY_BLOCK_NAME " with size={}byte is not allowed because -> min_size_allowed={}, max_size_allowed={} ."
-#define MEMORY_BLOCK_OUT_OF_RANGE_POINTER MEMORY_BLOCK_NAME " pointer {} passed to memory_block is out of range , start={} , end={} !"
-#define MEMORY_BLOCK_FAILED_TO_REGISTER_ALLOCATION MEMORY_BLOCK_NAME " failed to register new allocation !"
+struct block_description {
+	u64                  size;
+	u16                  max_allocations_per_block;
+	subsystem_memory_tag tag  DEBUG_ONLY;
+};
 
-#define MEMORY_HANDLE_BUSY     memory_handle(allocator_response::busy,-1,-1,nullptr,memory_tag::unkown,nullptr)
-#define MEMORY_HANDLE_REG_FULL memory_handle(allocator_response::register_full,-1,-1,nullptr,memory_tag::unkown,nullptr)
-#define MEMORY_HANDLE_FRAG     memory_handle(allocator_response::fragmeneted,-1,-1,nullptr,memory_tag::unkown,nullptr)
+struct block_status {
+	u64                  total_memory;
+	u64                  free_memory;
+	u64                  allocated_memory;
+	u64                  allocations_count;
+	subsystem_memory_tag tag  DEBUG_ONLY;
+};
 
 namespace core {
 
@@ -62,22 +70,21 @@ public:
 	/*
 		memory_block public functions
 	*/
-	memory_handle allocate(memory_request const& request) NOEXP;
-	memory_handle allocate(u32 size_, u32 alignement_, memory_tag tag_, bool wait_for_block = false) NOEXP;
+	void allocate(memory_request const& request, memory_handle& handle) NOEXP;
+	void allocate_tow(memory_request_2 const& request, same_pair<memory_handle>& handles) NOEXP;
 
-	same_pair<memory_handle> allocate_tow(memory_request_2 const& request) NOEXP;
-
-	bool deallocate(memory_handle const& handle) NOEXP;
+	bool deallocate(memory_handle& handle) NOEXP;
 
 	bool is_busy()  NOEXP;
 	bool is_alive() NOEXP;
 
-	u64 size() NOEXP; // size of block memory in bytes
-	u64 free_memory() NOEXP;
+	u64 total_memory() NOEXP; // size of memory block in bytes
+	u64 free_memory() NOEXP; 
 	u64 allocated_memory() NOEXP;
 
 	// use this to query information about allocated memory
 	memory_allocation get_allocation_info(memory_handle const& handle) NOEXP;
+	void get_status(block_status& obj) NOEXP;
 
 private: // private helper functions
 

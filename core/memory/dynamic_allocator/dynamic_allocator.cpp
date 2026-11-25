@@ -142,14 +142,14 @@ dynamic_allocator::~dynamic_allocator() NOEXP {
 */
 
 memory_handle dynamic_allocator::allocate(memory_request const& request) NOEXP {
-
+    
     if (request.block_index < _blocks_count_) {
         memory_handle handle;
         u8 index = request.block_index;
         
         do {
             // try allocate
-            handle = _blocks_[index].allocate(request);
+            _blocks_[index].allocate(request, handle);
 
             // on success
             if(handle._response_ == allocator_response::success) {
@@ -161,7 +161,8 @@ memory_handle dynamic_allocator::allocate(memory_request const& request) NOEXP {
                 
                 // update handle 
                 handle._block_index_ = index;
-            
+                handle._allocator_   = this;
+
                 return handle;
             }
 
@@ -215,7 +216,7 @@ same_pair<memory_handle> dynamic_allocator::allocate_tow( memory_request_2 const
         
         do {
             // try allocate
-            pair = _blocks_[index].allocate_tow(request);
+           _blocks_[index].allocate_tow(request, pair);
 
             // on success
             if(pair.first._response_ == allocator_response::success) {
@@ -226,9 +227,12 @@ same_pair<memory_handle> dynamic_allocator::allocate_tow( memory_request_2 const
                 #endif
                 _allocated_memory_.fetch_add(request.size_1 + request.size_2, MEMORY_ORDER_ACQUIRE);
                 
-                // update handle 
+                // update handle's
                 pair.first._block_index_  = index;
+                pair.first._allocator_ = this;
+
                 pair.second._block_index_ = index;
+                pair.second._allocator_ = this;
             
                 return pair;
             }
@@ -253,6 +257,7 @@ void dynamic_allocator::deallocate(memory_handle& handle) NOEXP {
         if (info.ptr){
             // deallocate
             _blocks_[handle._block_index_].deallocate(handle);
+            handle._ptr_ = nullptr;
             
             // update variables
             _sections_[(u8)info.tag] -= info.size;
@@ -273,11 +278,18 @@ void dynamic_allocator::deallocate(memory_handle& handle) NOEXP {
 }
 
 
+block_status dynamic_allocator::memory_block_status(u8 block_index) NOEXP {
+    block_status obj;
+    if(block_index < _blocks_count_) _blocks_[block_index].get_status(obj);
+    
+    return obj;
+}
+
 u32 dynamic_allocator::blocks_count() NOEXP {
     return _blocks_count_;
 }
 
-u64 dynamic_allocator::memory_budget() NOEXP {
+u64 dynamic_allocator::total_memory() NOEXP {
     return _memory_budget_;
 }
 
@@ -292,27 +304,23 @@ u64 dynamic_allocator::free_memory() NOEXP {
     return free_mem;
 }
 
-u64 dynamic_allocator::block_size(u8 index) NOEXP {
-
-    if (index < _blocks_count_) {
-        return _blocks_[index].size();
-    }
-
-    return 0;
-}
-
 /*
     todo: implement these functions
 */
-u64 dynamic_allocator::current_memory_usage() NOEXP {
+u64 dynamic_allocator::allocated_memory() NOEXP {
     return _allocated_memory_;
 }
 
-u64 dynamic_allocator::current_memory_usage(memory_tag section_tag) NOEXP {
+u64 dynamic_allocator::allocated_memory(memory_tag section_tag) NOEXP {
+#ifdef DEBUG
+
     if ((u8)section_tag < MAX_MEMORY_TAGS) {
         return _sections_[(u8)section_tag];
     }
     else return 0;
+#else
+    return 0;
+#endif
 }
 
 

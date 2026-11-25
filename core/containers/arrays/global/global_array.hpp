@@ -3,6 +3,7 @@
 #ifndef CORE_GLOBAL_ARRAY_HPP
 #define CORE_GLOBAL_ARRAY_HPP
 
+#include <typeinfo>
 #include "core/types.hpp"
 #include "core/memory/global_allocator/global_allocator.hpp"
 
@@ -13,7 +14,7 @@ namespace core {
 */
 template<typename type> class global_array {
 	private:
-		inline static const string _typename_ = TYPE_NAME(type);
+		inline static const string _typename_ = string( TYPE_NAME(type) );
 
 		memory_handle_g _handle_;
 		u64   _capacity_ = 0;

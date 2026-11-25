@@ -6,8 +6,7 @@
 
 #include "tools/tester/macros.hpp"
 
-#include "core/memory/memory.hpp"
-#include "core/memory/dynamic/dynamic_allocator.hpp"
+#include "core/memory/dynamic_allocator/dynamic_allocator.hpp"
 
 #include "behavior_on_st.hpp"
 
@@ -18,9 +17,12 @@ bool dynamic_allocator_simple_behavior_test_1() {
 	if (dc.name() != "tester allocator 1") { DEBUG_FAILUER(); }
 	if (dc.tag() != subsystem_memory_tag::debug_system) { DEBUG_FAILUER(); }
 
-	if (dc.block_size(0) != (4 KB)) { DEBUG_FAILUER(); }
-	if (dc.block_size(1) != (4 KB)) { DEBUG_FAILUER(); }
-	if (dc.memory_budget() != (8 KB)){ DEBUG_FAILUER(); }
+	block_status bs0 = dc.memory_block_status(0);
+	block_status bs1 = dc.memory_block_status(1);
+
+	if (bs0.allocated_memory != (4 KB)) { DEBUG_FAILUER(); }
+	if (bs1.allocated_memory != (4 KB)) { DEBUG_FAILUER(); }
+	if (dc.total_memory() != (8 KB)){ DEBUG_FAILUER(); }
 	
 	if (dc.free_memory() != (8 KB)) { DEBUG_FAILUER(); }
 	
@@ -31,9 +33,9 @@ bool dynamic_allocator_simple_behavior_test_1() {
 	memory_handle h3 = dc.allocate(size, memory_tag::dev, 1, true);
 	memory_handle h4 = dc.allocate(size, memory_tag::ai , 0, true);
 
-	if (dc.current_memory_usage(memory_tag::dev) != (size * 2)) { DEBUG_FAILUER(); }
-	if (dc.current_memory_usage(memory_tag::ai)  != (size * 2)) { DEBUG_FAILUER(); }
-	if (dc.current_memory_usage() != (4 KB)) { DEBUG_FAILUER(); }
+	if (dc.allocated_memory(memory_tag::dev) != (size * 2)) { DEBUG_FAILUER(); }
+	if (dc.allocated_memory(memory_tag::ai)  != (size * 2)) { DEBUG_FAILUER(); }
+	if (dc.allocated_memory() != (4 KB)) { DEBUG_FAILUER(); }
 	if (dc.free_memory() != (4 KB)) { DEBUG_FAILUER(); }
 
 	dc.deallocate(h1);
@@ -41,9 +43,9 @@ bool dynamic_allocator_simple_behavior_test_1() {
 	dc.deallocate(h3);
 	dc.deallocate(h4);
 
-	if (dc.current_memory_usage(memory_tag::dev) != 0) { DEBUG_FAILUER(); }
-	if (dc.current_memory_usage(memory_tag::ai)  != 0) { DEBUG_FAILUER(); }
-	if (dc.current_memory_usage() != 0) { DEBUG_FAILUER(); }
+	if (dc.allocated_memory(memory_tag::dev) != 0) { DEBUG_FAILUER(); }
+	if (dc.allocated_memory(memory_tag::ai)  != 0) { DEBUG_FAILUER(); }
+	if (dc.allocated_memory() != 0) { DEBUG_FAILUER(); }
 	if (dc.free_memory() != (8 KB)) { DEBUG_FAILUER(); }
 
 	return TEST_PASS;
@@ -67,7 +69,7 @@ bool dynamic_allocator_all_blocks_same_size() {
 	}
 
 	// check allocated size
-	if (dc.current_memory_usage() != (sizeof(test_struct) * 16)) {
+	if (dc.allocated_memory() != (sizeof(test_struct) * 16)) {
 		DEBUG_FAILUER();
 	}
 

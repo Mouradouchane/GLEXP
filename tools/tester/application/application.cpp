@@ -21,7 +21,7 @@
 // #include "core/references/references.hpp"
 // #include "core/window/window.hpp"
 #include "core/logger/logger.hpp"
-#include "core/memory/memory.hpp"
+#include "core/memory/global_allocator/global_allocator.hpp"
 
 // enable logger
 static auto _tester_app_cpp_logger_ = CORE_GET_LOGGER(UNIT_TESTER_LOGGER);
@@ -34,7 +34,7 @@ static auto _tester_app_cpp_logger_ = CORE_GET_LOGGER(UNIT_TESTER_LOGGER);
 // #include "tools/tester/unit_tests/arrays/dynamic_array_tests.hpp"
 #include "tools/tester/unit_tests/memory_tests/dynamic_allocator_tests/behavior_on_st.hpp"
 #include "tools/tester/unit_tests/memory_tests/global_allocator_tests/gloabl_allocator_behavior_test_on_st.hpp"
-#include "tools/tester/unit_tests/arrays/array_tests.hpp"
+#include "tools/tester/unit_tests/arrays/local_array_tests.hpp"
 
 #include "application.hpp"
 
@@ -67,7 +67,7 @@ namespace tester {
 	void init() { 
 
 		core::logger::init("tester_logger" , core::logger::verbosity_level::trace);
-		core::memory::init();
+		core::global_allocator::init();
 
 		/*
 			note: add your unit-tests here

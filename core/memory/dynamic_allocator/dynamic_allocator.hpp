@@ -14,17 +14,6 @@
 #include "core/containers/arrays/global/global_array.hpp"
 #include "core/strings/string.hpp"
 
-struct block_description {
-	u64 size;
-	u16 max_allocations_per_block;
-	subsystem_memory_tag tag;
-};
-
-struct block_status {
-	u64 size;
-	u64 free_memory;
-	u16 allocations_count;
-};
 
 namespace core {
 
@@ -83,16 +72,14 @@ public:
 		
 	void deallocate(memory_handle& handle) NOEXP;
 		
-	u32 blocks_count() NOEXP;
+	// retrun few info about a memory block
+	block_status memory_block_status(u8 block_index) NOEXP; 
+	u32          blocks_count() NOEXP;
 
-	block_status get_block_status(u8 block_index) NOEXP; // retrun few info about a memory_block
-
-	u64 block_size(u8 index) NOEXP; // size of one block
-	u64 memory_budget() NOEXP; // size of all blocks
+	u64 total_memory() NOEXP; // size of all blocks "memory budget"
 	u64 free_memory() NOEXP;  // free memory in all blocks
-
-	u64 current_memory_usage() NOEXP; // for all sections
-	u64 current_memory_usage(memory_tag section_tag) NOEXP; // for specific section
+	u64 allocated_memory() NOEXP; // for all sections
+	u64 allocated_memory(memory_tag section_tag) NOEXP; // for specific section
 		
 	DEBUG_ONLY string const& name() NOEXP;
 	DEBUG_ONLY subsystem_memory_tag tag() NOEXP;

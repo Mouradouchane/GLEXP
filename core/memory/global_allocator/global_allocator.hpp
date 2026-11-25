@@ -26,13 +26,13 @@ namespace core {
 		DLL_API memory_handle_g allocate(memory_request_g const& request) NOEXP;
 
 		// note: this function preforme tow allocation in one call but !
-		//       both allocations not guarnted to be next each other in memory :)
+		//       both allocations not garunted to be next each other in memory :)
 		//       because of paging , multi-threading , etc... .
 		DLL_API same_pair<memory_handle_g> allocate_tow(memory_request_g const& request_1, memory_request_g const& request_2) NOEXP;
 		DLL_API void deallocate(memory_handle_g& handle) NOEXP;
 
-		DLL_API u64 current_memory_usage() NOEXP; // memory usage of all
-		DLL_API u64 current_memory_usage(subsystem_memory_tag section_tag) NOEXP;
+		DLL_API u64 allocated_memory() NOEXP; // memory usage of all
+		DLL_API u64 allocated_memory(subsystem_memory_tag section_tag) NOEXP;
 		DLL_API u64 peak_memory_usage() NOEXP;
 
 	}

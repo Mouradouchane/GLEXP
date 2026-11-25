@@ -7,7 +7,7 @@
 
 #include "core/types.hpp"
 #include "core/assert.hpp"
-#include "core/memory/dynamic/dynamic_allocator.hpp"
+#include "core/memory/dynamic_allocator/dynamic_allocator.hpp"
 
 #define CORE_ARRAY_DEFAULT_RESIZE_VALUE 16
 

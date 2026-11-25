@@ -8,6 +8,15 @@
 #include "core/pair/pair.hpp"
 #include "core/memory/memory_enums.hpp"
 
+/*
+	few handles ready to use
+*/
+#define MEMORY_HANDLE_BUSY     memory_handle(allocator_response::busy,-1,-1,nullptr,memory_tag::unkown,nullptr)
+#define MEMORY_HANDLE_REG_FULL memory_handle(allocator_response::register_full,-1,-1,nullptr,memory_tag::unkown,nullptr)
+#define MEMORY_HANDLE_FRAG     memory_handle(allocator_response::fragmeneted,-1,-1,nullptr,memory_tag::unkown,nullptr)
+#define MEMORY_HANLDE_FULL     memory_handle(allocator_response::full,-1,-1,nullptr,memory_tag::unkown,nullptr)
+
+
 namespace core {
 	DLL_API_CLASS dynamic_allocator;
 	DLL_API_CLASS memory_block;
